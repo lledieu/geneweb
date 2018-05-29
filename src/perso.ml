@@ -1118,8 +1118,8 @@ value merge_date_place conf base surn ((d1, d2, pl), auth) p =
 
 value build_surnames_list conf base v p =
   let ht = Hashtbl.create 701 in
-  let mark = Array.make (nb_of_persons base) 5 in
-  let auth = conf.wizard || conf.friend in
+  let mark = Array.create (nb_of_persons base) 5 in
+  let auth = conf.wizard || (conf.friend && get_access p = Friend) in
   let add_surname sosa p surn dp =
     let r =
       try Hashtbl.find ht surn with
@@ -1684,7 +1684,7 @@ and eval_simple_bool_var conf base env (_, p_auth) =
         let s = Srcfile.source_file_name conf v in
         Sys.file_exists s
       else raise Not_found ]
-and eval_simple_str_var conf base env (_, p_auth) =
+and eval_simple_str_var conf base env (p, p_auth) =
   fun
   [ "alias" ->
       match get_env "alias" env with
@@ -1703,7 +1703,7 @@ and eval_simple_str_var conf base env (_, p_auth) =
                Wiki.wi_cancel_links = conf.cancel_links;
                Wiki.wi_file_path = Notes.file_path conf base;
                Wiki.wi_person_exists = person_exists conf base;
-               Wiki.wi_always_show_link = conf.wizard || conf.friend}
+               Wiki.wi_always_show_link = conf.wizard || (conf.friend && get_access p = Friend)}
             in
             let s = Wiki.syntax_links conf wi (String.concat "\n" lines) in
             if conf.pure_xhtml then Util.check_xhtml s else s
@@ -2587,6 +2587,7 @@ and eval_bool_person_field conf base env (p, p_auth) =
   | "is_male" -> get_sex p = Male
   | "is_private" -> get_access p = Private
   | "is_public" -> get_access p = Public
+  | "is_friend" -> get_access p = Friend
   | "is_restricted" -> is_hidden p
   | _ -> raise Not_found ]
 and eval_str_person_field conf base env ((p, p_auth) as ep) =
@@ -2770,7 +2771,7 @@ and eval_str_person_field conf base env ((p, p_auth) as ep) =
           {Wiki.wi_mode = "NOTES"; Wiki.wi_cancel_links = conf.cancel_links;
            Wiki.wi_file_path = Notes.file_path conf base;
            Wiki.wi_person_exists = person_exists conf base;
-           Wiki.wi_always_show_link = conf.wizard || conf.friend}
+           Wiki.wi_always_show_link = conf.wizard || (conf.friend && get_access p = Friend)}
         in
         let s = Wiki.syntax_links conf wi (String.concat "\n" lines) in
         if conf.pure_xhtml then Util.check_xhtml s else s
@@ -2786,7 +2787,7 @@ and eval_str_person_field conf base env ((p, p_auth) as ep) =
             {Wiki.wi_mode = "NOTES"; Wiki.wi_cancel_links = conf.cancel_links;
              Wiki.wi_file_path = Notes.file_path conf base;
              Wiki.wi_person_exists = person_exists conf base;
-             Wiki.wi_always_show_link = conf.wizard || conf.friend}
+             Wiki.wi_always_show_link = conf.wizard || (conf.friend && get_access p = Friend)}
           in
           Wiki.syntax_links conf wi s
         in
@@ -2914,7 +2915,7 @@ and eval_str_person_field conf base env ((p, p_auth) as ep) =
                Wiki.wi_cancel_links = conf.cancel_links;
                Wiki.wi_file_path = Notes.file_path conf base;
                Wiki.wi_person_exists = person_exists conf base;
-               Wiki.wi_always_show_link = conf.wizard || conf.friend}
+               Wiki.wi_always_show_link = conf.wizard || (conf.friend && get_access p = Friend)}
             in
             Wiki.syntax_links conf wi s
           in
@@ -3826,7 +3827,7 @@ value interp_notempl_with_menu title templ_fname conf base p = do {
 
 value print conf base p =
   let passwd =
-    if conf.wizard || conf.friend then None
+    if conf.wizard || (conf.friend && get_access p = Friend) then None
     else
       let src =
         match get_parents p with

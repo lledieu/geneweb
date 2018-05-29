@@ -5303,6 +5303,10 @@ sk: opatrovanec/opatrovankyňa/opatrovanec
 sl: rejenec/rejenka/rejenec
 sv: fosterson/fosterdotter/fosterbarn
 
+    friend
+en: friend
+fr: ami
+
     full siblings
 af: broers en susters
 bg: братя и сестри
