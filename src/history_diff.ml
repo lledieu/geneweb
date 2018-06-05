@@ -789,14 +789,16 @@ and eval_str_gen_record conf base env (bef, aft, p_auth) =
           [ IfTitles -> transl_nth conf "iftitles/public/private" 0
           | Public -> transl_nth conf "iftitles/public/private" 1
           | Private -> transl_nth conf "iftitles/public/private" 2
-          | Friend -> "friend" ]
+          | Friend -> "friend"
+          | Friend_m -> "friend_m" ]
         in
         let a =
           match aft.gen_p.access with
           [ IfTitles -> transl_nth conf "iftitles/public/private" 0
           | Public -> transl_nth conf "iftitles/public/private" 1
           | Private -> transl_nth conf "iftitles/public/private" 2
-          | Friend -> "friend" ]
+          | Friend -> "friend"
+          | Friend_m -> "friend_m" ]
         in
         diff_string b a
       else ("", "")
