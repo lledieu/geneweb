@@ -64,6 +64,7 @@
         <ul class="mod_data_ul">
           %foreach;value;
             <li>
+            %if;(bvar.modify_dict = "yes")
               %if;not is_modified;
                 <a href="%prefix;m=MOD_DATA;data=%evar.data;;%keys;s=%encode.evar.s;#mod">
                   %escape.entry_value;
@@ -83,6 +84,9 @@
                 %end;
                 <input type="submit" value="Ok">
               %end;
+            %else;
+              %escape.entry_value;
+            %end;
             </li>
           %end;
         </ul>
