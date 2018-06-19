@@ -382,12 +382,11 @@ value family_m conf base =
       match find_person_in_env conf base "" with
       [ Some p -> Perso.print_ascend conf base p
       | _ -> very_unknown conf ]
-  | Some "ADD_FAM" when conf.wizard -> UpdateFam.print_add conf base
-  | Some "ADD_FAM_OK" when conf.wizard -> UpdateFamOk.print_add conf base
-  | Some "ADD_IND" when conf.wizard -> UpdateInd.print_add conf base
-  | Some "ADD_IND_OK" when conf.wizard -> UpdateIndOk.print_add conf base
-  | Some "ADD_PAR" when conf.wizard -> UpdateFam.print_add_parents conf base
-  | Some "ANM" -> Birthday.print_anniversaries conf base
+  | Some "ADD_FAM" when (conf.wizard && not conf.not_wizard) -> UpdateFam.print_add conf base
+  | Some "ADD_FAM_OK" when (conf.wizard && not conf.not_wizard) -> UpdateFamOk.print_add conf base
+  | Some "ADD_IND" when (conf.wizard && not conf.not_wizard) -> UpdateInd.print_add conf base
+  | Some "ADD_IND_OK" when (conf.wizard && not conf.not_wizard) -> UpdateIndOk.print_add conf base
+  | Some "ADD_PAR" when (conf.wizard && not conf.not_wizard) -> UpdateFam.print_add_parents conf base
   | Some "AN" ->
       match p_getenv conf.env "v" with
       [ Some x -> Birthday.print_birth conf base (int_of_string x)
@@ -420,12 +419,13 @@ value family_m conf base =
       [ Some p -> Descend.print conf base p
       | _ -> very_unknown conf ]
   | Some "DAG" -> Dag.print conf base
-  | Some "DEL_FAM" when conf.wizard -> UpdateFam.print_del conf base
-  | Some "DEL_FAM_OK" when conf.wizard -> UpdateFamOk.print_del conf base
-  | Some "DEL_IMAGE" when conf.wizard && conf.can_send_image ->
+  | Some "DEL_FAM" when (conf.wizard && not conf.not_wizard) -> UpdateFam.print_del conf base
+  | Some "DEL_FAM_OK" when (conf.wizard && not conf.not_wizard) -> UpdateFamOk.print_del conf base
+  | Some "DEL_IMAGE" when (conf.wizard && not conf.not_wizard) && conf.can_send_image ->
       SendImage.print_del conf base
-  | Some "DEL_IMAGE_OK" when conf.wizard && conf.can_send_image ->
+  | Some "DEL_IMAGE_OK" when (conf.wizard && not conf.not_wizard) && conf.can_send_image ->
       SendImage.print_del_ok conf base
+<<<<<<< HEAD
   | Some "DEL_IND" when conf.wizard -> UpdateInd.print_del conf base
   | Some "DEL_IND_OK" when conf.wizard -> UpdateIndOk.print_del conf base
   (* Fonction obsolète, la documentation n'étant plus à jour *)
@@ -462,6 +462,19 @@ value family_m conf base =
       match p_getenv conf.base_env "disable_forum" with
       [ Some "yes" -> incorrect_request conf
       | _ -> Forum.print conf base ]
+=======
+  | Some "DEL_IND" when (conf.wizard && not conf.not_wizard) -> UpdateInd.print_del conf base
+  | Some "DEL_IND_OK" when (conf.wizard && not conf.not_wizard) -> UpdateIndOk.print_del conf base
+  | Some "DOC" -> Doc.print conf
+  | Some "FORUM" -> Forum.print conf base
+  | Some "FORUM_ADD" -> Forum.print_add conf base
+  | Some "FORUM_ADD_OK" -> Forum.print_add_ok conf base
+  | Some "FORUM_DEL" -> Forum.print_del conf base
+  | Some "FORUM_P_P" -> Forum.print_access_switch conf base
+  | Some "FORUM_SEARCH" -> Forum.print_search conf base
+  | Some "FORUM_VAL" -> Forum.print_valid conf base
+  | Some "FORUM_VIEW" -> Forum.print conf base
+>>>>>>> 561954b... wizard_not_wizard option
   | Some "H" ->
       match p_getenv conf.env "v" with
       [ Some f -> Srcfile.print conf base f
@@ -473,9 +486,9 @@ value family_m conf base =
   | Some "HIST_DIFF" -> History_diff.print conf base
   | Some "HIST_SEARCH" -> History.print_search conf base
   | Some "IMH" -> Image.print_html conf base
-  | Some "INV_FAM" when conf.wizard -> UpdateFam.print_inv conf base
-  | Some "INV_FAM_OK" when conf.wizard -> UpdateFamOk.print_inv conf base
-  | Some "KILL_ANC" when conf.wizard ->
+  | Some "INV_FAM" when (conf.wizard && not conf.not_wizard) -> UpdateFam.print_inv conf base
+  | Some "INV_FAM_OK" when (conf.wizard && not conf.not_wizard) -> UpdateFamOk.print_inv conf base
+  | Some "KILL_ANC" when (conf.wizard && not conf.not_wizard) ->
       MergeInd.print_kill_ancestors conf base
   | Some "LB" when conf.wizard || conf.friend ->
       BirthDeath.print_birth conf base
@@ -491,6 +504,7 @@ value family_m conf base =
   | Some "LEX" -> Srcfile.print_lexicon conf base
   | Some "MISC_NOTES" -> Notes.print_misc_notes conf base
   | Some "MISC_NOTES_SEARCH" -> Notes.print_misc_notes_search conf base
+<<<<<<< HEAD
   | Some "MOD_DATA" when conf.wizard -> UpdateData.print_mod conf base
   | Some "MOD_DATA_OK" when conf.wizard && conf.modify_dict ->
       UpdateData.print_mod_ok conf base
@@ -508,21 +522,34 @@ value family_m conf base =
   | Some "MOD_WIZNOTES_OK" when conf.authorized_wizards_notes ->
       Wiznotes.print_mod_ok conf base
   | Some "MRG" when conf.wizard ->
+=======
+  | Some "MOD_FAM" when (conf.wizard && not conf.not_wizard) -> UpdateFam.print_mod conf base
+  | Some "MOD_FAM_OK" when (conf.wizard && not conf.not_wizard) -> UpdateFamOk.print_mod conf base
+  | Some "MOD_IND" when (conf.wizard && not conf.not_wizard) -> UpdateInd.print_mod conf base
+  | Some "MOD_IND_OK" when (conf.wizard && not conf.not_wizard) -> UpdateIndOk.print_mod conf base
+  | Some "MOD_NOTES" when (conf.wizard && not conf.not_wizard) -> Notes.print_mod conf base
+  | Some "MOD_NOTES_OK" when (conf.wizard && not conf.not_wizard) -> Notes.print_mod_ok conf base
+  | Some "MOD_WDOC" when conf.wizard -> Doc.print_mod_wdoc conf
+  | Some "MOD_WDOC_OK" when conf.wizard -> Doc.print_mod_wdoc_ok conf base
+  | Some "MOD_WIZNOTES" -> Wiznotes.print_mod conf base
+  | Some "MOD_WIZNOTES_OK" -> Wiznotes.print_mod_ok conf base
+  | Some "MRG" when (conf.wizard && not conf.not_wizard) ->
+>>>>>>> 561954b... wizard_not_wizard option
       match find_person_in_env conf base "" with
       [ Some p -> Merge.print conf base p
       | _ -> very_unknown conf ]
-  | Some "MRG_DUP" when conf.wizard -> MergeDup.main_page conf base
-  | Some "MRG_DUP_IND_Y_N" when conf.wizard ->
+  | Some "MRG_DUP" when (conf.wizard && not conf.not_wizard) -> MergeDup.main_page conf base
+  | Some "MRG_DUP_IND_Y_N" when (conf.wizard && not conf.not_wizard) ->
       MergeDup.answ_ind_y_n conf base
-  | Some "MRG_DUP_FAM_Y_N" when conf.wizard ->
+  | Some "MRG_DUP_FAM_Y_N" when (conf.wizard && not conf.not_wizard) ->
       MergeDup.answ_fam_y_n conf base
-  | Some "MRG_FAM" when conf.wizard -> MergeFam.print conf base
-  | Some "MRG_FAM_OK" when conf.wizard -> MergeFamOk.print_merge conf base
-  | Some "MRG_MOD_FAM_OK" when conf.wizard ->
+  | Some "MRG_FAM" when (conf.wizard && not conf.not_wizard) -> MergeFam.print conf base
+  | Some "MRG_FAM_OK" when (conf.wizard && not conf.not_wizard) -> MergeFamOk.print_merge conf base
+  | Some "MRG_MOD_FAM_OK" when (conf.wizard && not conf.not_wizard) ->
       MergeFamOk.print_mod_merge conf base
-  | Some "MRG_IND" when conf.wizard -> MergeInd.print conf base
-  | Some "MRG_IND_OK" when conf.wizard -> MergeIndOk.print_merge conf base
-  | Some "MRG_MOD_IND_OK" when conf.wizard ->
+  | Some "MRG_IND" when (conf.wizard && not conf.not_wizard) -> MergeInd.print conf base
+  | Some "MRG_IND_OK" when (conf.wizard && not conf.not_wizard) -> MergeIndOk.print_merge conf base
+  | Some "MRG_MOD_IND_OK" when (conf.wizard && not conf.not_wizard) ->
       MergeIndOk.print_mod_merge conf base
   | Some "N" ->
       match p_getenv conf.env "v" with

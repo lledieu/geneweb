@@ -48,6 +48,61 @@
 %end;
 
 <p></p>
+%if;not cancel_links;
+  <table border="%border;" width="90%%">
+  <tr>
+  <td align="center">
+    <a href="%prefix;m=R;%access;"
+    class="highlight" accesskey="R">[*relationship computing] (R)</a>
+  </td>
+  <td align="%left;">
+    <ul style="list-style:inside">
+      %if;has_parents;
+        <li>
+        <a href="%prefix;m=A;%access;"
+         class="highlight">[*ancestors]</a></li>
+      %end;
+      %if;has_children;
+        <li>
+        <a href="%prefix;m=D;%access;"
+         class="highlight">[*descendants]</a></li>
+      %end;
+      %if;(has_parents and (father.has_parents or mother.has_parents))
+        <li>
+        <a href="%prefix;m=C;%access;"
+         class="highlight">[*cousins (general term)]</a></li>
+      %else;
+        %if;has_nephews_or_nieces;
+          <li>
+          <a href="%prefix;m=C;v1=1;v2=2;%access;"
+           class="highlight">[*nephews and nieces]</a></li>
+        %end;
+      %end;
+      %if;has_parents;
+        %foreach;father.child;
+          %if;is_sibling_before;
+            <li>
+            <a href="%prefix;%child.access;" class="highlight">%nn;
+            %apply;capitalize(nth([previous sibling],sex))</a></li>
+          %end;
+          %if;is_sibling_after;
+            <li>
+            <a href="%prefix;%child.access;" class="highlight">%nn;
+            %apply;capitalize(nth([next sibling],sex))</a></li>
+          %end;
+        %end;
+      %end;
+    </ul>
+  </td>
+  %if;(wizard and bvar.wizard_not_wizard!="yes")
+    <td>
+      <a href="%prefix;m=U;%access;"
+       class="highlight" accesskey="U">[*update] (U)</a>
+    </td>
+  %end;
+  </tr>
+  </table>
+%end;
 
 %if;(evar.opt = "misc")%misc_names;<p>%end;
 

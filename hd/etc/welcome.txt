@@ -291,8 +291,214 @@ zh: 访问次数
                   [marriage/marriages]0
                   </label>
                   <input type="submit" value="Ok"%/>
+<<<<<<< HEAD
           </div>
         </form>
+=======
+                </div>
+              </form>
+            </dd>
+            %if;(bvar.propose_place_surnames != "no")%nl;
+              <dd>
+                <form method="get" action="%prefix;">
+                  %hidden;
+                  <input type="hidden" name="m" value="PS"%/>
+                  <span class="highlight"> - [
+af: by
+bg: по
+br: dre
+ca: per
+cs: podle
+da: ved
+de: mit
+en: by
+eo: per
+es: por
+et:
+fi:
+fr: par
+is: eftir
+it: per
+lv:
+nl: via
+no: etter
+pl: przejrzeć listę:
+pt: por
+ro: cu
+sl: 
+sv: efter
+] [place] / [surname/surnames]0</span>
+                      - [birth]
+                        <input type="checkbox" name="bi" value="on"
+                         checked="checked"%/>
+                      - [death]
+                        <input type="checkbox" name="de" value="on"%/>
+                      - [marriage/marriages]0
+                        <input type="checkbox" name="ma" value="on"%/>
+                      - <input type="submit" value="Ok"%/>
+                </form>
+              </dd>
+            %end;
+            %if;(bvar.hide_advanced_request = "no")
+              <dd>
+                <span class="highlight">-</span>
+                %apply;interp([
+af: <span class="highlight">deur 'n</span>
+       <a href="%prefix;m=H;v=advanced"><font color="%highlight;"><b>detail
+       navraag</b></font></a>.
+bg: <span class="highlight">чрез</span>
+       <a href="%prefix;m=H;v=advanced"><font color="%highlight;"><b>разширено
+       търсене</b></font></a>.
+br: <span class="highlight"> dre ar</span>
+       <a href="%prefix;m=H;v=advanced"><font color="%highlight;"><b>klask
+       a-raokaet</b></font></a>.
+ca: <span class="highlight">per la</span>
+       <a href="%prefix;m=H;v=advanced"><font color="%highlight;"><b>consulta
+       avançada</b></font></a>.
+cs: <span class="highlight">lze také zadat</span>
+       <a href="%prefix;m=H;v=advanced"><font color="%highlight;"><b>rozšířený
+       dotaz</b></font></a>.
+da: <span class="highlight">ved</span>
+       <a href="%prefix;m=H;v=advanced"><font color="%highlight;"><b>avanceret
+       søgning</b></font></a>.
+de: <span class="highlight">mit der</span>
+       <a href="%prefix;m=H;v=advanced"><font color="%highlight;"><b>erweiterten
+       Suche</b></font></a>.
+en: <span class="highlight">by the</span>
+       <a href="%prefix;m=H;v=advanced"><font color="%highlight;"><b>advanced
+       request</b></font></a>.
+eo: <span class="highlight">per la</span>
+       <a href="%prefix;m=H;v=advanced"><font color="%highlight;"><b>serĉado
+       progresata</b></font></a>.
+es: <span class="highlight">mediante una</span>
+       <a href="%prefix;m=H;v=advanced"><font color="%highlight;"><b>consulta
+       avanzada</b></font></a>.
+et: <span class="highlight"></span>
+       <a href="%prefix;m=H;v=advanced"><font color="%highlight;"><b>laiendatud 
+       päring</b></font></a>.
+fi: <a href="%prefix;m=H;v=advanced"><span
+       class="highlight">erityishaulla</span></a>.
+fr: <span class="highlight"> par la</span>
+       <a href="%prefix;m=H;v=advanced"><font color="%highlight;"><b>requête
+        évoluée</b></font></a>.
+he: <span class="highlight">ע"י </span>
+       <a href="%prefix;m=H;v=advanced"><font color="%highlight;"><b>
+       בקשה מתקדמת</b></font></a>.
+is: <span class="highlight">eftir </span>
+       <a href="%prefix;m=H;v=advanced"><font color="%highlight;"><b>frekari
+       óskum</b></font></a>.
+it: <span class="highlight">per la</span>
+       <a href="%prefix;m=H;v=advanced"><font color="%highlight;"><b>richiesta
+       avanzata</b></font></a>.
+lv: <span class="highlight">meklēt pēc</span>
+       <a href="%prefix;m=H;v=advanced"><font color="%highlight;"><b>citiem
+       parametriem</b></font></a>.
+nl: <span class="highlight">via een</span>
+       <a href="%prefix;m=H;v=advanced"><font
+       color="%highlight;"><b>gedetailleerde opzoeking</b></font></a>.
+no: <span class="highlight">gjennom</span>
+       <a href="%prefix;m=H;v=advanced"><font color="%highlight;"><b>avansert
+       søking</b></font></a>.
+pl: <span class="highlight">skorzystać z</span>
+       <a href="%prefix;m=H;v=advanced"><font
+       color="%highlight;"><b>wyszukiwania zaawansowanego</b></font></a>.
+pt: <span class="highlight">por</span>
+       <a href="%prefix;m=H;v=advanced"><font color="%highlight;"><b>pesquisa
+       complexa</b></font></a>.
+ro: <span class="highlight">prin</span>
+       <a href="%prefix;m=H;v=advanced"><font color="%highlight;"><b>specificare
+       complexa</b></font></a>.
+ru: <span class="highlight">через</span>
+       <a href="%prefix;m=H;v=advanced"><font color="%highlight;"><b>расширенный
+       запрос</b></font></a>.
+sl: <span class="highlight">s pomočjo</span>
+       <a href="%prefix;m=H;v=advanced"><font color="%highlight;"><b>naprednega iskanja
+       </b></font></a>.
+sv: <span class="highlight">genom</span>
+       <a href="%prefix;m=H;v=advanced"><font color="%highlight;"><b>avancerad
+       sökning</b></font></a>.
+])
+              </dd>
+            %end;
+          </dl>
+        </td>
+      </tr>
+    </table>
+  </div>
+</div>
+
+%if;(wizard and bvar.wizard_not_wizard!="yes" and 
+    (not base.has_notes or bvar.propose_add_family != "no"))
+  <div style="text-align: center">
+    [
+af: Jy kan
+bg: Можете още
+br: Gellout a rit
+ca: Podeu
+cs: Zde můžete
+da: Du kan:
+de: Du kannst
+en: You can
+eo: Vi povas
+es: Puede
+et: Täiendamine:
+fi: Taikka
+fr: Vous pouvez
+he:  יש אפשרות 
+is: Þú getur
+it: Si può
+lv: Izmaiņu veikšana:
+nl: U kunt:
+no: Du kan
+pl: Możesz:
+pt: Pode
+ro: Tu poti
+ru: Вы можете
+sl: Lahko:
+sv: Du kan
+zh:
+]
+  </div>
+  %( IE seems not to recognize style "display: table"; must use a table %)
+  <table cellpadding="0" cellspacing="0"%sp;
+   style="text-align: center; display: table; margin: auto">
+    <tr style="display: table-row">
+      %if;(bvar.propose_add_family != "no")
+        <td style="display: table-cell">
+          <ul>
+            <li>
+              <a href="%prefix;m=ADD_FAM">[
+af: 'n familie byvoeg
+bg: да добавите семейство
+br: ouzhpennañ ur familh
+ca: afegir una família
+cs: přidat novou rodinu
+da: tilføje en familie
+de: eine Familie hinzufügen
+en: add a family
+eo: aldoni familion
+es: agregar una familia
+et: lisa pere
+fi: lisää perhe
+fr: ajouter une famille
+he:  להוסיף משפחה
+is: bætt við fjölskyldu
+it: aggiungere una famiglia
+lv: pievienot ģimeni
+nl: een familie toevoegen
+no: legge til en familie
+pl: dodać rodzinę (parę)
+pt: acrescentar uma família
+ro: adauga o familie
+ru: добавить семью
+sl: dodate družino
+sv: lägga till en familj
+zh: 增加家庭记录
+]</a>
+            </li>
+          </ul>
+        </td>
+>>>>>>> 561954b... wizard_not_wizard option
       %end;
       %if;(bvar.hide_advanced_request = "no")
         %apply;interp([
@@ -375,7 +581,6 @@ sv: <span class="highlight" style="margin-left:10px">genom
       %end;
     </div> %( end div search %)
 
-
 <br/>
 <div id="tools">
   <h3 class="with_picto" style=" background-image:url(%image_prefix;/picto_molette.png)"> [*tools]</h3>
@@ -450,6 +655,77 @@ sv: <span class="highlight" style="margin-left:10px">genom
 
 <br/>
 %if;(bvar.counter != "no")%sq
+<div style="text-align: center">
+  [
+af: Jy kan ook kyk na
+bg: Можете също да се насочите към
+br: Gellout a rit ivez gweladenniñ
+ca: També podeu consultar
+cs: Lze také zobrazit
+da: Du kan også fremkalde:
+de: Du kannst zugreifen auf
+en: You can consult
+eo: Vi povas ankaù konsulti
+es: Puede consultar
+et: Vaata lisaks:
+fi: Voit myös katsoa
+fr: Vous pouvez consulter
+he: אפשר גם להראות
+is: Þú getur einnig athugað
+it: Si può anche consultare
+lv: Informācija par:
+nl: U kunt de volgende zaken bekijken:
+no: Du kan også slå opp
+pl: Możesz także obejrzeć:
+pt: Também pode consultar
+ro: poti consulta
+ru: Вы можете также обратиться к
+sl: Lahko pregledate:
+sv: Du kan också konsultera
+zh:
+]
+</div>
+
+<br/>
+%( IE seems not to recognize style "display: table"; must use a table %)
+<table cellpadding="0" cellspacing="0"%sp;
+ style="display: table; margin: auto; white-space: nowrap">
+  <tr style="display: table-row">
+    <td style="display: table-cell">
+      <ul>
+        <li>
+          <a href="%prefix;m=AN">[birthdays]</a>
+        </li>
+        <li>
+          <a href="%prefix;m=AD">%sq;
+          [anniversaries of dead people]</a>
+        </li>
+        <li>
+          <a href="%prefix;m=AM">[anniversaries of marriage]</a>
+        </li>
+        <li>
+          <a href="%prefix;m=STAT">[statistics]</a>
+        </li>
+      </ul>
+    </td>
+    <td style="display: table-cell" valign="top">
+      <ul>
+      %if;has_history;%nl;
+        <li>
+          <a href="%prefix;m=HIST;k=20">[history of updates]</a>
+        </li>%sq;
+      %end;%nl;
+        <li>
+          <a href="%prefix;m=CAL">[calendar/calendars]1</a>
+        </li>
+        <li>
+          <a href="%prefix;m=FORUM">[database forum]</a>
+        </li>
+      </ul>
+    </td>
+  </tr>
+</table>
+
 <div style="text-align: center">
   %apply;interp([
 af: Daar was %nb_accesses; besoeke, %nb_accesses_to_welcome; van hulle
