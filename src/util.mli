@@ -264,6 +264,7 @@ value wprint_in_columns :
 
 (* Variable that use also private flag of person *)
 value is_hide_names : config -> person -> bool;
+value is_hide_names_full : config -> base -> person -> bool;
 
 value reduce_list : int -> list 'a -> list 'a;
 
