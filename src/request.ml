@@ -425,9 +425,8 @@ value family_m conf base =
       SendImage.print_del conf base
   | Some "DEL_IMAGE_OK" when (conf.wizard && not conf.not_wizard) && conf.can_send_image ->
       SendImage.print_del_ok conf base
-<<<<<<< HEAD
-  | Some "DEL_IND" when conf.wizard -> UpdateInd.print_del conf base
-  | Some "DEL_IND_OK" when conf.wizard -> UpdateIndOk.print_del conf base
+  | Some "DEL_IND" when (conf.wizard && not conf.not_wizard) -> UpdateInd.print_del conf base
+  | Some "DEL_IND_OK" when (conf.wizard && not conf.not_wizard) -> UpdateIndOk.print_del conf base
   (* Fonction obsolète, la documentation n'étant plus à jour *)
   (* | Some "DOC" -> Doc.print conf *)
   | Some "FORUM" ->
@@ -462,19 +461,6 @@ value family_m conf base =
       match p_getenv conf.base_env "disable_forum" with
       [ Some "yes" -> incorrect_request conf
       | _ -> Forum.print conf base ]
-=======
-  | Some "DEL_IND" when (conf.wizard && not conf.not_wizard) -> UpdateInd.print_del conf base
-  | Some "DEL_IND_OK" when (conf.wizard && not conf.not_wizard) -> UpdateIndOk.print_del conf base
-  | Some "DOC" -> Doc.print conf
-  | Some "FORUM" -> Forum.print conf base
-  | Some "FORUM_ADD" -> Forum.print_add conf base
-  | Some "FORUM_ADD_OK" -> Forum.print_add_ok conf base
-  | Some "FORUM_DEL" -> Forum.print_del conf base
-  | Some "FORUM_P_P" -> Forum.print_access_switch conf base
-  | Some "FORUM_SEARCH" -> Forum.print_search conf base
-  | Some "FORUM_VAL" -> Forum.print_valid conf base
-  | Some "FORUM_VIEW" -> Forum.print conf base
->>>>>>> 561954b... wizard_not_wizard option
   | Some "H" ->
       match p_getenv conf.env "v" with
       [ Some f -> Srcfile.print conf base f
@@ -504,16 +490,16 @@ value family_m conf base =
   | Some "LEX" -> Srcfile.print_lexicon conf base
   | Some "MISC_NOTES" -> Notes.print_misc_notes conf base
   | Some "MISC_NOTES_SEARCH" -> Notes.print_misc_notes_search conf base
-<<<<<<< HEAD
-  | Some "MOD_DATA" when conf.wizard -> UpdateData.print_mod conf base
+  | Some "MOD_DATA" when conf.wizard && conf.modify_dict -> 
+      UpdateData.print_mod conf base
   | Some "MOD_DATA_OK" when conf.wizard && conf.modify_dict ->
       UpdateData.print_mod_ok conf base
-  | Some "MOD_FAM" when conf.wizard -> UpdateFam.print_mod conf base
-  | Some "MOD_FAM_OK" when conf.wizard -> UpdateFamOk.print_mod conf base
-  | Some "MOD_IND" when conf.wizard -> UpdateInd.print_mod conf base
-  | Some "MOD_IND_OK" when conf.wizard -> UpdateIndOk.print_mod conf base
-  | Some "MOD_NOTES" when conf.wizard -> Notes.print_mod conf base
-  | Some "MOD_NOTES_OK" when conf.wizard -> Notes.print_mod_ok conf base
+  | Some "MOD_FAM" when (conf.wizard && not conf.not_wizard) -> UpdateFam.print_mod conf base
+  | Some "MOD_FAM_OK" when (conf.wizard && not conf.not_wizard) -> UpdateFamOk.print_mod conf base
+  | Some "MOD_IND" when (conf.wizard && not conf.not_wizard) -> UpdateInd.print_mod conf base
+  | Some "MOD_IND_OK" when (conf.wizard && not conf.not_wizard) -> UpdateIndOk.print_mod conf base
+  | Some "MOD_NOTES" when (conf.wizard && not conf.not_wizard) -> Notes.print_mod conf base
+  | Some "MOD_NOTES_OK" when (conf.wizard && not conf.not_wizard) -> Notes.print_mod_ok conf base
   (* Fonction obsolète, la documentation n'étant plus à jour *)
   (* | Some "MOD_WDOC" when conf.wizard -> Doc.print_mod_wdoc conf *)
   (* | Some "MOD_WDOC_OK" when conf.wizard -> Doc.print_mod_wdoc_ok conf base *)
@@ -521,20 +507,7 @@ value family_m conf base =
       Wiznotes.print_mod conf base
   | Some "MOD_WIZNOTES_OK" when conf.authorized_wizards_notes ->
       Wiznotes.print_mod_ok conf base
-  | Some "MRG" when conf.wizard ->
-=======
-  | Some "MOD_FAM" when (conf.wizard && not conf.not_wizard) -> UpdateFam.print_mod conf base
-  | Some "MOD_FAM_OK" when (conf.wizard && not conf.not_wizard) -> UpdateFamOk.print_mod conf base
-  | Some "MOD_IND" when (conf.wizard && not conf.not_wizard) -> UpdateInd.print_mod conf base
-  | Some "MOD_IND_OK" when (conf.wizard && not conf.not_wizard) -> UpdateIndOk.print_mod conf base
-  | Some "MOD_NOTES" when (conf.wizard && not conf.not_wizard) -> Notes.print_mod conf base
-  | Some "MOD_NOTES_OK" when (conf.wizard && not conf.not_wizard) -> Notes.print_mod_ok conf base
-  | Some "MOD_WDOC" when conf.wizard -> Doc.print_mod_wdoc conf
-  | Some "MOD_WDOC_OK" when conf.wizard -> Doc.print_mod_wdoc_ok conf base
-  | Some "MOD_WIZNOTES" -> Wiznotes.print_mod conf base
-  | Some "MOD_WIZNOTES_OK" -> Wiznotes.print_mod_ok conf base
   | Some "MRG" when (conf.wizard && not conf.not_wizard) ->
->>>>>>> 561954b... wizard_not_wizard option
       match find_person_in_env conf base "" with
       [ Some p -> Merge.print conf base p
       | _ -> very_unknown conf ]
