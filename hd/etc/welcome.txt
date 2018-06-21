@@ -291,10 +291,6 @@ zh: 访问次数
                   [marriage/marriages]0
                   </label>
                   <input type="submit" value="Ok"%/>
-<<<<<<< HEAD
-          </div>
-        </form>
-=======
                 </div>
               </form>
             </dd>
@@ -498,7 +494,6 @@ zh: 增加家庭记录
             </li>
           </ul>
         </td>
->>>>>>> 561954b... wizard_not_wizard option
       %end;
       %if;(bvar.hide_advanced_request = "no")
         %apply;interp([
