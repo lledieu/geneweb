@@ -627,7 +627,7 @@ value family_m conf base =
   | Some "CHANGE_WIZ_VIS" when conf.wizard ->
       Wiznotes.change_wizard_visibility conf base
   | Some "TT" -> Title.print conf base
-  | Some "U" when conf.wizard ->
+  | Some "U" when (conf.wizard && not conf.not_wizard) ->
       match find_person_in_env conf base "" with
       [ Some p -> updmenu_print conf base p
       | _ -> very_unknown conf ]
