@@ -233,7 +233,7 @@ value print_infos oc base is_child csrc cbp p =
     | Public -> fprintf oc " #apubl"
     | Private -> fprintf oc " #apriv"
     | Friend -> fprintf oc " #afriend"
-    | Friend_m -> fprintf oc " #afriend_m" ];
+    | Friend_m -> fprintf oc " #afriendm" ];
     print_if_no_empty oc base "#occu" (get_occupation p);
     print_if_not_equal_to csrc oc base "#src" (get_psources p);
     match Adef.od_of_codate (get_birth p) with
