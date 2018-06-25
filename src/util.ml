@@ -36,10 +36,10 @@ value is_hide_names_full conf base p =
 ;
 
 value is_hide_names conf p =
-  if conf.hide_names || get_access p = Private ||
-    (conf.friend && get_access p <> Friend) ||
-    (conf.friend && get_access p <> Friend_m) then True
-  else False
+  if conf.wizard || get_access p = Public ||
+    conf.friend && get_access p = Friend ||
+    conf.friend && get_access p = Friend_m then False
+  else True
 ;
 
 value sharelib =
