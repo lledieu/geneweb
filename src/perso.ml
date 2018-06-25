@@ -1702,9 +1702,11 @@ and eval_simple_str_var conf base env (p, p_auth) =
             let s = string_with_macros conf [] s in
             let lines = Wiki.html_of_tlsw conf s in
             let lines =
-              match lines with
-              [ [l1 :: [body :: l2]] -> [body]
-              | _ -> lines ]
+              if List.length lines > 2 then 
+                match lines with
+                [ ["<p>" :: remain] -> List.rev (List.tl (List.rev remain))
+                | _ -> lines ]
+              else lines
             in
             let wi =
               {Wiki.wi_mode = "NOTES";
