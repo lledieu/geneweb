@@ -685,7 +685,7 @@
 %end;
 <div class="col1">
 %( <!-- Begin display image, person --> %)
-  <div class="person">
+  <div class="person"><br>
     <h1 class="background_sex_%sex;%if;(has_sosa) h1_border_sosa%end;">
       %if;(has_public_name or has_qualifiers)
         %apply;link_ng("PN",self)
@@ -1099,6 +1099,7 @@
           %end;
         </span>
       </span>
+      <br>
       %if;(wizard or friend)
         <input type=text size=48 value="*%[%[%first_name_key_val;/%surname_key_val;/%occ;/%first_name; %surname;%]%]">
       %end;
