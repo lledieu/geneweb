@@ -1101,7 +1101,7 @@
       </span>
       <br>
       %if;(wizard or friend)
-        <input type=text size=48 value="*%[%[%first_name_key_val;/%surname_key_val;/%occ;/%first_name; %surname;%]%]">
+        <span style="background-color:ivory" >&nbsp;%[%[%first_name_key_val;/%surname_key_val;/%occ;/%first_name; %surname;%]%]</span>
       %end;
     </div>
   %end;
