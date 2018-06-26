@@ -36,6 +36,9 @@
   %if;(bvar.show_invisible = "on" and wizard and is_invisible) (x)%end;
   </div>
 %end;
+%if;(wizard or friend)
+  <input type=text size=48 value="*%[%[%first_name_key_val;/%surname_key_val;/%occ;/%first_name; %surname;%]%]">
+%end;
 
 %if;not cancel_links;
   <table style="float:%right;"><tr><td>

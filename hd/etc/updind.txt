@@ -1,7 +1,7 @@
 %doctype;
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-  <!-- $Id: updind.txt,v 5.14 2008-01-08 11:58:46 ddr Exp $ -->
+  <!-- $Id: updind.txt,v 5.14 2008-01-08 11:58:00 ddr Exp $ -->
   <!-- Copyright (c) 1998-2007 INRIA -->
   <meta name="robots" content="none"%/>
   <meta http-equiv="Content-Type" content="text/html; charset=%charset;"%/>
@@ -266,6 +266,14 @@ function changeCalendar(e,v,m,c) {
 <p>
   <b>[*other action] : </b>
   <a href="%prefix;m=MRG;i=%index;">[*merge::]</a> | <a href="%prefix;m=DEL_IND;i=%index;">[*delete::]</a>
+%(  |
+  <a href="%prefix;digest=%digest;&i=%index;&m=MOD_IND_OK&first_name=Anon&occ=&surname=Nn&sex=&
+    public_name=&image=&qualifier0=&alias0=&first_name_alias0=&surname_alias0=&
+    birth_place=&birth_dd=&birth_mm=&birth_yyyy=&birth_text=&birth_cal=&birth_prec=&birth_oryear=&birth_src=&
+    bapt_place=&bapt_dd=&bapt_mm=&bapt_yyyy=&bapt_text=&bapt_cal=&bapt_prec=&bapt_oryear=&bapt_src=&
+    death=DontKnowIfDead&death_place=&death_dd=&death_mm=&death_yyyy=&death_text=&death_cal=&death_prec=&death_oryear=&death_src=&
+    burial=UnknownBurial&burial_place=&burial_dd=&burial_mm=&burial_yyyy=&burial_text=&burial_cal=&burial_prec=&burial_oryear=&burial_src=&
+    occu=&notes=&src=&">[*anonymise]</a>%)
 </p>
 
 <form method="post" action="%action;">

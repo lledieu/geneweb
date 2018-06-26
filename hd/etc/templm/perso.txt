@@ -672,6 +672,7 @@
     </div>
   %end;
 %( <!-- End display menu2 --> %)
+
 %if;(evar.del = "on")<h1 class="del">[*delete]… [person/persons]1… [family/families]1…</h1>
 %if;(wizard and bvar.can_kill_ancestors="yes")
   <p><strong>/!\ can_kill_ancestors=yes   </strong>
@@ -1098,6 +1099,9 @@
           %end;
         </span>
       </span>
+      %if;(wizard or friend)
+        <input type=text size=48 value="*%[%[%first_name_key_val;/%surname_key_val;/%occ;/%first_name; %surname;%]%]">
+      %end;
     </div>
   %end;
 %( <!-- End display menu --> %)

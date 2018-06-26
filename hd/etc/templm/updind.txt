@@ -408,13 +408,19 @@
       [*access]0 :
       <label><input id="access_1" type="radio" name="access" value="Public"%if;acc_public; checked="checked"%end;%sp;
         onkeydown="if (event.keyCode == 13) javascript:document.upd.submit();
-                   if (event.keyCode == 32) javascript:valid('access_2');" %l_on1;%/>[public]0</label>
+                   if (event.keyCode == 32) javascript:valid('access_2');" %l_on1;%/>[*public]0</label>
       <label><input id="access_2" type="radio" name="access" value="IfTitles"%if;acc_if_titles; checked="checked"%end;%sp;
         onkeydown="if (event.keyCode == 13) javascript:document.upd.submit();
-                   if (event.keyCode == 32) javascript:valid('access_3');" %l_on1;%/>[if titles]0</label>
+                   if (event.keyCode == 32) javascript:valid('access_3');" %l_on1;%/>[*if titles]0</label>
+      <label><input id="access_4" type="radio" name="access" value="Friend"%if;acc_friend; checked="checked"%end;%sp;
+        onkeydown="if (event.keyCode == 13) javascript:document.upd.submit();
+                   if (event.keyCode == 32) javascript:valid('access_4');" %l_on1;%/>[*friend]0</label>
+      <label><input id="access_5" type="radio" name="access" value="Friend_m"%if;acc_friend_m; checked="checked"%end;%sp;
+        onkeydown="if (event.keyCode == 13) javascript:document.upd.submit();
+                   if (event.keyCode == 32) javascript:valid('access_5');" %l_on1;%/>[*friend and minors]0</label>
       <label><input id="access_3" type="radio" name="access" value="Private"%if;acc_private; checked="checked"%end;%sp;
         onkeydown="if (event.keyCode == 13) javascript:document.upd.submit();
-                   if (event.keyCode == 32) javascript:valid('access_1');" %l_on1;%/>[private]0</label>
+                   if (event.keyCode == 32) javascript:valid('access_1');" %l_on1;%/>[*private]0</label>
     <br%/><br%/>
     %if;has_qualifiers;
       %foreach;qualifier;

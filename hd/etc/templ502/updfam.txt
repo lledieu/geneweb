@@ -5,6 +5,8 @@
   <!-- Copyright (c) 1998-2007 INRIA -->
   <meta name="robots" content="none"%/>
   <meta http-equiv="Content-Type" content="text/html; charset=%charset;"%/>
+  <meta http-equiv="Content-Style-Type" content="text/css"%/>
+  <link rel="shortcut icon" href="%image_prefix;/favicon_gwd.png"%/>
   <title>%nn;
     %if;(evar_m = "ADD_FAM" or evar_m = "ADD_FAM_OK")
       [*add::family/families]0%nn;
@@ -16,11 +18,9 @@
       [*merge::family/families]1 # %evar_i;
     %end;
   </title>
-  <style type="text/css">
-    html { background:url('%image_prefix;/gwback.jpg') }
-    .highlight { color: %highlight;; font-weight: bold }
-  </style>
-%base_header;
+  %include.js;
+  %include.css;
+  %base_header;
 </head>
 <body%body_prop;>
 %message_to_wizard;
@@ -151,8 +151,10 @@ function changeCalendar(e,v,m,c) {
 -->
 </script>
 
+%include_perso_header;
+
 %define;date(xlab,xvar,xdate)
-  <table border="1">
+  <table border="1" width=700px>
     <tr>
       <td>xlab</td>
       <td>
@@ -202,7 +204,7 @@ function changeCalendar(e,v,m,c) {
       </td>
     </tr>
   </table>
-  <table border="1">
+  <table border="1" width=700px>
     <tr>
       <td>[*calendar/calendars]0
         <select name="xvar_cal" onchange=%nn;
@@ -244,7 +246,7 @@ function changeCalendar(e,v,m,c) {
 %end;
 
 %define;source(xvar,xx)
-  <table border="1">
+  <table border="1" width=700px>
     <tr>
       <td><label for="xvar_src">[*source/sources]0</label></td>
       <td><input name="xvar_src" size="40" maxlength="200"%sp;
@@ -256,26 +258,53 @@ function changeCalendar(e,v,m,c) {
 %define;small_date(kind,xvar,xx,verbose)
   <td>
     %if;([ !dates order]0 = "ddmmyy" or [ !dates order]0 = "ddmmyyyy" or [ !dates order]0 = "dmyyyy")
-      <input name="xvar_dd" size="2" maxlength="2"%sp;
-       value="%xx.create.kind_day;"%/>/
-      <input name="xvar_mm" size="2" maxlength="2"%sp;
-       value="%xx.create.kind_month;"%/>/
-      <input name="xvar_yyyy" size="6" maxlength="6"%sp;
-       value="%xx.create.kind_year;"%/>
-    %elseif;([ !dates order]0 = "mmddyyyy")
-      <input name="xvar_mm" size="2" maxlength="2"%sp;
-       value="%xx.create.kind_month;"%/>/
-      <input name="xvar_dd" size="2" maxlength="2"%sp;
-       value="%xx.create.kind_day;"%/>/
-      <input name="xvar_yyyy" size="6" maxlength="6"%sp;
-       value="%xx.create.kind_year;"%/>
-    %else;
-      <input name="xvar_yyyy" size="6" maxlength="6"%sp;
-       value="%xx.create.kind_year;"%/>-
-      <input name="xvar_mm" size="2" maxlength="2"%sp;
-       value="%xx.create.kind_month;"%/>-
+      <label>
+      [year/month/day]2
       <input name="xvar_dd" size="2" maxlength="2"%sp;
        value="%xx.create.kind_day;"%/>
+      </label>
+      <label>
+      [year/month/day]1
+      <input name="xvar_mm" size="2" maxlength="2"%sp;
+       value="%xx.create.kind_month;"%/>
+      </label>
+      <label>
+      [year/month/day]0
+      <input name="xvar_yyyy" size="6" maxlength="6"%sp;
+       value="%xx.create.kind_year;"%/>
+      </label>
+    %elseif;([ !dates order]0 = "mmddyyyy")
+      <label>
+      [year/month/day]1
+      <input name="xvar_mm" size="2" maxlength="2"%sp;
+       value="%xx.create.kind_month;"%/>
+      </label>
+      <label>
+      [year/month/day]2
+      <input name="xvar_dd" size="2" maxlength="2"%sp;
+       value="%xx.create.kind_day;"%/>
+      </label>
+      <label>
+      [year/month/day]0
+      <input name="xvar_yyyy" size="6" maxlength="6"%sp;
+       value="%xx.create.kind_year;"%/>
+      </label>
+    %else;
+      <label>
+      [year/month/day]0
+      <input name="xvar_yyyy" size="6" maxlength="6"%sp;
+       value="%xx.create.kind_year;"%/>
+      </label>
+      <label>
+      [year/month/day]1
+      <input name="xvar_mm" size="2" maxlength="2"%sp;
+       value="%xx.create.kind_month;"%/>
+      </label>
+      <label>
+      [year/month/day]2
+      <input name="xvar_dd" size="2" maxlength="2"%sp;
+       value="%xx.create.kind_day;"%/>
+      </label>
     %end;
   </td>
   %if;("verbose" = "true")<td><label for="xvar_pl">[*place]</label>%nn;
@@ -297,14 +326,14 @@ function changeCalendar(e,v,m,c) {
 %end;
 
 %define;parent(xcnt,xx)
-  <table border="1">
+  <table border="1" width=700px>
     <tr>
       <td><label for="paxcnt_fn">[*first name/first names]0</label></td>
       <td>
-        <input name="paxcnt_fn" size="23" maxlength="200"%sp;
+        <input name="paxcnt_fn" size="40" maxlength="200"%sp;
          value="%xx.first_name;" id="paxcnt_fn"%/>
       </td>
-      <td align="%right;"><label for="paxcnt_occ">[*number]</label></td>
+      <td><label for="paxcnt_occ">[*number]</label></td>
       <td>
         <input name="paxcnt_occ" size="5" maxlength="8" value="%xx.occ;"%sp;
          id="paxcnt_occ"%/>
@@ -325,13 +354,17 @@ function changeCalendar(e,v,m,c) {
          value="%xx.surname" id="paxcnt_sn"%/>
       </td>
     </tr>
-  </table>
-  <table border="1">
     <tr>
       %apply;birth("paxcnt","xx","true")
     </tr>
     <tr>
       %apply;death("paxcnt","xx","true")
+    </tr>
+    <tr>
+      <td><label for="paxcnt_occupation">[*occupation/occupations]0</label></td>
+      <td colspan="4">
+        <input name="paxcnt_occupation" size="40" maxlength="200" value="%xx.create.occupation" id="paxcnt_occupation"%/>
+      </td>
     </tr>
   </table>
 %end;
@@ -348,7 +381,7 @@ function changeCalendar(e,v,m,c) {
   </table>
 %end;
 
-<h1 style="text-align:center" class="highlight">%nn;
+<h1>%nn;
 %if;(evar_m = "ADD_FAM" or evar_m = "ADD_FAM_OK")
   [*add::family/families]0
 %elseif;(evar_m = "ADD_PAR")
@@ -396,7 +429,7 @@ function changeCalendar(e,v,m,c) {
 %if;(bvar.multi_parents = "yes")%apply;insert_parent(cnt)%end;
 %end;
 
-<h4>[*marriage/marriages]0</h4>
+<h4><a name="marr">[*marriage/marriages]0</a></h4>
 <p>
 <label>
 <input type="radio" name="mrel" value="marr"%nn;
@@ -418,7 +451,7 @@ function changeCalendar(e,v,m,c) {
  checked="checked"%end;%/>[*no mention]
 </label>
 </p>
-<table border="1">
+<table border="1" width=700px>
   <tr>
     <td><label for="marr_place">[*place]</label></td>
     <td>
@@ -441,11 +474,11 @@ function changeCalendar(e,v,m,c) {
 </table>
 
 %foreach;witness;
-  <table border="1">
+  <table border="1" width=700px>
     <tr>
       <td><label for="witn%cnt;_fn">[*first name/first names]0</label></td>
       <td>
-        <input name="witn%cnt;_fn" size="23" maxlength="200"%sp;
+        <input name="witn%cnt;_fn" size="40" maxlength="200"%sp;
          value="%witness.first_name;" id="witn%cnt;_fn"%/>
       </td>
       <td align="%right;"><label for="witn%cnt;_occ">[*number]</label></td>
@@ -507,7 +540,7 @@ function changeCalendar(e,v,m,c) {
 
 <h4><label for="comment">[*comment]</label></h4>
 
-<table border="1">
+<table border="1" width=700px>
   <tr>
     <td><input name="comment" size="50" maxlength="200"%sp;
      value="%comment;" id="comment"%/></td>
@@ -532,14 +565,14 @@ function changeCalendar(e,v,m,c) {
 %end;
 
 %define;child(xcnt)
-  <table border="1">
+  <table border="1" width=660px>
     <tr>
       <td><label for="chxcnt_fn">[*first name/first names]0</label></td>
       <td colspan="2">
-        <input name="chxcnt_fn" size="23" maxlength="200"%sp;
+        <input name="chxcnt_fn" size="40" maxlength="200"%sp;
          value="%child.first_name;" id="chxcnt_fn"%/>
       </td>
-      <td align="%right;"><label for="chxcnt_occ">[*number]</label></td>
+      <td><label for="chxcnt_occ">[*number]</label></td>
       <td>
         <input name="chxcnt_occ" size="5" maxlength="8" value="%child.occ;"%sp;
          id="chxcnt_occ"%/>
@@ -561,7 +594,7 @@ function changeCalendar(e,v,m,c) {
     <tr>
       <td>
         <select name="chxcnt_p">
-          <option value="link"%if;(child.create = "link")
+          <option value="link"%if;(child.create = "link")%sp;
            selected="selected"%end;>[*link]0</option>
           <option value="create"%if;(child.create = "create")%sp;
            selected="selected"%end;>[*create]0</option>
@@ -584,6 +617,12 @@ function changeCalendar(e,v,m,c) {
       </td>
       %apply;death("chxcnt", "child", "false")
     </tr>
+    <tr>
+      <td><label for="chxcnt_occupation">[*occupation/occupations]0</label></td>
+      <td colspan="4">
+        <input name="chxcnt_occupation" size="40" maxlength="200" value="%child.create.occupation;" id="chxcnt_occupation"%/>
+      </td>
+    </tr>
   </table>
 %end;
 
@@ -592,7 +631,7 @@ function changeCalendar(e,v,m,c) {
 %apply;insert_child("0")
 %foreach;child;
   %if;(cnt != 1)
-    </td><td>&nbsp;</td><td>
+    <td>&nbsp;</td>
     %apply;invert_children(cnt)
   %end;
   </tr></table>
@@ -633,10 +672,7 @@ function changeCalendar(e,v,m,c) {
 </p>
 </form>
 
-<div><a href="%prefix;"><img src="%image_prefix;/gwlogo.png"
- alt="..." width="64" height="72" style="border:0;float:%right;"%/></a><br%/>
-</div>
-%copyright;
 %base_trailer;
+%copyright;
 </body>
 </html>

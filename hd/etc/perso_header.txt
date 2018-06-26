@@ -43,6 +43,9 @@
       <img class="modify_family" src="%image_prefix;/picto_molette.png" width="13" height="13" title="[modify::person/persons]0"%/>
     </a>
   %end;
+  %if;(wizard or friend)
+    <input type=text size=48 value="*%[%[%first_name_key_val;/%surname_key_val;/%occ;/%first_name; %surname;%]%]">
+  %end;
 </h1>
 
 %if;(has_sosa or has_qualifiers or has_aliases or has_nobility_titles or
