@@ -21,6 +21,7 @@ src/gwlib.ml
 
 distribution
 
+tools/Makefile.inc
 tools/Makefile.config
 tools/transitive_depend
 tools/transitive_depend.sh
