@@ -122,6 +122,8 @@ value speclist =
      <str> Set the source field for persons and families without source data");
    ("-part", Arg.String (fun s -> Db2link.particules_file.val := s), "\
      <file> Particles file (default = predefined particles)");
+   ("-rgpd", Arg.String (fun s -> Gwcomp.rgpd_files.val := s), "\
+     <file> Rgpd files (default = ./basename.gwb/RGPD)");
    ("-mem", Arg.Unit (fun () -> ()), " (obsolete option)");
    ("-nolock", Arg.Set Lock.no_lock_flag, " do not lock database.");
    ("-nofail", Arg.Set Gwcomp.no_fail, " no failure in case of error.");

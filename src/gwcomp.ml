@@ -6,6 +6,7 @@ open Def;
 value magic_gwo = "GnWo000o";
 
 value base_name = ref "";
+value rgpd_files = ref "";
 
 type key = { pk_first_name : string; pk_surname : string; pk_occ : int };
 
@@ -632,13 +633,13 @@ value rgpd_access fn sn occ str l =
   let ocs = string_of_int occ in
   let (access, l) =
     let d_sep = Filename.dir_sep in
-    let rgpd_file =
-        (* test for relative vs absolute path *)
-      (if (Filename.basename base_name.val) = base_name.val then 
-        "." ^ d_sep 
-      else "") ^ base_name.val ^
-        ".gwb" ^ d_sep ^ "RGPD" ^ d_sep ^ fns ^ "." ^ ocs ^ "." ^ sns
+    let rgpd_file = 
+      (if rgpd_files.val = "" then 
+        ("." ^ d_sep ^ base_name.val ^ ".gwb" ^ d_sep ^ "RGPD")
+        else rgpd_files.val)
+       ^ d_sep ^ fns ^ "." ^ ocs ^ "." ^ sns
     in
+    let _ = Printf.printf "RGPD files: %s\n" (rgpd_file ^ ".pdf") in
       (* if one of the files exist, set the Friend or Friend_m value *)
     if Sys.file_exists (rgpd_file ^ "-et-mineurs.pdf") then (Friend_m, l)
     else if Sys.file_exists (rgpd_file ^ ".pdf") then (Friend, l)

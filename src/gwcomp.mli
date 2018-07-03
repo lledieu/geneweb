@@ -20,7 +20,7 @@ type gw_syntax =
   | Bnotes of string and string
   | Wnotes of string and string ]
 ;
-
+value rgpd_files : ref string;
 value magic_gwo : string;
 value line_cnt : ref int;
 value no_fail : ref bool;
