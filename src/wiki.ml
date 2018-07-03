@@ -369,7 +369,7 @@ value summary_of_tlsw_lines conf short lines =
 value string_of_modify_link conf cnt empty =
   fun
   [ Some (can_edit, mode, sfn) ->
-      if conf.wizard then
+      if (conf.wizard && not conf.not_wizard) then
         let mode_pref = if can_edit then "MOD" else "VIEW" in
         sprintf "%s(<a href=\"%sm=%s_%s;v=%d%s\">%s</a>)%s\n"
           (if empty then "<p>"
