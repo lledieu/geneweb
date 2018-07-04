@@ -639,7 +639,6 @@ value rgpd_access fn sn occ str l =
         else rgpd_files.val)
        ^ d_sep ^ fns ^ "." ^ ocs ^ "." ^ sns
     in
-    let _ = Printf.printf "RGPD files: %s\n" (rgpd_file ^ ".pdf") in
       (* if one of the files exist, set the Friend or Friend_m value *)
     if Sys.file_exists (rgpd_file ^ "-et-mineurs.pdf") then (Friend_m, l)
     else if Sys.file_exists (rgpd_file ^ ".pdf") then (Friend, l)
