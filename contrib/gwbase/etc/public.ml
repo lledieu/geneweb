@@ -77,8 +77,8 @@ value get_b_dates base p =
       get_death p, CheckItem.date_of_death (get_death p))
     with
     [ (_, _, NotDead, _) -> ("not dead", 0, 0)
-    | (_, Some (Dgreg d _), _, _) -> ("baptized on", d.year, d.year+lim_b.val)
-    | (Some (Dgreg d _), _, _, _) -> ("born on", d.year, d.year+lim_b.val)
+    | (_, Some (Dgreg d _), _, _) -> ("baptized in", d.year, d.year+lim_b.val)
+    | (Some (Dgreg d _), _, _, _) -> ("born in", d.year, d.year+lim_b.val)
     | (_, _, _, _) -> ("unknown", 0, 0) ]
   in
   (reason, d, d2)
@@ -91,7 +91,7 @@ value get_d_dates base p =
       get_death p, CheckItem.date_of_death (get_death p))
     with
     [ (_, _, NotDead, _) -> ("not dead", 0, 0)
-    | (_, _, (Death reasn d1), Some (Dgreg d _)) -> ("dead on", d.year, (d.year+lim_d.val))
+    | (_, _, (Death reasn d1), Some (Dgreg d _)) -> ("dead in", d.year, (d.year+lim_d.val))
     | (_, _, DeadYoung, _) -> ("dead young", 0, -1)
     | (_, _, OfCourseDead, _) -> ("of course dead", 0, -2)
     | (_, _, DeadDontKnowWhen, _) -> ("dead, but dont know when", 0, -3)
@@ -112,7 +112,7 @@ value mark_old base scanned old p =
     else do {
       (* birth date + lim_b > today *)
       old.(Adef.int_of_iper (get_key_index p)) := y;
-      printf "Old (birth): %s, %s %d %d\n" (Gutil.designation base p) reason y old_p;
+      printf "Old (birth): %s, %s %d\n" (Gutil.designation base p) reason y;
       flush stdout
       };
     let (reason, y, old_p) = get_d_dates base p in
@@ -121,7 +121,7 @@ value mark_old base scanned old p =
     else do {
       (* death date + lim_d > today *)
       old.(Adef.int_of_iper (get_key_index p)) := y;
-      printf "Old (death): %s, %s %d %d\n" (Gutil.designation base p) reason y old_p;
+      printf "Old (death): %s, %s %d\n" (Gutil.designation base p) reason y;
       flush stdout
       };
       
@@ -139,8 +139,8 @@ value mark_old base scanned old p =
         [ Some d -> 
             if d < today.val then do {
               (* marriage date + lim_m < today *)
-              printf "Old (marriage): %s, marriage %d\n" (Gutil.designation base p) (d-lim_m.val);
-              printf "Old (marriage): %s, marriage %d\n" (Gutil.designation base sp) (d-lim_m.val);
+              printf "Old (marriage): %s, in %d\n" (Gutil.designation base p) (d-lim_m.val);
+              printf "Old (marriage): %s, in %d\n" (Gutil.designation base sp) (d-lim_m.val);
               flush stdout;
               old.(Adef.int_of_iper (get_key_index p)) := d-lim_m.val;
               old.(Adef.int_of_iper (get_key_index sp)) := d-lim_m.val;
@@ -309,6 +309,8 @@ value main () =
   do {
     Arg.parse speclist anonfun usage;
     if bname.val = "" then do { Arg.usage speclist usage; exit 2; } else ();
+    printf "Executing public on %s with -lb %d -ld %d -lm %d\n\n" 
+      bname.val lim_b.val lim_d.val lim_m.val;
     let gcc = Gc.get () in
     gcc.Gc.max_overhead := 100;
     Gc.set gcc;
