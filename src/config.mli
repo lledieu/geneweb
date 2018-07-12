@@ -26,6 +26,7 @@ type config =
     supervisor : bool;
     wizard : bool;
     not_wizard : bool;
+    half_rgpd : bool;
     friend : bool;
     just_friend_wizard : bool;
     user : string;

@@ -30,6 +30,7 @@ value is_hide_names_full conf base p =
           else False
       | _ -> False ] ]
   in
+  let is_access_friend = if conf.friend && conf.half_rgpd then True else is_access_friend in
   if conf.hide_names || get_access p = Private ||
     (conf.friend && not is_access_friend) then True
   else False
@@ -38,7 +39,8 @@ value is_hide_names_full conf base p =
 value is_hide_names conf p =
   if conf.wizard || get_access p = Public ||
     conf.friend && get_access p = Friend ||
-    conf.friend && get_access p = Friend_m then False
+    conf.friend && get_access p = Friend_m ||
+    conf.half_rgpd && conf.friend then False
   else True
 ;
 

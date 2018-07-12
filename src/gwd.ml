@@ -1229,6 +1229,10 @@ value make_conf cgi from_addr (addr, request) script_name contents env = do {
       try List.assoc "wizard_not_wizard" base_env = "yes" with
       [ Not_found -> False ]
   in
+  let half_rgpd =
+    try List.assoc "half_rgpd" base_env = "yes" with
+    [ Not_found -> False ]
+  in
   let is_rtl =
     try Hashtbl.find lexicon " !dir" = "rtl" with [ Not_found -> False ]
   in
@@ -1254,6 +1258,7 @@ value make_conf cgi from_addr (addr, request) script_name contents env = do {
      supervisor = supervisor;
      wizard = ar.ar_wizard && not wizard_just_friend;
      not_wizard = ar.ar_wizard && wizard_not_wizard;
+     half_rgpd = half_rgpd;
      friend = ar.ar_friend || wizard_just_friend && ar.ar_wizard;
      just_friend_wizard = ar.ar_wizard && wizard_just_friend;
      user = ar.ar_user; username = ar.ar_name;
