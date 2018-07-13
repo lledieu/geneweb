@@ -183,21 +183,22 @@ use of database forum by ill-intentioned people to communicate)...
           in
           loop quot_lev pos j (Buff.mstore len t)
       | NotesLinks.WLperson j (fn, sn, oc) name _ ->
-          let name = if wi.wi_person_exists (fn, sn, oc) then name else "x x" in
+          let name = if wi.wi_person_exists (fn, sn, oc) ||
+            conf.friend && conf.half_rgpd then name else "x x" in
           let t =
+            let color = if conf.friend && conf.half_rgpd then "" else " style=\"color:red\"" in
             if wi.wi_cancel_links || name = "x x" then name
             else if wi.wi_person_exists (fn, sn, oc) then
               sprintf "<a id=\"p_%d\" href=\"%sp=%s;n=%s%s\">%s</a>"
                 pos (commd conf) (code_varenv fn) (code_varenv sn)
                 (if oc = 0 then "" else ";oc=" ^ string_of_int oc) name
             else if wi.wi_always_show_link then
-              let s = " style=\"color:red\"" in
               sprintf "<a id=\"p_%d\" href=\"%sp=%s;n=%s%s\"%s>%s</a>"
                 pos (commd conf) (code_varenv fn) (code_varenv sn)
-                (if oc = 0 then "" else ";oc=" ^ string_of_int oc) s name
+                (if oc = 0 then "" else ";oc=" ^ string_of_int oc) color name
             else
-              sprintf "<a href=\"%s\" style=\"color:red\">%s</a>" (commd conf)
-                (if conf.hide_names then "x x" else name)
+              sprintf "<a href=\"%s\" %s>%s</a>" (commd conf)
+                color (if conf.hide_names then "x x" else name)
           in
           loop quot_lev (pos + 1) j (Buff.mstore len t)
       | NotesLinks.WLwizard j wiz name ->
