@@ -607,6 +607,7 @@ value fast_auth_age conf p =
   if (conf.friend && get_access p = Friend) ||
     (conf.friend && get_access p = Friend_m) ||
     conf.wizard || get_access p = Public then True
+  else if get_access p = Private then False
   else if
     conf.public_if_titles && get_access p = IfTitles && get_titles p <> []
   then
@@ -697,7 +698,8 @@ value authorized_age conf base p =
           else False
       | _ -> False ] ]
   in
-  if conf.wizard || (conf.friend && is_access_friend) || get_access p = Public then True
+  if not conf.wizard && (get_access p = Private) then False
+  else if conf.wizard || (conf.friend && is_access_friend) || get_access p = Public then True
   else if
     conf.public_if_titles && get_access p = IfTitles &&
     (nobtit conf base p <> [] || parent_has_title conf base p) then

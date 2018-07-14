@@ -175,7 +175,8 @@ value rec mark_ancestors base scanned old p =
     if not (is_quest_string (get_first_name p)) &&
        not (is_quest_string (get_surname p))
     then 
-      if ((get_access p) <> Public) then do {
+      (* dont change access if Private *)
+      if ((get_access p) <> Public && (get_access p) <> Private) then do {
         if trace.val  then do {
           let (reason, d, date) = get_b_dates base p in
           printf "Anc: %s, %s %d\n" (Gutil.designation base p) reason d;
