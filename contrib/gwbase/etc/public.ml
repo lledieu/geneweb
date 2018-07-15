@@ -268,7 +268,10 @@ value test_dead_child old bname =
             if dd2 > today.val && f_not_old then do {
               incr cnt;
               printf "Father of: %s, %s: %d; born: %d, dead: %d\n" (Gutil.designation base p)
-                pdreason dd fbd fdd
+                pdreason dd fbd fdd;
+              let gp = {(gen_person_of_person fa) with access = IfTitles} in
+              if execute.val then patch_person base gp.key_index gp else ();
+              incr changes;
             }
             else ();
             let mo = poi base (get_mother cpl) in
@@ -278,7 +281,10 @@ value test_dead_child old bname =
             if dd2 > today.val && m_not_old then do {
               incr cnt;
               printf "Mother of: %s, %s: %d; born: %d, dead: %d\n" (Gutil.designation base p)
-                pdreason dd mbd mdd
+                pdreason dd mbd mdd;
+              let gp = {(gen_person_of_person mo) with access = IfTitles} in
+              if execute.val then patch_person base gp.key_index gp else ();
+              incr changes;
             }
             else ();
           }
