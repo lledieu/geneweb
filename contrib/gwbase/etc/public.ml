@@ -255,7 +255,7 @@ value test_dead_child old bname =
     for i = 0 to nb_of_persons base - 1 do {
       let p = poi base (Adef.iper_of_int i) in
       let (pdreason, dd, dd2) = get_d_dates base p in
-      (* dd <> 0 -> dead *)
+      (* dd2 <> 0 -> dead *)
       match get_parents p with
       [ Some ifam ->
           let cpl = foi base ifam in
@@ -264,7 +264,7 @@ value test_dead_child old bname =
             let (fbreason, fbd, fbd2) = get_b_dates base fa in
             let (fdreason, fdd, fdd2) = get_d_dates base fa in
             let f_not_old = not (fbd2 < today.val || (fdd2 <> 0 && fdd2 < today.val) ) in
-            if dd <> 0 && f_not_old && (get_access fa = Public) then do {
+            if dd2 <> 0 && f_not_old && (get_access fa = Public) then do {
               incr cnt;
               printf "Father of: %s, %s: %d; born: %d, dead: %d\n" (Gutil.designation base p)
                 pdreason dd fbd fdd;
@@ -278,7 +278,7 @@ value test_dead_child old bname =
             let (mdreason, mdd, mdd2) = get_d_dates base mo in
             let mdd2 = if mdd2 = 0 then today.val+1 else mdd2 in
             let m_not_old = not (mbd2 < today.val || mdd2 < today.val ) in
-            if dd <> 0 && m_not_old && (get_access mo = Public) then do {
+            if dd2 <> 0 && m_not_old && (get_access mo = Public) then do {
               incr cnt;
               printf "Mother of: %s, %s: %d; born: %d, dead: %d\n" (Gutil.designation base p)
                 pdreason dd mbd mdd;
