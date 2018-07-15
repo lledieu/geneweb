@@ -79,8 +79,7 @@ value get_b_dates base p =
       (Adef.od_of_codate (get_birth p), Adef.od_of_codate (get_baptism p),
       get_death p, CheckItem.date_of_death (get_death p))
     with
-    [ (_, _, NotDead, _) -> ("not dead", 0, 0)
-    | (_, Some (Dgreg d _), _, _) -> ("baptized in", d.year, d.year+lim_b.val)
+    [ (_, Some (Dgreg d _), _, _) -> ("baptized in", d.year, d.year+lim_b.val)
     | (Some (Dgreg d _), _, _, _) -> ("born in", d.year, d.year+lim_b.val)
     | (_, _, _, _) -> ("unknown", 0, 0) ]
   in
@@ -277,7 +276,8 @@ value test_dead_child old bname =
             let mo = poi base (get_mother cpl) in
             let (mbreason, mbd, mbd2) = get_b_dates base mo in
             let (mdreason, mdd, mdd2) = get_d_dates base mo in
-            let m_not_old = not (mbd2 < today.val || (mdd2 <> 0 && mdd2 < today.val) ) in
+            let mdd2 = if mdd2 = 0 then today.val+1 else mdd2 in
+            let m_not_old = not (mbd2 < today.val || mdd2 < today.val ) in
             if dd <> 0 && m_not_old then do {
               incr cnt;
               printf "Mother of: %s, %s: %d; born: %d, dead: %d\n" (Gutil.designation base p)
