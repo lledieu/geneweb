@@ -264,7 +264,7 @@ value test_dead_child old bname =
             let fa = poi base (get_father cpl) in
             let (fbreason, fbd, fbd2) = get_b_dates base fa in
             let (fdreason, fdd, fdd2) = get_d_dates base fa in
-            let f_not_old = not (fbd2 < today.val || fdd2 < today.val) in
+            let f_not_old = not (fbd2 < today.val || (fdd2 <> 0 && fdd2 < today.val ) ) in
             if dd <> 0 && f_not_old then do {
               incr cnt;
               printf "Father of: %s, %s: %d; born: %d, dead: %d\n" (Gutil.designation base p)
@@ -277,7 +277,7 @@ value test_dead_child old bname =
             let mo = poi base (get_mother cpl) in
             let (mbreason, mbd, mbd2) = get_b_dates base mo in
             let (mdreason, mdd, mdd2) = get_d_dates base mo in
-            let m_not_old = not (mbd2 < today.val || mdd2 < today.val) in
+            let m_not_old = not (mbd2 < today.val || (mdd2 <> 0 && mdd2 < today.val ) in
             if dd <> 0 && m_not_old then do {
               incr cnt;
               printf "Mother of: %s, %s: %d; born: %d, dead: %d\n" (Gutil.designation base p)
