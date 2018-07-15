@@ -265,7 +265,7 @@ value test_dead_child old bname =
             let (fbreason, fbd, fbd2) = get_b_dates base fa in
             let (fdreason, fdd, fdd2) = get_d_dates base fa in
             let f_not_old = not (fbd2 < today.val || fdd2 < today.val) in
-            if dd2 > today.val && f_not_old then do {
+            if dd <> 0 && f_not_old then do {
               incr cnt;
               printf "Father of: %s, %s: %d; born: %d, dead: %d\n" (Gutil.designation base p)
                 pdreason dd fbd fdd;
@@ -278,7 +278,7 @@ value test_dead_child old bname =
             let (mbreason, mbd, mbd2) = get_b_dates base mo in
             let (mdreason, mdd, mdd2) = get_d_dates base mo in
             let m_not_old = not (mbd2 < today.val || mdd2 < today.val) in
-            if dd2 > today.val && m_not_old then do {
+            if dd <> 0 && m_not_old then do {
               incr cnt;
               printf "Mother of: %s, %s: %d; born: %d, dead: %d\n" (Gutil.designation base p)
                 pdreason dd mbd mdd;
@@ -379,7 +379,7 @@ value speclist =
    ("-ind", Arg.String (fun x -> ind.val := x), "individual key");
    ("-tr", Arg.Set trace, "trace changed persons");
    ("-tro", Arg.Set trace_old, "trace set to old");
-   ("-ma_no", Arg.Clear ascend, "mark ascendants");
+   ("-ma_no", Arg.Clear ascend, "do not mark ascendants");
    ("-tst", Arg.Clear execute, "do not perform changes (test only)")]
 ;
 value anonfun i = bname.val := i;
