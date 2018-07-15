@@ -45,6 +45,7 @@ value nb_desc_gen lim_year p =
 
 value changes = ref 0;
 value trace = ref False;
+value trace_old = ref False;
 value execute = ref True;
 value ascend = ref True;
 value age_death = ref 80;
@@ -58,6 +59,8 @@ value lim_m = ref 100;
 value ind = ref "";
 value bname = ref "";
 value everybody = ref False;
+value testhg = ref False;
+value cnt = ref 0;
 
 (*
 type death =
@@ -112,19 +115,22 @@ value mark_old base scanned old p =
     else do {
       (* birth date + lim_b > today *)
       old.(Adef.int_of_iper (get_key_index p)) := y;
-      printf "Old (birth): %s, %s %d\n" (Gutil.designation base p) reason y;
-      flush stdout
-      };
+      if trace_old.val then do {
+        printf "Old (birth): %s, %s %d\n" (Gutil.designation base p) reason y;
+        flush stdout
+      } else ();
+    };
     let (reason, y, old_p) = get_d_dates base p in
     if old_p > today.val || y = 0 then 
       old.(Adef.int_of_iper (get_key_index p)) := 1
     else do {
       (* death date + lim_d > today *)
       old.(Adef.int_of_iper (get_key_index p)) := y;
-      printf "Old (death): %s, %s %d\n" (Gutil.designation base p) reason y;
-      flush stdout
-      };
-      
+      if trace_old.val then do {
+        printf "Old (death): %s, %s %d\n" (Gutil.designation base p) reason y;
+        flush stdout
+      } else ();
+    };
     for i = 0 to Array.length (get_family p) - 1 do {
       let ifam = (get_family p).(i) in
       let fam = foi base ifam in
@@ -139,9 +145,11 @@ value mark_old base scanned old p =
         [ Some d -> 
             if d < today.val then do {
               (* marriage date + lim_m < today *)
-              printf "Old (marriage): %s, in %d\n" (Gutil.designation base p) (d-lim_m.val);
-              printf "Old (marriage): %s, in %d\n" (Gutil.designation base sp) (d-lim_m.val);
-              flush stdout;
+              if trace_old.val then do {
+                printf "Old (marriage): %s, in %d\n" (Gutil.designation base p) (d-lim_m.val);
+                printf "Old (marriage): %s, in %d\n" (Gutil.designation base sp) (d-lim_m.val);
+                flush stdout;
+              } else ();
               old.(Adef.int_of_iper (get_key_index p)) := d-lim_m.val;
               old.(Adef.int_of_iper (get_key_index sp)) := d-lim_m.val;
             }
@@ -195,8 +203,12 @@ value rec mark_ancestors base scanned old p =
       [ Some ifam ->
           let cpl = foi base ifam in
           do {
-            mark_ancestors base scanned old (poi base (get_father cpl));
-            mark_ancestors base scanned old (poi base (get_mother cpl));
+            if old.(Adef.int_of_iper (get_father cpl)) > 1 then
+              mark_ancestors base scanned old (poi base (get_father cpl)) 
+            else ();
+            if old.(Adef.int_of_iper (get_mother cpl)) > 1 then
+              mark_ancestors base scanned old (poi base (get_mother cpl))
+            else ();
           }
       | None -> () ]
     else ();
@@ -222,7 +234,66 @@ value public_everybody old bname =
   }
 ;
 
-value cnt = ref 0;
+value test_dead_child old bname =
+  let base = Gwdb.open_base bname in
+  let () = load_ascends_array base in
+  let () = load_couples_array base in
+  do {
+    let scanned = Array.make (nb_of_persons base) False in
+    for i = 0 to nb_of_persons base - 1 do {
+      (*
+      let p = poi base (Adef.iper_of_int i) in
+      let _ = printf "Pers: %s\n" (Gutil.designation base p) in
+      let _ = flush stdout in
+      *)
+      if not scanned.(i) then do {
+        let p = poi base (Adef.iper_of_int i) in
+        mark_old base scanned old p 
+      }
+      else ();
+    };
+    cnt.val := 0;
+    for i = 0 to nb_of_persons base - 1 do {
+      let p = poi base (Adef.iper_of_int i) in
+      let (pdreason, dd, dd2) = get_d_dates base p in
+      (* dd <> 0 -> dead *)
+      match get_parents p with
+      [ Some ifam ->
+          let cpl = foi base ifam in
+          do {
+            let fa = poi base (get_father cpl) in
+            let (fbreason, fbd, fbd2) = get_b_dates base fa in
+            let (fdreason, fdd, fdd2) = get_d_dates base fa in
+            let f_not_old = not (fbd2 < today.val || fdd2 < today.val) in
+            if dd2 > today.val && f_not_old then do {
+              incr cnt;
+              printf "Father of: %s, %s: %d; born: %d, dead: %d\n" (Gutil.designation base p)
+                pdreason dd fbd fdd
+            }
+            else ();
+            let mo = poi base (get_mother cpl) in
+            let (mbreason, mbd, mbd2) = get_b_dates base mo in
+            let (mdreason, mdd, mdd2) = get_d_dates base mo in
+            let m_not_old = not (mbd2 < today.val || mdd2 < today.val) in
+            if dd2 > today.val && m_not_old then do {
+              incr cnt;
+              printf "Mother of: %s, %s: %d; born: %d, dead: %d\n" (Gutil.designation base p)
+                pdreason dd mbd mdd
+            }
+            else ();
+          }
+      | None -> () ]
+    };
+    if changes.val > 0 then do {
+      commit_patches base;
+      printf "Patches applied\n"; flush stdout;
+    }
+    else ();
+   if cnt.val > 0 then
+      printf "Nb of persone: %d\n" cnt.val
+    else ();
+  }
+;
 
 value public_all old bname lim_year =
   let base = Gwdb.open_base bname in
@@ -298,8 +369,10 @@ value speclist =
    ("-lm", Arg.Int (fun i -> lim_m.val := i),
     "limit marriage (default = " ^ string_of_int lim_m.val ^ ")");
    ("-everybody", Arg.Set everybody, "set flag public to everybody");
+   ("-testhg", Arg.Set testhg, "test for dead child and still young");
    ("-ind", Arg.String (fun x -> ind.val := x), "individual key");
    ("-tr", Arg.Set trace, "trace changed persons");
+   ("-tro", Arg.Set trace_old, "trace set to old");
    ("-ma_no", Arg.Clear ascend, "mark ascendants");
    ("-tst", Arg.Clear execute, "do not perform changes (test only)")]
 ;
@@ -318,10 +391,13 @@ value main () =
     lim_year.val := today.val-lim_b.val;
     let base = Gwdb.open_base bname.val in
     let old = Array.make (nb_of_persons base) 0 in
-    if everybody.val then public_everybody old bname.val
+    if testhg.val then test_dead_child old bname.val
+    else if everybody.val then public_everybody old bname.val
     else if ind.val = "" then public_all old bname.val lim_year.val
     else public_some old bname.val lim_year.val ind.val;
-    printf "Set %d persons to old\n" cnt.val; flush stdout;
+    if trace_old.val then do {
+      printf "Set %d persons to old\n" cnt.val; flush stdout;
+    } else ();
     printf "Changed %d persons\n" changes.val; flush stdout;
   }
 ;
