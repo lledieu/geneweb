@@ -60,6 +60,7 @@ value ind = ref "";
 value bname = ref "";
 value everybody = ref False;
 value testhg = ref False;
+value testhg1 = ref False;
 value cnt = ref 0;
 
 (*
@@ -233,6 +234,44 @@ value public_everybody old bname =
   }
 ;
 
+value test_public old bname =
+  let base = Gwdb.open_base bname in
+  let () = load_ascends_array base in
+  let () = load_couples_array base in
+  do {
+    cnt.val := 0;
+    for i = 0 to nb_of_persons base - 1 do {
+      let p = poi base (Adef.iper_of_int i) in
+      let (reason, bd, bd2) = 
+        match
+          (Adef.od_of_codate (get_birth p), Adef.od_of_codate (get_baptism p),
+          get_death p, CheckItem.date_of_death (get_death p))
+        with
+        [ (Some (Dgreg d _), _, NotDead, _) -> ("born in", d.year, d.year+lim_b.val)
+        | (_, Some (Dgreg d _),  NotDead, _) -> ("baptized in", d.year, d.year+lim_b.val)
+        | (Some (Dgreg d _), _, DontKnowIfDead, _) -> ("born in", d.year, d.year+lim_b.val)
+        | (_, Some (Dgreg d _),  DontKnowIfDead, _) -> ("baptized in", d.year, d.year+lim_b.val)
+        | (_, _, _, _) -> ("other", 0, 0) ]
+      in
+      if bd2 > today.val && (get_access p) = Public then do {
+        incr cnt;
+        printf "Public: %s, born: %d (%d), %s\n" (Gutil.designation base p) bd bd2 reason;
+        let gp = {(gen_person_of_person p) with access = IfTitles} in
+        if False then patch_person base gp.key_index gp else ();
+      }
+      else ();
+    };
+    if changes.val > 0 then do {
+      commit_patches base;
+      printf "Patches applied\n"; flush stdout;
+    }
+    else ();
+   if cnt.val > 0 then
+      printf "Nb of persone: %d\n" cnt.val
+    else ();
+  }
+;
+
 value test_dead_child old bname =
   let base = Gwdb.open_base bname in
   let () = load_ascends_array base in
@@ -376,6 +415,7 @@ value speclist =
     "limit marriage (default = " ^ string_of_int lim_m.val ^ ")");
    ("-everybody", Arg.Set everybody, "set flag public to everybody");
    ("-testhg", Arg.Set testhg, "test for dead child and still young");
+   ("-testhg1", Arg.Set testhg1, "test for born < 120 and public");
    ("-ind", Arg.String (fun x -> ind.val := x), "individual key");
    ("-tr", Arg.Set trace, "trace changed persons");
    ("-tro", Arg.Set trace_old, "trace set to old");
@@ -389,8 +429,8 @@ value main () =
   do {
     Arg.parse speclist anonfun usage;
     if bname.val = "" then do { Arg.usage speclist usage; exit 2; } else ();
-    printf "Executing public on %s with -lb %d -ld %d -lm %d\n\n" 
-      bname.val lim_b.val lim_d.val lim_m.val;
+    printf "Executing public today (%d) on %s with -lb %d -ld %d -lm %d\n\n" 
+      today.val bname.val lim_b.val lim_d.val lim_m.val;
     let gcc = Gc.get () in
     gcc.Gc.max_overhead := 100;
     Gc.set gcc;
@@ -398,6 +438,7 @@ value main () =
     let base = Gwdb.open_base bname.val in
     let old = Array.make (nb_of_persons base) 0 in
     if testhg.val then test_dead_child old bname.val
+    else if testhg1.val then test_public old bname.val
     else if everybody.val then public_everybody old bname.val
     else if ind.val = "" then public_all old bname.val lim_year.val
     else public_some old bname.val lim_year.val ind.val;
