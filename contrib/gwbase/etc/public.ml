@@ -255,7 +255,7 @@ value test_public old bname =
       in
       if bd2 > today.val && (get_access p) = Public then do {
         incr cnt;
-        printf "Public: %s, born: %d (%d), %s\n" (Gutil.designation base p) bd bd2 reason;
+        printf "Public: %s, %s: %d (%d)\n" (Gutil.designation base p) reason bd bd2;
         let gp = {(gen_person_of_person p) with access = IfTitles} in
         if False then patch_person base gp.key_index gp else ();
       }

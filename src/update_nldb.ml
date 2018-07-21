@@ -132,6 +132,7 @@ value compute base bdir =
     in
     loop Filename.current_dir_name "";
     Printf.eprintf "--- individual notes\n";
+    Printf.eprintf "--- nb persons: %d\n" nb_ind;
     flush stderr;
     ProgrBar.full.val := '*';
     ProgrBar.start ();
@@ -153,6 +154,7 @@ value compute base bdir =
     };
     ProgrBar.finish ();
     Printf.eprintf "--- families notes\n";
+    Printf.eprintf "--- nb families: %d\n" nb_fam;
     flush stderr;
     ProgrBar.full.val := '*';
     ProgrBar.start ();
@@ -197,4 +199,4 @@ value main () =
   }
 ;
 
-Printexc.catch main ();
+try main () with exc -> Printexc.print_backtrace stdout;
