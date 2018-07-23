@@ -392,7 +392,7 @@ sv: <span class="highlight" style="margin-left:10px">genom
         <a href="%prefix;m=HIST;k=20">[*history of updates]</a>
       </li>
     %end;
-    %if;(wizard and bvar.modify_dict="yes")
+    %if;((wizard and bvar.modify_dict="yes") or manitou)
       <li>
         <a href="%prefix;m=MOD_DATA;data=place">%apply;book_of([places])</a>
       </li>
