@@ -18,3 +18,13 @@ value print_misc_notes_search : config -> base -> unit;
 value print_linked_list : config -> base -> list page -> unit;
 
 value merge_possible_aliases : config -> notes_links_db -> notes_links_db;
+
+value links_to_ind :
+  config -> base -> list (NotesLinks.page * ('a * list ('b * 'c))) ->
+    'b -> list NotesLinks.page;
+
+value has_linked_pages :
+  config -> base -> Def.iper ->
+    list (NotesLinks.page * ('a * list ((string * string * int) * 'b))) -> bool;
+
+value patch_cache_person_linked_pages : config -> Def.iper -> bool -> unit;

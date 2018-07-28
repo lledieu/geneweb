@@ -1381,30 +1381,6 @@ value linked_page_text conf base p s key str (pg, (_, il)) =
   | _ -> str ]
 ;
 
-value links_to_ind conf base db key =
-  let list =
-    List.fold_left
-      (fun pgl (pg, (_, il)) ->
-         let record_it =
-           match pg with
-           [ NotesLinks.PgInd ip -> authorized_age conf base (pget conf base ip)
-           | NotesLinks.PgFam ifam ->
-               let fam = foi base ifam in
-               if is_deleted_family fam then False
-               else authorized_age conf base (pget conf base (get_father fam))
-           | NotesLinks.PgNotes | NotesLinks.PgMisc _
-           | NotesLinks.PgWizard _ -> True ]
-         in
-         if record_it then
-           List.fold_left
-             (fun pgl (k, _) -> if k = key then [pg :: pgl] else pgl)
-             pgl il
-         else pgl)
-      [] db
-  in
-  list_uniq (List.sort compare list)
-;
-
 (* Interpretation of template file *)
 
 value rec compare_ls sl1 sl2 =
@@ -2311,17 +2287,8 @@ and eval_person_field_var conf base env ((p, p_auth) as ep) loc =
   | ["has_linked_pages"] ->
       match get_env "nldb" env with
       [ Vnldb db ->
-          let r =
-            if p_auth then
-              let key =
-                let fn = Name.lower (sou base (get_first_name p)) in
-                let sn = Name.lower (sou base (get_surname p)) in
-                (fn, sn, get_occ p)
-              in
-              links_to_ind conf base db key <> []
-            else False
-          in
-          VVbool r
+          VVbool
+            (p_auth && Notes.has_linked_pages conf base (get_key_index p) db)
       | _ -> raise Not_found ]
   | ["has_sosa"] ->
       match get_env "sosa" env with
@@ -3931,7 +3898,7 @@ value print_what_links conf base p =
     let fname = Filename.concat bdir "notes_links" in
     let db = NotesLinks.read_db_from_file fname in
     let db = Notes.merge_possible_aliases conf db in
-    let pgl = links_to_ind conf base db key in
+    let pgl = Notes.links_to_ind conf base db key in
     let title h = do {
       Wserver.wprint "%s: " (capitale (transl conf "linked pages"));
       if h then Wserver.wprint "%s" (simple_person_text conf base p True)

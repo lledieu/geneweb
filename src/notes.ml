@@ -586,3 +586,95 @@ value print_misc_notes_search conf base =
   [ Some s -> search_text conf base (Wserver.gen_decode False s)
   | None -> print_misc_notes conf base ]
 ;
+
+(**/**)
+value links_to_ind conf base db key =
+  let list =
+    List.fold_left
+      (fun pgl (pg, (_, il)) ->
+         let record_it =
+           match pg with
+           [ NotesLinks.PgInd ip -> authorized_age conf base (pget conf base ip)
+           | NotesLinks.PgFam ifam ->
+               let fam = foi base ifam in
+               if is_deleted_family fam then False
+               else authorized_age conf base (pget conf base (get_father fam))
+           | NotesLinks.PgNotes | NotesLinks.PgMisc _
+           | NotesLinks.PgWizard _ -> True ]
+         in
+         if record_it then
+           List.fold_left
+             (fun pgl (k, _) -> if k = key then [pg :: pgl] else pgl)
+             pgl il
+         else pgl)
+      [] db
+  in
+  List.sort_uniq compare list
+;
+
+(**/**)
+
+type cache_person_linked_pages_t = Hashtbl.t Def.iper bool;
+
+value (ht_cache_person_linked_pages : cache_person_linked_pages_t) =
+  Hashtbl.create 1;
+
+value cache_fname_person_linked_pages conf =
+  let bname =
+    if Filename.check_suffix conf.bname ".gwb" then conf.bname
+    else conf.bname ^ ".gwb"
+  in
+  Filename.concat (base_path [] bname) "cache_person_linked_pages"
+;
+
+value read_cache_person_linked_pages conf =
+  let fname = cache_fname_person_linked_pages conf in
+  match try Some (Secure.open_in_bin fname) with [ Sys_error _ -> None ] with
+  [ Some ic ->
+      let ht : cache_person_linked_pages_t = input_value ic in
+      do { close_in ic; ht }
+  | None -> ht_cache_person_linked_pages ]
+;
+
+value write_cache_person_linked_pages conf =
+  let ht_cache = read_cache_person_linked_pages conf in
+  let () =
+    Hashtbl.iter
+      (fun k v ->
+         if not (Hashtbl.mem ht_cache_person_linked_pages k) then
+           Hashtbl.add ht_cache_person_linked_pages k v
+         else ())
+      ht_cache
+  in
+  let fname = cache_fname_person_linked_pages conf in
+  match try Some (Secure.open_out_bin fname) with [ Sys_error _ -> None ] with
+  [ Some oc ->
+      do {
+        output_value oc ht_cache_person_linked_pages;
+        close_out oc
+      }
+  | None -> () ]
+;
+
+value patch_cache_person_linked_pages conf k v = do {
+  Hashtbl.replace ht_cache_person_linked_pages k v;
+  write_cache_person_linked_pages conf;
+};
+
+value has_linked_pages conf base ip db =
+  let ht = read_cache_person_linked_pages conf in
+  try Hashtbl.find ht ip with
+  [ Not_found ->
+      do {
+        let p = poi base ip in
+        let key =
+          let fn = Name.lower (sou base (get_first_name p)) in
+          let sn = Name.lower (sou base (get_surname p)) in
+          (fn, sn, get_occ p)
+        in
+        let links = links_to_ind conf base db key <> [] in
+        Hashtbl.add ht ip links;
+        write_cache_person_linked_pages conf;
+        links
+      } ]
+;

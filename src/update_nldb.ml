@@ -176,6 +176,40 @@ value compute base bdir =
     };
     ProgrBar.finish ();
     NotesLinks.write_db bdir db.val;
+    Printf.eprintf "--- cache person linked pages\n";
+    flush stderr;
+    let fname = Filename.concat bdir "notes_links" in
+    let db = NotesLinks.read_db_from_file fname in
+    let ht_key = Hashtbl.create nb_ind in
+    List.iter
+      (fun (pg, (_, il)) ->
+        List.iter
+          (fun (k, _) -> Hashtbl.add ht_key k True)
+          il)
+      db;
+    ProgrBar.start ();
+    let ht_cache = Hashtbl.create nb_ind in
+    for i = 0 to nb_ind - 1 do {
+      let ip = Adef.iper_of_int i in
+      let p = poi base ip in
+      let key =
+        let fn = Name.lower (sou base (get_first_name p)) in
+        let sn = Name.lower (sou base (get_surname p)) in
+        (fn, sn, get_occ p)
+      in
+      if Hashtbl.mem ht_key key then Hashtbl.add ht_cache ip True
+      else Hashtbl.add ht_cache ip False;
+      ProgrBar.run i nb_ind
+    };
+    ProgrBar.finish ();
+    let fname = Filename.concat bdir "cache_person_linked_pages" in
+    match try Some (Secure.open_out_bin fname) with [ Sys_error _ -> None ] with
+    [ Some oc ->
+        do {
+          output_value oc ht_cache;
+          close_out oc
+        }
+    | None -> () ]
   }
 ;
 
