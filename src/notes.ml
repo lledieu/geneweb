@@ -361,7 +361,7 @@ value print_mod conf base =
   Wiki.print_mod_view_page conf True "NOTES" fnotes title env s
 ;
 
-value update_notes_links_db conf fnotes s =
+value update_notes_links_db conf fnotes s = do {
   let slen = String.length s in
   let (list_nt, list_ind) =
     loop [] [] 1 0 where rec loop list_nt list_ind pos i =
@@ -384,7 +384,13 @@ value update_notes_links_db conf fnotes s =
         | NotesLinks.WLnone -> loop list_nt list_ind pos (i + 1) ]
   in
   let bdir = Util.base_path [] (conf.bname ^ ".gwb") in
-  NotesLinks.update_db bdir fnotes (list_nt, list_ind)
+  NotesLinks.update_db bdir fnotes (list_nt, list_ind);
+  (* On devrait mettre à jour le cache aussi
+     On connait pas p ou ip??
+  if list_ind <> [] then 
+    Notes.patch_cache_person_linked_pages conf p.key_index True
+  else (); *)
+  }
 ;
 
 value commit_notes conf base fnotes s =  do {

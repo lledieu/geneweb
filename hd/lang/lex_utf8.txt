@@ -179,6 +179,7 @@ sk:  skúsiť znovu s týmto číslom
 sl:  za ponoven poskus s to številko
 sv:  för att försöka igen med detta nummer
 
+
     %1 of %2
 af: %1 van %2
 bg: %1 на :a:%2
@@ -8174,6 +8175,10 @@ sk: mladší brat/mladšia sestra/mladší súrodenec
 sl: mlajši brat/mlajša sestra
 sv: nästa bror/nästa syster/nästa syskon
 
+    no linked pages
+en: no linked pages
+fr: pas de pages liées
+
     no anniversary
 af: geen herdenking
 bg: няма годишнина
@@ -11168,6 +11173,10 @@ no: tabell
 oc: taula
 pt: tabela
 sv: tabell
+
+    test for linked pages
+en: test for linked pages
+fr: test des pages liées
 
     text
 af: teks
