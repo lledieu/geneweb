@@ -6,7 +6,8 @@ open Def;
 value magic_gwo = "GnWo000o";
 
 value base_name = ref "";
-value rgpd_files = ref "";
+value rgpd_files = ref "None";
+value rgpd = ref False;
 
 type key = { pk_first_name : string; pk_surname : string; pk_occ : int };
 
@@ -635,7 +636,7 @@ value rgpd_access fn sn occ str l =
     let d_sep = Filename.dir_sep in
     let rgpd_file = 
       (if rgpd_files.val = "" then 
-        ("." ^ d_sep ^ base_name.val ^ ".gwb" ^ d_sep ^ "RGPD")
+        ("." ^ d_sep ^ base_name.val ^ d_sep ^ "RGPD")
         else rgpd_files.val)
        ^ d_sep ^ fns ^ "." ^ ocs ^ "." ^ sns
     in
@@ -658,7 +659,7 @@ value set_infos fn sn occ sex comm_psources comm_birth_place str u l =
   let (qualifiers, l) = get_qualifiers str l in
   let (aliases, l) = get_aliases str l in
   let (titles, l) = get_titles str l in
-  let (access, l) = rgpd_access fn sn occ str l in
+  let (access, l) = if rgpd.val then rgpd_access fn sn occ str l else get_access str l in
   let (occupation, l) = get_occu str l in
   let (psources, l) = get_sources str l in
   let (naissance, l) = get_optional_birthdate l in

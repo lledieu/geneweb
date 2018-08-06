@@ -137,6 +137,7 @@ value main () =
   do {
     Mutil.verbose.val := False;
     Argl.parse speclist anonfun errmsg;
+    if Gwcomp.rgpd_files.val <> "None" then Gwcomp.rgpd.val := True else ();
     Secure.set_base_dir (Filename.dirname out_file.val);
     let gwo = ref [] in
     List.iter

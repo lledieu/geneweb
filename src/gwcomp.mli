@@ -21,6 +21,7 @@ type gw_syntax =
   | Wnotes of string and string ]
 ;
 value rgpd_files : ref string;
+value rgpd : ref bool;
 value magic_gwo : string;
 value line_cnt : ref int;
 value no_fail : ref bool;
