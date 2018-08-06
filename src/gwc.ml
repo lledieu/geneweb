@@ -104,7 +104,7 @@ value speclist =
    ("-part", Arg.String (fun s -> Db1link.particules_file.val := s), "\
      <file> Particles file (default = predefined particles)");
    ("-rgpd", Arg.String (fun s -> Gwcomp.rgpd_files.val := s), "\
-     <file> Rgpd files (default = ./basename.gwb/RGPD)");
+     <file> Rgpd files");
    ("-mem", Arg.Set Outbase.save_mem, " Save memory, but slower");
    ("-nolock", Arg.Set Lock.no_lock_flag, " do not lock database.");
    ("-nofail", Arg.Set Gwcomp.no_fail, " no failure in case of error.");
@@ -137,8 +137,13 @@ value main () =
   do {
     Mutil.verbose.val := False;
     Argl.parse speclist anonfun errmsg;
-    if Gwcomp.rgpd_files.val <> "None" then Gwcomp.rgpd.val := True else ();
+    try if Sys.is_directory Gwcomp.rgpd_files.val then  Gwcomp.rgpd.val := True
+    else Gwcomp.rgpd.val := True with [ Sys_error _ -> Gwcomp.rgpd.val := False];
     Secure.set_base_dir (Filename.dirname out_file.val);
+    let rgpd_st = if Gwcomp.rgpd.val = True then "True" else "False" in
+    if  Gwcomp.rgpd.val 
+    then printf "Rgpd status: %s, files in: %s\n" rgpd_st Gwcomp.rgpd_files.val
+    else printf "Rgpd status: %s\n" rgpd_st;
     let gwo = ref [] in
     List.iter
       (fun (x, separate, shift) ->

@@ -635,10 +635,7 @@ value rgpd_access fn sn occ str l =
   let (access, l) =
     let d_sep = Filename.dir_sep in
     let rgpd_file = 
-      (if rgpd_files.val = "" then 
-        ("." ^ d_sep ^ base_name.val ^ d_sep ^ "RGPD")
-        else rgpd_files.val)
-       ^ d_sep ^ fns ^ "." ^ ocs ^ "." ^ sns
+       rgpd_files.val ^ d_sep ^ fns ^ "." ^ ocs ^ "." ^ sns
     in
       (* if one of the files exist, set the Friend or Friend_m value *)
     if Sys.file_exists (rgpd_file ^ "-et-mineurs.pdf") then (Friend_m, l)
