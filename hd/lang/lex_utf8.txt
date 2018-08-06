@@ -1,3 +1,11 @@
+    in a few sec
+en: in a few seconds
+fr: dans quelques secondes
+
+    click here for linked pages
+en: Cliking here will test for linked pages, at the cost of 1 seconds
+fr: Clicker ici testera la présence de pages liées, avec un coût de quelques secondes
+
      !dates order
 af: yyyymmdd
 ar: ddmmyyyy
