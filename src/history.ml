@@ -507,6 +507,10 @@ and eval_person_field_var conf base env p =
   | ["is_invisible"] ->
       let conf = {(conf) with wizard = False; friend = False} in
       VVbool (not (Util.authorized_age conf base p))
+  | ["is_friend"] ->
+      VVbool ((get_access p) = Friend)
+  | ["is_friend_m"] ->
+      VVbool ((get_access p) = Friend_m)
   | ["title"] -> VVstring (person_title conf base p)
   | [] -> VVstring (possibly_highlight env (simple_person_text conf base p))
   | _ -> VVstring "person..." ]
