@@ -90,6 +90,20 @@ type death =
 ;
 *)
 
+value rindex s c =
+  pos (String.length s - 1) where rec pos i =
+    if i < 0 then None else if s.[i] = c then Some i else pos (i - 1)
+;
+
+value tr c1 c2 s =
+  match rindex s c1 with
+  [ Some _ ->
+      String.init (String.length s) convert_char
+        where convert_char i =
+          if s.[i] = c1 then c2 else s.[i]
+  | None -> s ]
+;
+
 value get_b_dates base p =
   let (reason, d, d2) =
     match
@@ -407,8 +421,8 @@ value set_friend base p =
     else if old_access = Private then "Private"
     else "Other"
   in
-  let fns = sou base (get_first_name p) in
-  let sns = sou base (get_surname p) in
+  let fns = tr ' ' '_' (sou base (get_first_name p)) in
+  let sns = tr ' ' '_' (sou base (get_surname p)) in
   let ocs = string_of_int (get_occ p) in
   let new_access =
     let d_sep = Filename.dir_sep in
@@ -430,7 +444,7 @@ value set_friend base p =
     else if old_access = Private then incr nb_prv
     else incr nb_oth;
     if new_access = Friend || new_access = Friend_m then do {
-      if old_access = IfTitles then incr nb_ift
+      if old_access = IfTitles then incr nbf_ift
       else if old_access = Public then incr nbf_pub
       else if old_access = Friend then incr nbf_ami
       else if old_access = Friend_m then incr nbf_amm
@@ -440,7 +454,7 @@ value set_friend base p =
     }
     else ();
     let gp = {(gen_person_of_person p) with access = new_access} in
-    if execute.val then do { 
+    if execute.val && new_access <> old_access then do { 
       patch_person base gp.key_index gp;
       incr changes;
     }
