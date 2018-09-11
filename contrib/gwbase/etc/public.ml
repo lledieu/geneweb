@@ -61,7 +61,17 @@ value bname = ref "";
 value everybody = ref False;
 value testhg = ref False;
 value testhg1 = ref False;
+value set_friends = ref False;
 value cnt = ref 0;
+value rgpd_files = ref ".";
+
+value nb_ift = ref 0;
+value nb_pub = ref 0;
+value nb_ami = ref 0;
+value nb_amm = ref 0;
+value nb_prv = ref 0;
+value nb_oth = ref 0;
+
 
 (*
 type death =
@@ -382,6 +392,70 @@ value public_all old bname lim_year =
   }
 ;
 
+value set_friend base p =
+  let old_access = get_access p in
+  let old_as = if old_access = IfTitles then "IfTitles"
+    else if old_access = Public then "Public"
+    else if old_access = Friend then "Friend"
+    else if old_access = Friend_m then "Friend_m"
+    else if old_access = Private then "Private"
+    else "Other"
+  in
+  let fns = sou base (get_first_name p) in
+  let sns = sou base (get_surname p) in
+  let ocs = string_of_int (get_occ p) in
+  let new_access =
+    let d_sep = Filename.dir_sep in
+    let rgpd_file = 
+       rgpd_files.val ^ d_sep ^ fns ^ "." ^ ocs ^ "." ^ sns
+    in
+      (* if one of the files exist, set the Friend or Friend_m value *)
+    if Sys.file_exists (rgpd_file ^ "-et-mineurs.pdf") then Friend_m
+    else if Sys.file_exists (rgpd_file ^ ".pdf") then Friend
+      (* if none of the file exist and person was Friend, then it becomes Private *)
+    else if old_access = Friend || old_access = Friend_m then Private
+      (* otherwise keep thee current value *)
+    else old_access
+  in do {
+    if old_access = IfTitles then incr nb_ift
+    else if old_access = Public then incr nb_pub
+    else if old_access = Friend then incr nb_ami
+    else if old_access = Friend_m then incr nb_amm
+    else if old_access = Private then incr nb_prv
+    else incr nb_oth;
+    if new_access = Friend || new_access = Friend_m then do {
+      printf "Friend: %s, %s\n" (Gutil.designation base p) old_as; flush stdout;
+    }
+    else ();
+    let gp = {(gen_person_of_person p) with access = new_access} in
+    if execute.val then do { 
+      patch_person base gp.key_index gp;
+      incr changes;
+    }
+    else ();
+  }
+;
+
+value set_friend_all bname =
+  let _ =printf "Set_friend_all: %s\n" bname in
+  let base = Gwdb.open_base bname in
+  let () = load_ascends_array base in
+  let () = load_couples_array base in
+  do {
+    cnt.val := 0;
+    for i = 0 to nb_of_persons base - 1 do {
+      set_friend base (poi base (Adef.iper_of_int i))
+    };
+    if changes.val > 0 then do {
+      commit_patches base;
+      printf "Patches applied\n"; flush stdout;
+    }
+    else ();
+    printf "Totals: IfTitle %d, Public %d, Friend %d, Friend_m %d, Private %d, Other %d\n"
+      nb_ift.val nb_pub.val nb_ami.val nb_amm.val nb_prv.val nb_oth.val; flush stdout;
+  }
+;
+
 value public_some old bname lim_year key =
   let base = Gwdb.open_base bname in
   match Gutil.person_ht_find_all base key with
@@ -420,11 +494,14 @@ value speclist =
    ("-everybody", Arg.Set everybody, "set flag public to everybody");
    ("-testhg", Arg.Set testhg, "test for dead child and still young");
    ("-testhg1", Arg.Set testhg1, "test for born < 120 and public");
+   ("-set_fr", Arg.Set set_friends, "set friends");
    ("-ind", Arg.String (fun x -> ind.val := x), "individual key");
    ("-tr", Arg.Set trace, "trace changed persons");
    ("-tro", Arg.Set trace_old, "trace set to old");
    ("-ma_no", Arg.Clear ascend, "do not mark ascendants");
-   ("-tst", Arg.Clear execute, "do not perform changes (test only)")]
+   ("-rgpd", Arg.String (fun x -> rgpd_files.val := x), "Set RGPD folder");
+   ("-tst", Arg.Clear execute, "do not perform changes (test only)")
+   ]
 ;
 value anonfun i = bname.val := i;
 value usage = "Usage: public [-lb #] [-ld #] [-lm #] [-everybody] [-ind key] [-ma] [-tr] [-tst] base.\n";
@@ -435,6 +512,7 @@ value main () =
     if bname.val = "" then do { Arg.usage speclist usage; exit 2; } else ();
     printf "Executing public today (%d) on %s with -lb %d -ld %d -lm %d\n\n" 
       today.val bname.val lim_b.val lim_d.val lim_m.val;
+    flush stdout;
     let gcc = Gc.get () in
     gcc.Gc.max_overhead := 100;
     Gc.set gcc;
@@ -443,6 +521,7 @@ value main () =
     let old = Array.make (nb_of_persons base) 0 in
     if testhg.val then test_dead_child old bname.val
     else if testhg1.val then test_public old bname.val
+    else if set_friends.val then set_friend_all bname.val
     else if everybody.val then public_everybody old bname.val
     else if ind.val = "" then public_all old bname.val lim_year.val
     else public_some old bname.val lim_year.val ind.val;
