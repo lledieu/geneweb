@@ -450,7 +450,7 @@ value set_friend base p =
       else if old_access = Friend_m then incr nbf_amm
       else if old_access = Private then incr nbf_prv
       else incr nbf_oth;
-      printf "Friend: %s, %s\n" (Gutil.designation base p) old_as; flush stdout;
+      printf "Friend: %s.%s.%s, %s\n" fns ocs sns old_as; flush stdout;
     }
     else ();
     let gp = {(gen_person_of_person p) with access = new_access} in
