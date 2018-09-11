@@ -71,6 +71,12 @@ value nb_ami = ref 0;
 value nb_amm = ref 0;
 value nb_prv = ref 0;
 value nb_oth = ref 0;
+value nbf_ift = ref 0;
+value nbf_pub = ref 0;
+value nbf_ami = ref 0;
+value nbf_amm = ref 0;
+value nbf_prv = ref 0;
+value nbf_oth = ref 0;
 
 
 (*
@@ -424,6 +430,12 @@ value set_friend base p =
     else if old_access = Private then incr nb_prv
     else incr nb_oth;
     if new_access = Friend || new_access = Friend_m then do {
+      if old_access = IfTitles then incr nb_ift
+      else if old_access = Public then incr nbf_pub
+      else if old_access = Friend then incr nbf_ami
+      else if old_access = Friend_m then incr nbf_amm
+      else if old_access = Private then incr nbf_prv
+      else incr nbf_oth;
       printf "Friend: %s, %s\n" (Gutil.designation base p) old_as; flush stdout;
     }
     else ();
@@ -453,6 +465,8 @@ value set_friend_all bname =
     else ();
     printf "Totals: IfTitle %d, Public %d, Friend %d, Friend_m %d, Private %d, Other %d\n"
       nb_ift.val nb_pub.val nb_ami.val nb_amm.val nb_prv.val nb_oth.val; flush stdout;
+    printf "Totals Friends: IfTitle %d, Public %d, Friend %d, Friend_m %d, Private %d, Other %d\n"
+      nbf_ift.val nbf_pub.val nbf_ami.val nbf_amm.val nbf_prv.val nbf_oth.val; flush stdout;
   }
 ;
 
