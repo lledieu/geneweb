@@ -137,7 +137,8 @@ value main () =
   do {
     Mutil.verbose.val := False;
     Argl.parse speclist anonfun errmsg;
-    try if Sys.is_directory Gwcomp.rgpd_files.val then  Gwcomp.rgpd.val := True
+    try 
+    if Sys.is_directory Gwcomp.rgpd_files.val then  Gwcomp.rgpd.val := True
     else Gwcomp.rgpd.val := True with [ Sys_error _ -> Gwcomp.rgpd.val := False];
     Secure.set_base_dir (Filename.dirname out_file.val);
     let rgpd_st = if Gwcomp.rgpd.val = True then "True" else "False" in
