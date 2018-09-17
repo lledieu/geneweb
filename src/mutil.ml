@@ -4,6 +4,7 @@
 value int_size = 4;
 value verbose = ref True;
 value utf_8_db = Name.utf_8_db;
+value f_cnt = ref 0;
 
 value lindex s c =
   pos 0 where rec pos i =

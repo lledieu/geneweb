@@ -100,6 +100,7 @@ value force = ref False;
 value separate = ref False;
 value shift = ref 0;
 value files = ref [];
+value f_cnt = ref 0;
 
 (* ******************************************************************** *)
 (*  [Var] speclist : (string * Arg.spec * string) list                  *)
@@ -221,6 +222,7 @@ The database \"%s\" already exists. Use option -f to overwrite it.
         } ];
     }
     else ();
+    printf "Set %d persons to Friend status\n" Mutil.f_cnt.val; flush stdout;
   }
 ;
 

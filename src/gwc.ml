@@ -194,6 +194,7 @@ The database \"%s\" already exists. Use option -f to overwrite it.
         } ];
     }
     else ();
+    printf "Set %d persons to Friend status\n" Mutil.f_cnt.val; flush stdout;
   }
 ;
 
