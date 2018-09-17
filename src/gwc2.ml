@@ -162,6 +162,7 @@ and [options] are:"
 (* ******************************************************************** *)
 value main () =
   do {
+    printf "Starting gwc2\n";
     Mutil.verbose.val := False;
     Argl.parse speclist anonfun errmsg;
     try 
@@ -172,6 +173,7 @@ value main () =
     if  Gwcomp.rgpd.val 
     then printf "Rgpd status: %s, files in: %s\n" rgpd_st Gwcomp.rgpd_files.val
     else printf "Rgpd status: %s\n" rgpd_st;
+    flush stdout;
     let gwo = ref [] in
     List.iter
       (fun (x, separate, shift) ->

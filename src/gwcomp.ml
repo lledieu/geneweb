@@ -645,6 +645,10 @@ value rgpd_access fn sn occ str l =
       (* otherwise keep thee current value *)
     else (access, l)
   in
+  let frs = if access=Friend then "Friend" else if access=Friend_m then "Friend_m" else "Other" in
+  let _ = if Mutil.verbose.val=True && (access=Friend || access=Friend_m) 
+    then Printf.printf "Set to %s %s.%s %s\n" frs fns ocs sns else ()
+  in
   (access, l)
 ;
 
