@@ -436,7 +436,7 @@ value set_friend base p =
     else if old_access = Friend || old_access = Friend_m then Private
       (* otherwise keep thee current value *)
     else old_access
-  in 
+  in
   let new_as = if new_access = Friend then "Friend"
     else if old_access = Friend_m then "Friend_m"
     else if old_access = Private then "Private"
@@ -457,7 +457,7 @@ value set_friend base p =
       else if old_access = Friend_m then incr nbf_amm
       else if old_access = Private then incr nbf_prv
       else incr nbf_oth;
-      printf "Status: %s.%s.%s, %s -> %s %s\n" fns ocs sns old_as new_as; flush stdout;
+      printf "Status: %s.%s.%s, %s -> %s %s\n" fns ocs sns tst old_as new_as; flush stdout;
     }
     else ();
     let gp = {(gen_person_of_person p) with access = new_access} in
@@ -470,7 +470,7 @@ value set_friend base p =
 ;
 
 value set_friend_all bname =
-  let _ =printf "Set_friend_all: %s\n" bname in
+  let _ =printf "Set_friend_all: %s, rgpd: %s\n" bname rgpd_files.val in
   let base = Gwdb.open_base bname in
   let () = load_ascends_array base in
   let () = load_couples_array base in
@@ -486,7 +486,7 @@ value set_friend_all bname =
     else ();
     printf "Totals: IfTitle %d, Public %d, Friend %d, Friend_m %d, Private %d, Other %d\n"
       nb_ift.val nb_pub.val nb_ami.val nb_amm.val nb_prv.val nb_oth.val; flush stdout;
-    printf "Totals Friends: IfTitle %d, Public %d, Friend %d, Friend_m %d, Private %d, Other %d\n"
+    printf "Total Friends: IfTitle %d, Public %d, Friend %d, Friend_m %d, Private %d, Other %d\n"
       nbf_ift.val nbf_pub.val nbf_ami.val nbf_amm.val nbf_prv.val nbf_oth.val; flush stdout;
   }
 ;
