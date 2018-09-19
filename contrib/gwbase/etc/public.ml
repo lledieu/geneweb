@@ -71,12 +71,18 @@ value nb_ami = ref 0;
 value nb_amm = ref 0;
 value nb_prv = ref 0;
 value nb_oth = ref 0;
-value nbf_ift = ref 0;
-value nbf_pub = ref 0;
-value nbf_ami = ref 0;
-value nbf_amm = ref 0;
-value nbf_prv = ref 0;
-value nbf_oth = ref 0;
+value nbfo_ift = ref 0;
+value nbfo_pub = ref 0;
+value nbfo_ami = ref 0;
+value nbfo_amm = ref 0;
+value nbfo_prv = ref 0;
+value nbfo_oth = ref 0;
+value nbfn_ift = ref 0;
+value nbfn_pub = ref 0;
+value nbfn_ami = ref 0;
+value nbfn_amm = ref 0;
+value nbfn_prv = ref 0;
+value nbfn_oth = ref 0;
 
 
 (*
@@ -450,13 +456,20 @@ value set_friend base p =
     else if old_access = Friend_m then incr nb_amm
     else if old_access = Private then incr nb_prv
     else incr nb_oth;
-    if new_access = Friend || new_access = Friend_m then do {
-      if old_access = IfTitles then incr nbf_ift
-      else if old_access = Public then incr nbf_pub
-      else if old_access = Friend then incr nbf_ami
-      else if old_access = Friend_m then incr nbf_amm
-      else if old_access = Private then incr nbf_prv
-      else incr nbf_oth;
+    if new_access = Friend || new_access = Friend_m ||
+      old_access = Friend || old_access = Friend_m then do {
+      if old_access = IfTitles then incr nbfo_ift
+      else if old_access = Public then incr nbfo_pub
+      else if old_access = Friend then incr nbfo_ami
+      else if old_access = Friend_m then incr nbfo_amm
+      else if old_access = Private then incr nbfo_prv
+      else incr nbfo_oth;
+      if new_access = IfTitles then incr nbfn_ift
+      else if new_access = Public then incr nbfn_pub
+      else if new_access = Friend then incr nbfn_ami
+      else if new_access = Friend_m then incr nbfn_amm
+      else if new_access = Private then incr nbfn_prv
+      else incr nbfn_oth;
       printf "Status: %s.%s.%s, %s -> %s %s\n" fns ocs sns tst old_as new_as; flush stdout;
     }
     else ();
@@ -485,9 +498,14 @@ value set_friend_all bname =
     }
     else ();
     printf "Totals: IfTitle %d, Public %d, Friend %d, Friend_m %d, Private %d, Other %d\n"
-      nb_ift.val nb_pub.val nb_ami.val nb_amm.val nb_prv.val nb_oth.val; flush stdout;
-    printf "Total Friends: IfTitle %d, Public %d, Friend %d, Friend_m %d, Private %d, Other %d\n"
-      nbf_ift.val nbf_pub.val nbf_ami.val nbf_amm.val nbf_prv.val nbf_oth.val; flush stdout;
+      nb_ift.val nb_pub.val nb_ami.val nb_amm.val nb_prv.val nb_oth.val;
+    printf "Total Friends: IfTitle %d -> %d, Public %d -> %d\n"
+      nbfo_ift.val nbfn_ift.val nbfo_pub.val nbfn_pub.val;
+    printf "               Friend %d -> %d, Friend_m %d -> %d\n"
+      nbfo_ami.val nbfn_ami.val nbfo_amm.val nbfn_amm.val;
+    printf "               Private %d -> %d, Other %d -> %d\n"
+      nbfo_prv.val nbfn_prv.val nbfo_oth.val nbfn_oth.val;
+      flush stdout;
   }
 ;
 
