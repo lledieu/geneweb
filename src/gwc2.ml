@@ -130,6 +130,7 @@ value speclist =
    ("-nofail", Arg.Set Gwcomp.no_fail, " no failure in case of error.");
    ("-nopicture", Arg.Set Gwcomp.no_picture, " do not create associative pictures");
    ("-q", Arg.Clear Mutil.verbose, " no verbose");
+   ("-vf", Arg.Set Mutil.verbose_friends, " verbose for setting friends");
    ("-v", Arg.Set Mutil.verbose, " verbose")]
 ;
 

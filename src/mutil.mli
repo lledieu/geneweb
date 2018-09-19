@@ -3,6 +3,7 @@
 
 value int_size : int;
 value verbose : ref bool;
+value verbose_friends : ref bool;
 value utf_8_db : ref bool;
 value f_cnt : ref int;
 

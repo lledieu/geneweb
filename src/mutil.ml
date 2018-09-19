@@ -3,6 +3,7 @@
 
 value int_size = 4;
 value verbose = ref True;
+value verbose_friends = ref False;
 value utf_8_db = Name.utf_8_db;
 value f_cnt = ref 0;
 
