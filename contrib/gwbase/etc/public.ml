@@ -443,9 +443,11 @@ value set_friend base p =
       (* otherwise keep thee current value *)
     else old_access
   in
-  let new_as = if new_access = Friend then "Friend"
-    else if old_access = Friend_m then "Friend_m"
-    else if old_access = Private then "Private"
+  let new_as = if old_access = IfTitles then "IfTitles"
+    else if new_access = Public then "Public"
+    else if new_access = Friend then "Friend"
+    else if new_access = Friend_m then "Friend_m"
+    else if new_access = Private then "Private"
     else "Other"
   in
   let tst = if execute.val=True then "" else "(?)" in
@@ -457,7 +459,7 @@ value set_friend base p =
     else if old_access = Private then incr nb_prv
     else incr nb_oth;
     if new_access = Friend || new_access = Friend_m ||
-      old_access = Friend || old_access = Friend_m then do {
+      ( new_access = Private && (old_access = Friend || old_access = Friend_m )) then do {
       if old_access = IfTitles then incr nbfo_ift
       else if old_access = Public then incr nbfo_pub
       else if old_access = Friend then incr nbfo_ami
@@ -470,7 +472,7 @@ value set_friend base p =
       else if new_access = Friend_m then incr nbfn_amm
       else if new_access = Private then incr nbfn_prv
       else incr nbfn_oth;
-      printf "Status: %s.%s.%s, %s -> %s %s\n" fns ocs sns tst old_as new_as; flush stdout;
+      printf "Status: %s.%s.%s, %s %s -> %s \n" fns ocs sns old_as tst new_as; flush stdout;
     }
     else ();
     let gp = {(gen_person_of_person p) with access = new_access} in
