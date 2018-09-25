@@ -857,7 +857,18 @@ value print_mod o_conf base =
           base
           (gen_person_of_person (poi base (Adef.iper_of_int (-1)))) ]
   in
-  let conf = Update.update_conf o_conf in
+  let ofn = o_p.first_name in
+  let osn = o_p.surname in
+  let oocc = o_p.occ in
+  let key = (Name.lower ofn, Name.lower osn, oocc) in  let conf = Update.update_conf o_conf in
+  let pgl =
+    let bdir = Util.base_path [] (conf.bname ^ ".gwb") in
+    let fname = Filename.concat bdir "notes_links" in
+    let db = NotesLinks.read_db_from_file fname in
+    let db = Notes.merge_possible_aliases conf db in
+    let pgl = Notes.links_to_ind conf base db key in
+    pgl
+  in
   let callback sp = do {
     let p = effective_mod conf base sp in
     let op = poi base p.key_index in
@@ -871,6 +882,7 @@ value print_mod o_conf base =
       String.concat " " (List.map (sou base) sl)
     in
     Notes.update_notes_links_db conf (NotesLinks.PgInd p.key_index) s;
+    Notes.patch_cache_person_linked_pages conf p.key_index (pgl <> []); 
     if not (eq_istr (get_surname op) p.surname) ||
        not (eq_lists eq_istr (get_surnames_aliases op) p.surnames_aliases) ||
        not (eq_lists (eq_titles eq_istr) (get_titles op) p.titles)

@@ -188,7 +188,7 @@ value compute base bdir =
           il)
       db;
     ProgrBar.start ();
-    let ht_cache = Hashtbl.create nb_ind in
+    let ht_cache = Hashtbl.create 1 in
     for i = 0 to nb_ind - 1 do {
       let ip = Adef.iper_of_int i in
       let p = poi base ip in
@@ -198,7 +198,7 @@ value compute base bdir =
         (fn, sn, get_occ p)
       in
       if Hashtbl.mem ht_key key then Hashtbl.add ht_cache ip True
-      else Hashtbl.add ht_cache ip False;
+      else ();
       ProgrBar.run i nb_ind
     };
     ProgrBar.finish ();

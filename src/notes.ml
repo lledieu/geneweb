@@ -662,10 +662,13 @@ value write_cache_person_linked_pages conf =
   | None -> () ]
 ;
 
-value patch_cache_person_linked_pages conf k v = do {
-  Hashtbl.replace ht_cache_person_linked_pages k v;
-  write_cache_person_linked_pages conf;
-};
+value patch_cache_person_linked_pages conf k v =
+  if v then do {
+    Hashtbl.replace ht_cache_person_linked_pages k v;
+    write_cache_person_linked_pages conf;
+  }
+  else ()
+;
 
 value has_linked_pages conf base ip db =
   let ht = read_cache_person_linked_pages conf in
@@ -679,8 +682,12 @@ value has_linked_pages conf base ip db =
           (fn, sn, get_occ p)
         in
         let links = links_to_ind conf base db key <> [] in
-        Hashtbl.add ht ip links;
-        write_cache_person_linked_pages conf;
-        links
+        if links then do {
+          Hashtbl.add ht ip links;
+          write_cache_person_linked_pages conf;
+          links
+        }
+        else
+          False
       } ]
 ;
