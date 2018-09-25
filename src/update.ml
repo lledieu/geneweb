@@ -52,6 +52,51 @@ value restrict_to_small_list el =
       | [] -> List.rev rl ]
 ;
 
+value print_person_parents_and_spouses conf base p = do {
+  Wserver.wprint "<a href=\"%s%s\">" (commd conf) (acces conf base p);
+  Wserver.wprint "%s.%d %s" (p_first_name base p) (get_occ p)
+    (p_surname base p);
+  Wserver.wprint "</a>";
+  Wserver.wprint "%s" (Date.short_dates_text conf base p);
+  let cop = Util.child_of_parent conf base p in
+  if cop != "" then Wserver.wprint ", %s" cop else ();
+  let ifam = get_family p in
+  let nbfam = Array.length ifam in
+  List.iteri
+    (fun i ifam -> do {
+       let fam = foi base ifam in
+       let sp = Gutil.spouse (get_key_index p) fam in
+       let sp = poi base sp in
+       Wserver.wprint ", &amp;";
+       if nbfam > 1 then Wserver.wprint "%d" (i + 1) else ();
+       Wserver.wprint " ";
+       Wserver.wprint "%s.%d %s" (p_first_name base sp) (get_occ sp)
+         (p_surname base sp);
+       Wserver.wprint "%s" (Date.short_dates_text conf base sp)})
+    (Array.to_list ifam);
+  Wserver.wprint "\n"
+};
+
+value print_same_name conf base p = do {
+  Wserver.wprint "<p>\n";
+  Wserver.wprint "%s%s\n"
+    (capitale (transl conf "persons having the same name")) (transl conf ":");
+  Wserver.wprint "<ul>\n";
+  let pl = Gutil.find_same_name base p in
+  let pl = restrict_to_small_list pl in
+  List.iter
+    (fun p -> do {
+       Wserver.wprint "<li>";
+       match p with
+        [ Some p -> print_person_parents_and_spouses conf base p
+        | None -> Wserver.wprint "...\n" ];
+       Wserver.wprint "</li>"} )
+    pl;
+  Wserver.wprint "</ul>\n";
+  Wserver.wprint "</p>\n"
+};
+
+(*
 value print_same_name conf base p =
   match Gutil.find_same_name base p with
   [ [_] -> ()
@@ -94,7 +139,7 @@ value print_same_name conf base p =
         end;
       end ]
 ;
-
+*)
 value print_return conf =
   tag "p" begin
     tag "form" "method=\"post\" action=\"%s\"" conf.command begin
@@ -834,12 +879,9 @@ value print_create_conflict conf base p var =
   do {
     rheader conf title;
     Wserver.wprint
-      (fcapitale (ftransl conf "name %s already used by %tthis person%t"))
+      (fcapitale (ftransl conf "name %s already used"))
       ("\"" ^ p_first_name base p ^ "." ^ string_of_int (get_occ p) ^ " " ^
-         p_surname base p ^ "\" (" ^ text ^ ")")
-      (fun _ ->
-         Printf.sprintf "<a href=\"%s%s\">" (commd conf) (acces conf base p))
-      (fun _ -> "</a>.");
+         p_surname base p ^ "\" (" ^ text ^ ")");
     let free_n =
       find_free_occ base (p_first_name base p) (p_surname base p) 0
     in
