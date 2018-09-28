@@ -401,6 +401,7 @@ value effective_merge_ind conf base warning p1 p2 =
       (get_occ p2);
     let p2 = UpdateIndOk.effective_del conf base warning p2 in
     patch_person base p2.key_index p2;
+    Notes.patch_cache_person_linked_pages conf p2.key_index False;
     let s =
       let sl =
         [p1.notes; p1.occupation; p1.birth_src; p1.baptism_src; p1.death_src;
@@ -409,7 +410,20 @@ value effective_merge_ind conf base warning p1 p2 =
       String.concat " " (List.map (sou base) sl)
     in
     Notes.update_notes_links_db conf (NotesLinks.PgInd p1.key_index) s;
-  }
+    let key =
+      (Name.lower (sou base p1.first_name),
+       Name.lower (sou base p1.surname),
+       p1.occ)
+    in
+    let pgl =
+      let bdir = Util.base_path [] (conf.bname ^ ".gwb") in
+      let fname = Filename.concat bdir "notes_links" in
+      let db = NotesLinks.read_db_from_file fname in
+      let db = Notes.merge_possible_aliases conf db in
+      let pgl = Notes.links_to_ind conf base db key in
+      pgl
+    in
+    Notes.patch_cache_person_linked_pages conf p1.key_index (pgl <> []);  }
 ;
 
 value is_ancestor base ip1 ip2 =

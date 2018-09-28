@@ -811,6 +811,7 @@ value print_del conf base =
       patch_person base ip p;
       delete_key base fn sn occ;
       Notes.update_notes_links_db conf (NotesLinks.PgInd p.key_index) "";
+      Notes.patch_cache_person_linked_pages conf p.key_index False;
       Util.commit_patches conf base;
       let changed = U_Delete_person op in
       History.record conf base changed "dp";
@@ -860,7 +861,8 @@ value print_mod o_conf base =
   let ofn = o_p.first_name in
   let osn = o_p.surname in
   let oocc = o_p.occ in
-  let key = (Name.lower ofn, Name.lower osn, oocc) in  let conf = Update.update_conf o_conf in
+  let key = (Name.lower ofn, Name.lower osn, oocc) in
+  let conf = Update.update_conf o_conf in
   let pgl =
     let bdir = Util.base_path [] (conf.bname ^ ".gwb") in
     let fname = Filename.concat bdir "notes_links" in
