@@ -3886,7 +3886,7 @@ value print_ascend conf base p =
       in
       interp_templ templ conf base p ]
 ;
-
+(*
 value print_what_links conf base p =
   if authorized_age conf base p then do {
     let key =
@@ -3909,6 +3909,52 @@ value print_what_links conf base p =
     in
     Hutil.header conf title;
     Hutil.print_link_to_welcome conf True;
+    Notes.print_linked_list conf base pgl;
+    Hutil.trailer conf;
+  }
+  else Hutil.incorrect_request conf
+;
+*)
+value print_what_links conf base p o_fn o_oc o_sn =
+  if authorized_age conf base p then do {
+    let fn = sou base (get_first_name p) in
+    let sn = sou base (get_surname p) in
+    let oc = get_occ p in
+    let key = (Name.lower fn, Name.lower sn, oc) in
+    let old_key = (Name.lower o_fn, Name.lower o_sn, o_oc) in
+    let bdir = Util.base_path [] (conf.bname ^ ".gwb") in
+    let fname = Filename.concat bdir "notes_links" in
+    let db = NotesLinks.read_db_from_file fname in
+    let db = Notes.merge_possible_aliases conf db in
+    let pgl = Notes.links_to_ind conf base db key in
+    let old_pgl = Notes.links_to_ind conf base db old_key in
+    let pub_nam = simple_person_text conf base p True in
+    let title h = do {
+      Wserver.wprint "%s%s " (capitale (transl conf "linked pages")) (transl conf ":");
+      if h then Wserver.wprint "%s" pub_nam
+      else
+        Wserver.wprint "<a href=\"%s%s\">%s</a>" (commd conf)
+          (acces conf base p) pub_nam;
+    }
+    in
+    Hutil.header conf title;
+    Hutil.print_link_to_welcome conf True;
+    if old_pgl <> [] then do {
+      Wserver.wprint "<h5>%s%s</h5>%s/%s/%d\n"
+        (capitale (transl conf "old name")) (transl conf ":") o_fn o_sn o_oc;
+      Wserver.wprint "<p>\n<h5>%s%s</h5>%s/%s/%d/%s\n"
+        (capitale (transl conf "new name")) (transl conf ":")
+        fn sn oc pub_nam;
+      Wserver.wprint "<br>%s/%s/%d/%s, %s\n<p>\n"
+        fn sn oc sn fn;
+      Wserver.wprint "%s<br>\n"
+        (capitale (transl conf "notes pointing to the old name"));
+      Notes.print_linked_list conf base old_pgl;
+      if pgl <> [] then Wserver.wprint "%s<br>\n"
+        (capitale (transl conf "notes pointing to the new name"))
+      else ();
+    }
+    else ();
     Notes.print_linked_list conf base pgl;
     Hutil.trailer conf;
   }

@@ -6,9 +6,33 @@ fr: dans quelques secondes
 en: :
 fr:  :
 
+    alert
+en: WARNING
+fr: ATTENTION
+
+    notes pointing to the new name
+en: notes pointing to the new name
+fr: notes pointant vers le nouveau nom
+
+    notes pointing to the old name
+en: notes pointing to the old name
+fr: notes pointant vers l'ancien nom
+
     click here for linked pages
 en: Cliking here will test for linked pages, at the cost of 1 seconds
 fr: Clicker ici testera la présence de pages liées, avec un coût de quelques secondes
+
+    name changed. update %s to old key
+fr: Le prénom, nom ou occurrence de cette personne a changé. Pensez à mettre à jour les %s à l’ancienne clé.
+en: The first name, name or occurrence of this person has changed. Please update %s to the old key.
+
+    old name
+en: old name
+fr: ancien nom
+
+    new name
+en: new name
+fr: nouveau nom
 
      !dates order
 af: yyyymmdd

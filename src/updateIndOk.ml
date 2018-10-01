@@ -624,7 +624,7 @@ value effective_del conf base warning p = do {
    notes = empty; psources = empty; key_index = ip}
 };
 
-value print_mod_ok conf base wl p =
+value print_mod_ok conf base wl pgl p ofn osn oocc =
   let title _ =
     Wserver.wprint "%s" (capitale (transl conf "person modified"))
   in
@@ -666,17 +666,27 @@ value print_mod_ok conf base wl p =
     Wserver.wprint "\n<p>%s</p>"
       (referenced_person_text conf base (poi base p.key_index));
     Wserver.wprint "\n";
-    Update.print_warnings conf base wl;
-    trailer conf;
+    let pi = p.key_index in
+    let index = string_of_int (Adef.int_of_iper pi) in
+    let np = poi base pi in
+    let nfn = p_first_name base np in
+    let nsn = p_surname base np in
+    let nocc = get_occ np in
+    if pgl <> [] && (ofn <> nfn || osn <> nsn || oocc <> nocc) then
+      do {
+        Wserver.wprint "<span style=\"color:red\">%s%s </span>"
+          (transl conf "alert") (transl conf ":");
+        let link = Printf.sprintf "<span>
+          <a href='%sm=LINKED;old_fn=%s;old_sn=%s;old_occ=%d;i=%s;' target='blank'>%s</a>"
+          (Util.commd conf) ofn osn oocc index (transl conf "linked pages") in
+        Wserver.wprint (ftransl conf "name changed. update %s to old key") link;
+        Wserver.wprint "</span>\n"
+      } else ();
+      Wserver.wprint "<p>\n";
+      Update.print_warnings conf base wl;
+      trailer conf;
   }
 ;
-
-(*
-value print_mod_ok conf base wl p =
-  if wl = [] then Perso.print conf base p
-  else print_mod_ok_aux conf base wl p
-;
-*)
 
 value relation_sex_is_coherent base warning p =
   List.iter
@@ -905,7 +915,7 @@ value print_mod o_conf base =
     then
       Update.delete_topological_sort_v conf base
     else ();
-    print_mod_ok conf base wl p;
+    print_mod_ok conf base wl pgl p ofn osn oocc
   }
   in
   print_mod_aux conf base callback

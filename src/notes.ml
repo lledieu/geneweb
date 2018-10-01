@@ -275,11 +275,19 @@ value print_linked_list conf base pgl =
                  (Date.short_dates_text conf base fath)
                  (Util.referenced_person_title_text conf base moth)
                  (Date.short_dates_text conf base moth)
-           | NotesLinks.PgNotes ->
+           | NotesLinks.PgNotes -> do {
+               Wserver.wprint "<a href='%sm=MOD_NOTES;'>" (commd conf);
+               Wserver.wprint "<img src='%s/picto_molette.png'>" (Util.image_prefix conf);
+               Wserver.wprint "</a> ";
                stagn "a" "href=\"%sm=NOTES\"" (commd conf) begin
                  Wserver.wprint "%s" (transl_nth conf "note/notes" 1);
                end
-           | NotesLinks.PgMisc fnotes ->
+               }
+           | NotesLinks.PgMisc fnotes -> do {
+               Wserver.wprint "<a href='%sm=MOD_NOTES;f=%s'>"
+                 (commd conf) fnotes;
+               Wserver.wprint "<img src='%s/picto_molette.png'>" (Util.image_prefix conf);
+               Wserver.wprint "</a> ";
                stagn "tt" begin
                  Wserver.wprint "[";
                  stag "a" "href=\"%sm=NOTES;f=%s\"" (commd conf) fnotes
@@ -288,7 +296,12 @@ value print_linked_list conf base pgl =
                  end;
                  Wserver.wprint "]";
                end
-           | NotesLinks.PgWizard wizname ->
+               }
+           | NotesLinks.PgWizard wizname -> do {
+               Wserver.wprint "<a href='%sm=MOD_WIZNOTES;v=%s'>"
+                 (commd conf) (code_varenv wizname);
+               Wserver.wprint "<img src='%s/picto_molette.png'>" (Util.image_prefix conf);
+               Wserver.wprint "</a> ";
                stagn "tt" begin
                  stag "i" begin
                    Wserver.wprint "%s"
@@ -301,7 +314,7 @@ value print_linked_list conf base pgl =
                  begin
                    Wserver.wprint "%s" wizname;
                  end;
-               end ];
+               end} ];
          end)
       pgl;
   end
