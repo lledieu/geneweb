@@ -16,6 +16,7 @@ CLEOPATRE_OBJS=$(STD_OBJS) gwlib.cmo cleopatre.cmo
 POPULE_OBJS=$(STD_OBJS) gwlib.cmo $(GWB)/src/calendar.cmo $(GWB)/src/outbase.cmo popule.cmo
 MODIF_OBJS=$(STD_OBJS) modif.cmo
 PUBLIC_OBJS=$(STD_OBJS) public.cmo
+CACHE_OBJS=$(STD_OBJS) cache.cmo
 PUBLIC2_OBJS=$(STD_OBJS) $(GWB)/src/progrBar.cmo public2.cmo
 DONADELLO_OBJS=$(STD_OBJS) donadello.cmo
 PARTICULE_OBJS=$(STD_OBJS) particule.cmo
@@ -26,9 +27,9 @@ NBDESC_OBJS=$(STD_OBJS) $(GWB)/src/progrBar.cmo nbdesc.cmo
 
 all:: opt
 
-out:: connex.out hist.out selroy.out chkimg.out consmoy.out cleopatre.out lune.out popule.out public.out public2.out titres.out gwck.out
+out:: connex.out hist.out selroy.out chkimg.out consmoy.out cleopatre.out lune.out popule.out public.out cache.out public2.out titres.out gwck.out
 
-opt:: connex.opt hist.opt selroy.opt chkimg.opt consmoy.opt lune.opt popule.opt public.opt public2.opt titres.opt gwck.opt nbdesc.opt
+opt:: connex.opt hist.opt selroy.opt chkimg.opt consmoy.opt lune.opt popule.opt public.opt cache.opt public2.opt titres.opt gwck.opt nbdesc.opt
 
 odif.opt: $(MODIF_OBJS:.cmo=.cmx)
 	$(OCAMLOPT) unix.cmxa $(LIBUNIX) $(MODIF_OBJS:.cmo=.cmx) -o modif.opt
@@ -44,6 +45,8 @@ public.out: $(PUBLIC_OBJS)
 
 public.opt: $(PUBLIC_OBJS:.cmo=.cmx)
 	$(OCAMLOPT) unix.cmxa $(LIBUNIX) $(PUBLIC_OBJS:.cmo=.cmx) -o public.opt
+cache.opt: $(CACHE_OBJS:.cmo=.cmx)
+	$(OCAMLOPT) unix.cmxa $(LIBUNIX) $(CACHE_OBJS:.cmo=.cmx) -o cache.opt
 
 public2.opt: $(PUBLIC2_OBJS:.cmo=.cmx)
 	$(OCAMLOPT) unix.cmxa $(LIBUNIX) $(PUBLIC2_OBJS:.cmo=.cmx) -o public2.opt
