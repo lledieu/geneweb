@@ -1678,7 +1678,7 @@ and eval_simple_str_var conf base env (p, p_auth) =
             let s = string_with_macros conf [] s in
             let lines = Wiki.html_of_tlsw conf s in
             let lines =
-              if List.length lines > 2 then 
+              if List.length lines > 2 then
                 match lines with
                 [ ["<p>" :: remain] -> List.rev (List.tl (List.rev remain))
                 | _ -> lines ]
@@ -2609,7 +2609,8 @@ and eval_str_person_field conf base env ((p, p_auth) as ep) =
             p_surname base (pget conf base (get_father (foi base ifam))) <>
               p_surname base p ]
       in
-      if not p_auth && (is_hide_names_full conf base p) then "x x"
+      if not p_auth && (is_hide_names_full conf base p) then
+        Printf.sprintf "x x"
       else if force_surname then person_text conf base p
       else person_text_no_surn_no_acc_chk conf base p
   | "consanguinity" ->
@@ -2985,7 +2986,7 @@ and simple_person_text conf base p p_auth =
     match main_title conf base p with
     [ Some t -> titled_person_text conf base p t
     | None -> person_text conf base p ]
-  else if (is_hide_names conf p) then "x x"
+  else if (is_hide_names_full conf base p) then "x x"
   else person_text conf base p
 and string_of_died conf base env p p_auth =
   if p_auth then

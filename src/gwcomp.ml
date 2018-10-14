@@ -424,7 +424,7 @@ value rec get_access str l =
   match l with
   [ ["#apubl" :: l'] -> (Public, l')
   | ["#apriv" :: l'] -> (Private, l')
-  | ["#afriendm" :: l'] -> (Friend_m, l')
+  | ["#afriendm" :: l'] -> (Friend, l')
   | ["#afriend" :: l'] -> (Friend, l')
   | _ -> (IfTitles, l) ]
 ;
@@ -634,7 +634,7 @@ value rgpd_access fn sn occ str l =
   let ocs = string_of_int occ in
   let (access, l) =
     let d_sep = Filename.dir_sep in
-    let rgpd_file = 
+    let rgpd_file =
        rgpd_files.val ^ d_sep ^ fns ^ "." ^ ocs ^ "." ^ sns
     in
       (* if one of the files exist, set the Friend or Friend_m value *)
@@ -646,7 +646,7 @@ value rgpd_access fn sn occ str l =
     else (access, l)
   in
   let frs = if access=Friend then "Friend" else if access=Friend_m then "Friend_m" else "Other" in
-  let _ = if access=Friend || access=Friend_m 
+  let _ = if access=Friend || access=Friend_m
     then do {
       incr Mutil.f_cnt;
       if Mutil.verbose_friends.val=True then Printf.printf "Set to %s %s.%s %s\n" frs fns ocs sns else ()

@@ -12,7 +12,7 @@ open Printf;
 value is_hide_names_full conf base p =
   let is_access_friend =
     match get_access p with
-    [ Friend | Friend_m -> True
+    [ Friend -> True
     | _ ->
       match
         (Adef.od_of_codate (get_birth p), Adef.od_of_codate (get_baptism p),
@@ -24,23 +24,26 @@ value is_hide_names_full conf base p =
             match get_parents p with
             [ Some ifam ->
               let cpl = foi base ifam in
-              (get_access (poi base (get_father cpl)) = Friend_m) ||
-              (get_access (poi base (get_mother cpl)) = Friend_m)
+              (get_access (poi base (get_father cpl)) = Friend) ||
+              (get_access (poi base (get_mother cpl)) = Friend)
             | None -> False ]
           else False
       | _ -> False ] ]
   in
   let is_access_friend = if conf.friend && conf.half_rgpd then True else is_access_friend in
-  if conf.hide_names || get_access p = Private ||
-    (conf.friend && not is_access_friend) then True
-  else False
+  if conf.wizard || get_access p = Public then False
+  else if
+    conf.friend && get_access p = Private && not conf.half_rgpd then True
+  else if
+    conf.friend && get_access p = Friend ||
+    conf.friend && is_access_friend then False
+  else True
 ;
 
 value is_hide_names conf p =
   if conf.wizard || get_access p = Public ||
     conf.friend && get_access p = Friend ||
-    conf.friend && get_access p = Friend_m ||
-    conf.half_rgpd && conf.friend then False
+    conf.friend && conf.half_rgpd then False
   else True
 ;
 
@@ -605,7 +608,6 @@ value is_old_person conf p =
 
 value fast_auth_age conf p =
   if (conf.friend && get_access p = Friend) ||
-    (conf.friend && get_access p = Friend_m) ||
     conf.wizard || get_access p = Public then True
   else if get_access p = Private then False
   else if
@@ -680,7 +682,7 @@ value parent_has_title conf base p =
 value authorized_age conf base p =
   let is_access_friend =
     match get_access p with
-    [ Friend | Friend_m -> True
+    [ Friend -> True
     | _ ->
       match
         (Adef.od_of_codate (get_birth p), Adef.od_of_codate (get_baptism p),
@@ -692,8 +694,8 @@ value authorized_age conf base p =
             match get_parents p with
             [ Some ifam ->
               let cpl = foi base ifam in
-              (get_access (poi base (get_father cpl)) = Friend_m) ||
-              (get_access (poi base (get_mother cpl)) = Friend_m)
+              (get_access (poi base (get_father cpl)) = Friend) ||
+              (get_access (poi base (get_mother cpl)) = Friend)
             | None -> False ]
           else False
       | _ -> False ] ]
@@ -769,7 +771,6 @@ value accessible_by_key conf base p fn sn =
   && not (fn = "?" || sn = "?")
   && (not (is_hide_names conf p) || is_public conf base p ||
         (conf.friend && get_access p = Friend) ||
-        (conf.friend && get_access p = Friend_m) ||
         conf.wizard)
 ;
 

@@ -265,7 +265,7 @@ value reconstitute_person conf =
     [ Some "Public" -> Public
     | Some "Private" -> Private
     | Some "Friend" -> Friend
-    | Some "Friend_m" -> Friend_m
+    | Some "Friend_m" -> Friend
     | _ -> IfTitles ]
   in
   let occupation = only_printable (get conf "occu") in
@@ -894,7 +894,7 @@ value print_mod o_conf base =
       String.concat " " (List.map (sou base) sl)
     in
     Notes.update_notes_links_db conf (NotesLinks.PgInd p.key_index) s;
-    Notes.patch_cache_person_linked_pages conf p.key_index (pgl <> []); 
+    Notes.patch_cache_person_linked_pages conf p.key_index (pgl <> []);
     if not (eq_istr (get_surname op) p.surname) ||
        not (eq_lists eq_istr (get_surnames_aliases op) p.surnames_aliases) ||
        not (eq_lists (eq_titles eq_istr) (get_titles op) p.titles)

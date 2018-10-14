@@ -60,10 +60,10 @@
 %(<!-- Begin define (used in updind.txt, updfam.txt)  -->%)
   <script type="text/javascript">
   <!--
-  function changeCalendar(e,v,d2,d3,m,c) 
+  function changeCalendar(e,v,d2,d3,m,c)
   {
     var mv = m;
-    switch (m) 
+    switch (m)
     {
       case "VD": mv = 1; break;
       case "BR": mv = 2; break;
@@ -79,7 +79,7 @@
       case "FT": mv = 12; break;
       case "JC": mv = 13; break;
     }
-    switch(c.options%[c.selectedIndex%].value) 
+    switch(c.options%[c.selectedIndex%].value)
     {
       case 'G':
       case 'J':
@@ -152,7 +152,7 @@
 
   %define;date(xlab,xvar,xdate)
     <span %apply;sure_date("xdate")>
-      <select name="xvar_cal"%sp; title="[*calendar/calendars]0"%sp; 
+      <select name="xvar_cal"%sp; title="[*calendar/calendars]0"%sp;
         onchange="changeCalendar('xvar_mm_sel','xvar_mm','xvar_d2','xvar_d3','%xdate.month;',this)"%sp;
         onkeydown="if (event.keyCode == 13) javascript:document.upd.submit();">
         <option value="G"%if;(xdate.calendar = "gregorian") selected="selected"%end;>[*gregorian/julian/french/hebrew]0</option>
@@ -234,7 +234,7 @@
 %define;place(xvar,xx)
   <label>[*place]%nn;
     <input name="xvar_place" size="90" maxlength="200"%sp;
-     title="[*place] : 2=[birth], 3=[baptism], 4=[death], 5=[burial]"%sp; 
+     title="[*place] : 2=[birth], 3=[baptism], 4=[death], 5=[burial]"%sp;
      value="%xx_place;" id="xvar_place" onblur="fillPlaceInd(this)"%/>
    </label>
 %end;
@@ -259,7 +259,7 @@
   </strong>
   <br%/>
   <label>[*name]0
-    <input name="t_namexcnt" size="20" 
+    <input name="t_namexcnt" size="20"
     value="%title.t_name;"%sp;id="t_namexcnt"%/></label>
   <label>[*nth]0
     <input name="t_nthxcnt" class="number" autocomplete="off" size="3" value="%title.t_nth;"%sp;
@@ -276,7 +276,7 @@
 %end
 
 %define;insert_relation(xcnt)
-  <label class="addrow"%sp; 
+  <label class="addrow"%sp;
     %if;(xcnt=0)
       title="[insert::relation/relations]0 (7)" accesskey="7"
     %else;
@@ -288,11 +288,11 @@
 
 %define;relations(xcnt)
   <tr class="background_sex_0">
-   <td rowspan="2" class="bg7">%apply;relation_type("xcnt")</td> 
+   <td rowspan="2" class="bg7">%apply;relation_type("xcnt")</td>
    <td>[*him/her]0</td>
    %apply;one_relation("xcnt","fath","r_father")
   </tr>
-  <tr class="background_sex_1"> 
+  <tr class="background_sex_1">
    <td>[*him/her]1</td>
    %apply;one_relation("xcnt","moth","r_mother")
    <td class="bg7">%apply;insert_relation("xcnt")</td>
@@ -374,7 +374,7 @@
 
 <fieldset>
   <legend>
-    <sup>(1)</sup> 
+    <sup>(1)</sup>
     %if;(evar_m = "MRG_IND_OK" or evar_m = "MRG_MOD_IND_OK")
       [*merge::person/persons]1 # %index;
     %elseif;(evar_m = "MOD_IND" or evar_m = "MOD_IND_OK")
@@ -384,7 +384,7 @@
     %end;
     &nbsp;<input type="submit" value="Ok"%/>
   </legend>
-    
+
   <p id="sex_person" %if;is_male;class="background_sex_0"%elseif;is_female;class="background_sex_1"%else;class="background_sex_2"%end;>
     <label title="[*first name/first names]0 (1)" accesskey="1">[*first name/first names]0<input name="first_name" size="30" maxlength="200" value="%first_name;"%sp;id="first_name"%/></label>%nn;
     <br%/>
@@ -415,9 +415,6 @@
       <label><input id="access_4" type="radio" name="access" value="Friend"%if;acc_friend; checked="checked"%end;%sp;
         onkeydown="if (event.keyCode == 13) javascript:document.upd.submit();
                    if (event.keyCode == 32) javascript:valid('access_4');" %l_on1;%/>[*friend]0</label>
-      <label><input id="access_5" type="radio" name="access" value="Friend_m"%if;acc_friend_m; checked="checked"%end;%sp;
-        onkeydown="if (event.keyCode == 13) javascript:document.upd.submit();
-                   if (event.keyCode == 32) javascript:valid('access_5');" %l_on1;%/>[*friend and minors]0</label>
       <label><input id="access_3" type="radio" name="access" value="Private"%if;acc_private; checked="checked"%end;%sp;
         onkeydown="if (event.keyCode == 13) javascript:document.upd.submit();
                    if (event.keyCode == 32) javascript:valid('access_1');" %l_on1;%/>[*private]0</label>
@@ -509,7 +506,7 @@
 <fieldset>
   <legend><sup>(4)</sup> [*death]
     <label title="[*death] (4)" accesskey="4">
-    <select id="death" name="death" 
+    <select id="death" name="death"
       onkeydown="if (event.keyCode == 13) javascript:document.upd.submit();"
       onchange="setDead(this)"
       onkeypress="return changeFocusDeath(event);"
@@ -536,7 +533,7 @@
       <option value="Killed"%if;dr_killed; selected="selected" %end;>[*killed (in action)]2</option>
       <option value="Murdered"%if;dr_murdered;selected="selected"%end;>[*murdered]2</option>
       <option value="Executed"%if;dr_executed;selected="selected"%end;>[*executed (legally killed)]2</option>
-      <option value="Disappeared"%if;dr_disappeared;selected="selected"%end;>[*disappeared]2</option>  
+      <option value="Disappeared"%if;dr_disappeared;selected="selected"%end;>[*disappeared]2</option>
     </select>
   </legend>
   <div id="content_death" %if;(not_dead or dont_know_if_dead or of_course_dead)style="display: none;"%end;>
