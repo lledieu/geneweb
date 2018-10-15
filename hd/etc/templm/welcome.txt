@@ -3,7 +3,7 @@
 <head>
   <!-- $Id: welcome.txt,v 1.40 2007-08-04 07:22:30 ddr Exp $ -->
   <!-- Copyright (c) 2006-2007 INRIA -->
-  <!-- Modified mickroue(a)yahoo.fr 20130630 templ=templm -->
+  <!-- Modified mickroue(a)yahoo.fr hg 2018-10-15 templ=templm -->
   <title>Geneweb - %base.name;</title>
   <meta name="robots" content="none"%/>
   <meta name="format-detection" content="telephone=no"%/>
@@ -96,7 +96,7 @@ fr: Les droits des magiciens sont actuellement suspendus pour maintenance.
         </form>
       %end;
     %end;
-  %end; 
+  %end;
   %if;(wizard or friend)
     %if;(friend)
       %apply;disconnect("friend",[wizard/wizards/friend/friends/exterior]2)
@@ -198,26 +198,26 @@ fr: Les droits des magiciens sont actuellement suspendus pour maintenance.
         [*search/case sensitive]0
       %end;
     </h3>
-    <form id="welcome_form-person" method="get" action="%action;">
+    <form id="welcome_form-person" method="get" action="%prefix;">
       <table>
         <tr><td>
           %hidden;
-          <input id="mNG" type="hidden" name="m" value="NG"%/>
-          <label><input id="tPN" type="radio" name="t" value="PN" checked="checked"
-                        onclick="changeTri('hidden');this.focus()"
-                  %/><abbr title="[first name/first names]0/[surname/surnames]0, [public name], [alias], Sosa…">[person/persons]0</abbr></label>
-          <label><input id="tP" type="radio" name="t" value="P" 
-                        onclick="changeTri('visible');this.focus()"%/>[first name/first names]0</label>
-          <label><input id="tN" type="radio" name="t" value="N" 
-                        onclick="changeTri('visible');this.focus()"%/>[surname/surnames]0</label>
+          <span class="highlight">[*person/persons]0</span>
+          <input type="hidden" name="m" value="NG"%/>
+          <br%/>
+          <input type="text" name="n" placeholder="[*first name/first names]0 [surname/surnames]0, [*public name], [*alias] %if;browsing_with_sosa_ref;, [n° Sosa relative to]%end; ..." size="77" maxlength="200" autofocus %/>
+          %if;browsing_with_sosa_ref;<br%/>%apply;display_sosa_ref%with;%sosa_ref;%end;%end;
+          <br%/>
+          <input type="text" name="fn" placeholder="[*first name/first names]0" size="35" maxlength="200"
+            onclick="changeTri('visible');this.focus()"%/>
+          <input type="text" name="sn" placeholder="[*surname/surnames]0" size="35" maxlength="200"
+            onclick="changeTri('visible');this.focus()"%/>
           <label id="labelTriA" style="visibility:hidden;">
-                 <input id="triA" type="checkbox" name="tri" value="A"
-                        onclick="changeTri('visible');this.focus()"%/>[starting with]</label>
-          <br%/><input id="n" name="n" size="54" maxlength="200"
-                       onkeypress="javascript:return computeSosa(event,'n')"%/>
-        </td><td align="right">
-          <input type="submit" value="Ok"%/>
-        </td></tr>
+            %(<input id="triA" type="checkbox" name="tri" value="A"
+                onclick="changeTri('visible');this.focus()"%/>[starting with]</label>%)
+          </td>
+          <td align="right"><input type="submit" value="Ok"%/></td>
+        </tr>
       </table>
     </form>
     %if;(bvar.propose_place_surnames != "no")%nl;
@@ -225,7 +225,7 @@ fr: Les droits des magiciens sont actuellement suspendus pour maintenance.
         <table>
           <tr><td>
             %hidden;
-            [*place] :
+            <span class="highlight">[*place]</span>
             <input type="hidden" name="m" value="PS"%/>
             <label><input type="checkbox" name="bi" value="on" checked="checked" %l_on1;%/>[birth]</label>
             <label><input type="checkbox" name="bp" value="on" checked="checked" %l_on1;%/>[baptism]</label>
@@ -244,10 +244,10 @@ fr: Les droits des magiciens sont actuellement suspendus pour maintenance.
           <tr><td>
             %hidden;
             <input type="hidden" name="m" value="TT"%/>
-            <label>[*title/titles]0
+            <label class="highlight">[*title/titles]0
             <input name="t" size="25" maxlength="200"%/>%nn;
             </label>
-            <label>[*estate]0
+            <label class="highlight">[*estate]0
               <input name="p" size="25" maxlength="200"%/>
             </label>
           </td><td align="right">
@@ -372,7 +372,7 @@ is: Það hafa verið %nb_accesses; heimsóknir, %nb_accesses_to_welcome;
 it: Dal %start_date; ci sono stati %nb_accesses; accessi,
     %nb_accesses_to_welcome; dei quali a questa pagina.
 lv: Kopš %D datu bāze ir apmeklēta %nb_accesses; reizes,
-    %nb_accesses_to_welcome; no tiem ir bijuši šinī lappusē. 
+    %nb_accesses_to_welcome; no tiem ir bijuši šinī lappusē.
 nl: Deze paginas zijn sinds %start_date; reeds %nb_accesses; maal
     bezocht, waaronder %nb_accesses_to_welcome; maal deze verwelkomingspagina.
 no: Det har vært %nb_accesses; aksesser, %nb_accesses_to_welcome;

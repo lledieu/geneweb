@@ -1,29 +1,33 @@
-<!-- trl.txt Modified mickroue(a)yahoo.fr 20130701 templ=templm -->
+<!-- trl.txt Modified mickroue(a)yahoo.fr, hg 2018-10-15 templ=templm -->
 
 %if;(not cancel_links)
   <div id="trl">
     <form id="Tsearch" method="get" action="%action;">
-      <div>
-        %hidden;
-        <input id="TmNG" type="hidden" name="m" value="NG"%/>
-        <label><input id="TtPN" type="radio" name="t" value="PN" checked="checked"
-                      onclick="TchangeTri('hidden');this.focus()"
-                %/><abbr title="[first name/first names]0/[surname/surnames]0, [public name], [alias], Sosa…">[person/persons]0</abbr></label>
-        <label><input id="TtP" type="radio" name="t" value="P" 
-                      onclick="TchangeTri('visible');this.focus()"%/>[first name/first names]0</label>
-        <label><input id="TtN" type="radio" name="t" value="N" 
-                      onclick="TchangeTri('visible');this.focus()"%/>[surname/surnames]0</label>
-        <label id="TlabelTriA" style="visibility:hidden;">
-               <input id="TtriA" type="checkbox" name="tri" value="A"
-                      onclick="TchangeTri('visible');this.focus()"%/>[starting with]</label>
-        <br%/><input id="Tn" name="n" size="54" maxlength="200"
-                     title="[*search/case sensitive]0 (²)" accesskey="²"
-                     onclick="this.focus()" onkeypress="javascript:return computeSosa(event,'Tn')"%/>
-        <input type="submit" value="[*search/case sensitive]0 (²)"%/>
-        %if;(bvar.hide_advanced_request = "no")
-          <span class="button"><a href="%prefix;m=H;v=advanced">[*advanced request]</a></span>
-        %end;
-      </div>
+      <table>
+        <tr><td>
+          %hidden;
+          <span class="highlight">[*person/persons]0</span>
+          <input type="hidden" name="m" value="NG"%/>
+          <br%/>
+          <input type="text" name="n" placeholder="[*first name/first names]0 [surname/surnames]0, [*public name], [*alias] %if;browsing_with_sosa_ref;, [n° Sosa relative to]%end; ..." size="77" maxlength="200" autofocus %/>
+          %if;browsing_with_sosa_ref;<br%/>%apply;display_sosa_ref%with;%sosa_ref;%end;%end;
+          <br%/>
+          <input type="text" name="fn" placeholder="[*first name/first names]0" size="35" maxlength="200"
+            onclick="changeTri('visible');this.focus()"%/>
+          <input type="text" name="sn" placeholder="[*surname/surnames]0" size="35" maxlength="200"
+            onclick="changeTri('visible');this.focus()"%/>
+          <label id="labelTriA" style="visibility:hidden;">
+            %(<input id="triA" type="checkbox" name="tri" value="A"
+                onclick="changeTri('visible');this.focus()"%/>[starting with]</label>%)
+          </td>
+          <td align="right"><input type="submit" value="Ok"%/></td>
+          <td>
+            %if;(bvar.hide_advanced_request = "no")
+              <span class="button"><a href="%prefix;m=H;v=advanced">[*advanced request]</a></span>
+            %end;
+          </td>
+        </tr>
+      </table>
     </form>
   </div>
   %if;(evar.digest = "")
@@ -59,7 +63,7 @@
       htmlTitle == "[*family added]"
     )
     {
-      if (window.opener && !window.opener.closed) 
+      if (window.opener && !window.opener.closed)
       {
         document.getElementById("trl").innerHTML = '\
         <p><a id="reloadclose" href="javascript:reloadClose()">[X]<\/a><\/p>\

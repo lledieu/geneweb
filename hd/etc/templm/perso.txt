@@ -36,21 +36,21 @@
   %let;l_url;;wide=%evar.wide;;maxlev=%l_maxlev;;image=%evar.image;;spouse=%evar.spouse;;%in;
   %let;l_ldates;
     %if;(evar.del="on")
-      class="del" target="ifr" onclick="javascript:deleted(this);" 
-      title="[delete::person/persons]0" 
+      class="del" target="ifr" onclick="javascript:deleted(this);"
+      title="[delete::person/persons]0"
       href="%prefix;m=DEL_IND_OK;%nn;
     %else;
-      onclick="window.open(this.href); return false;" 
-      title="[modify::person/persons]0" 
+      onclick="window.open(this.href); return false;"
+      title="[modify::person/persons]0"
       href="%prefix;m=MOD_IND;%nn;
     %end;
   %in;
   %let;l_lmarriage1;
     %if;(evar.del="on" and wizard)
-      class="del" target="ifr" onclick="javascript:deleted(this);" 
+      class="del" target="ifr" onclick="javascript:deleted(this);"
       href="%prefix;m=DEL_FAM_OK;%nn;
     %elseif;(wizard)
-      onclick="window.open(this.href); return false;" 
+      onclick="window.open(this.href); return false;"
       href="%prefix;m=MOD_FAM;%nn;
     %else;
       href="#%nn;
@@ -105,7 +105,7 @@
           %xx.spouse.marriage_age;%nn;
         %else; ? [years old]%end;%nn;
       %in;
-      <a id="f%family.index;" %l_lmarriage1;i=%family.index;;ip=%index;" 
+      <a id="f%family.index;" %l_lmarriage1;i=%family.index;;ip=%index;"
          title=" %him;%nl; %her; %l_lmarriage2;"
          >&amp;%if;(on_marriage_date != "")%marriage_date.prec;%marriage_date.year;%end;</a>
     %else;
@@ -476,8 +476,8 @@
       %end;
     %elseif;(wizard and not cancel_links and first_name != "?" and surname != "?")
        <div class="fam2 button">
-         <a id="add_par" href="%prefix;m=ADD_PAR;ip=%index;" 
-            title="[add::parents] (L)" accesskey="L" 
+         <a id="add_par" href="%prefix;m=ADD_PAR;ip=%index;"
+            title="[add::parents] (L)" accesskey="L"
             onclick="window.open(this.href); return false;">[add::parents]</a>
        </div>
     %end;
@@ -590,7 +590,7 @@
   %end;
 
   %define;nav_with_sosa_ref(xx)
-    <a id="nav_sosa_ref" accesskey="S" 
+    <a id="nav_sosa_ref" accesskey="S"
        href="%prefix_no_iz;iz=%self.index;;%self.access;%l_url;"
        title="[navigation with %t as Sosa reference:::xx] (S)">[*navigation with %t as Sosa reference:::xx]</a>
   %end;
@@ -599,9 +599,9 @@
     %if;cancel_links;z2%nn;
     %else;
       %let;x1;
-        %prefix;m=NG;t=z1;n=%nn;
+        %prefix;m=NG;t=z1;%if;("z1"="P")fn=%elseif("z1"="N")sn=%else;n=%end;%nn;
       %in;
-      <a href="javascript:void()" onclick="javascript:adv1('%x1;',this)" title="[search/case sensitive]0">z2</a>%nn;
+      <a href="javascript:void()" onclick="javascript:adv('%x1;',this)" title="[search/case sensitive]0">z2</a>%nn;
     %end;
   %end;
 
@@ -864,7 +864,7 @@
             %if;(cancel_links)
               [consanguinity] : %consanguinity;
             %else;
-              <a href="%prefix;em=R;ei=%mother.index;;m=NG;t=PN;select=%father.index;;et=A;spouse=on;image=on" 
+              <a href="%prefix;em=R;ei=%mother.index;;m=NG;t=PN;select=%father.index;;et=A;spouse=on;image=on"
                  title="[relationship computing], [parents]">[consanguinity] : %consanguinity;</a>
             %end;
             %if;(count != 0) (%nn;
