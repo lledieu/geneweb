@@ -185,12 +185,13 @@ use of database forum by ill-intentioned people to communicate)...
           loop quot_lev pos j (Buff.mstore len t)
       | NotesLinks.WLperson j (fn, sn, oc) name _ ->
           let name = if wi.wi_person_exists (fn, sn, oc) ||
-            conf.friend && conf.half_rgpd then name else "x x" in
+            conf.friend && conf.half_rgpd || conf.wizard then name else "x x"
+          in
+          let color = " style=\"color:red\"" in
+          let color1 = if wi.wi_mark_if_not_public (fn, sn, oc)
+            then "style=\"color:red\"" else ""
+          in
           let t =
-            let color = if conf.friend && conf.half_rgpd then "" else " style=\"color:red\"" in
-            let color1 = if wi.wi_mark_if_not_public (fn, sn, oc) then "style=\"color:red\""
-              else ""
-            in
             if wi.wi_cancel_links || name = "x x" then name
             else if wi.wi_person_exists (fn, sn, oc) then
               sprintf "<a id=\"p_%d\" href=\"%sp=%s;n=%s%s\" %s>%s</a>"
