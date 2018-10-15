@@ -889,10 +889,31 @@
         %end;
       %end;
       %( <!-- End display sosa consang nb ancestors nb descendants --> %)
-      %if;(not cancel_links and has_linked_pages)
-        <small style = "float: right;">
-          (<a href="%prefix;m=LINKED;%access;">[linked pages]</a>)
-        </small>
+      %if;(bvar.test_linked_pages="yes")
+        <table style="float:left"><tr><td style="font-size:80%%">
+          (<a href="%prefix;%foreach;env_binding;%env.key=%env.val;;%end;linked_pages=yes;"
+            title="[click here for linked pages]">%nn;
+            [*test for linked pages]%nn;
+           </a>)
+        </td></tr></table>
+        %if;(not cancel_links and evar.linked_pages="yes")
+          %if;(has_linked_pages)
+           <table style="float:left"><tr><td style="font-size:80%%">
+             ([*in a few sec])
+           </td></tr></table>
+           <meta http-equiv="refresh" content="0;url=http://roglo.eu/%prefix;m=LINKED;%access;">
+          %else;
+            <table style="float:left"><tr><td style="font-size:80%%">
+              ([*no linked pages])
+            </td></tr></table>
+          %end;
+        %end;
+      %else;
+        %if;(not cancel_links and has_linked_pages)
+          <table style="float:left"><tr><td style="font-size:80%%">
+            (<a href="%prefix;m=LINKED;%access;">[linked pages]</a>)
+          </td></tr></table>
+        %end;
       %end;
     </p>
   </div>
