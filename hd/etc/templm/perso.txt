@@ -1104,6 +1104,42 @@
         <span style="background-color:ivory" >&nbsp;%[%[%first_name_key_val;/%surname_key_val;/%occ;/%first_name; %surname;%]%]</span>
       %end;
     </div>
+      %if;(wizard)
+      <span>&nbsp;
+        <a href="%prefix;;em=R;ei=%index;;m=NG;select=input;n=%user.name;;t=PN;spouse=on;long=on;et=S">
+        <img src="%image_prefix;/link.jpg" alt="W"%/>%nn;
+        </a>
+        %if;(bvar.show_invisible = "on")
+          <a href="%bvar.Base_Wiz;_f?lang=%evar.lang;;%if;(evar.templ!="")templ=%evar.templ;;%end;i=%index;;o=%occ;">
+          %if;is_friend;
+            <img src="%image_prefix;/friend.gif"%wid_hei;restricted.png; alt=" (f)"%/>%nn;
+          %elseif;is_invisible;
+            <img src="%image_prefix;/restricted.png"%wid_hei;restricted.png; alt=" (x)"%/>%nn;
+          %else;
+            <img src="%image_prefix;/1pixel.png"%wid_hei;restricted.png; alt=" "%/>%nn;
+          %end;
+          </a>
+          %if;(bvar.wizard_not_wizard!="yes")
+            <a href="%bvar.Base_Wiz;_w?%nn;
+              %( pourquoi ne pas utiliser %prefix;?? %)
+              %if;(evar.lang!="")&lang=%evar.lang;%end;%nn;
+              %if;(evar.templ!="")&templ=%evar.templ;%end;%nn;
+              %if;(evar.dsrc!="")&dsrc=%evar.dsrc;%end;%nn;
+              %( TO DO généraliser foreach env_binding dans les aurtes cas %)
+              %foreach;env_binding;
+                %if;(env.key != "m" and env.key != "i" and env.key != "o" and
+                     env.key != "lang" and env.key != "templ and env.key != "dsrc")
+                  &%env.key=%env.val;%nn;
+                %end;
+              %end;
+              &m=MOD_IND&i=%index;&o=%occ;"><img src="%image_prefix;/b_edit.png" alt="edit"></a>
+          %end;
+        %end;
+      </span>
+      %end;
+      %sp;
+      <span>%include.vaetvient;</span>
+    </div>
   %end;
 %( <!-- End display menu --> %)
   %if;(not cancel_links and wizard and (evar.opt = "misc" or bvar.misc = "on"))
