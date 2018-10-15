@@ -1120,11 +1120,6 @@
           %end;
         </span>
       </span>
-      <br>
-      %if;(wizard or friend)
-        <span style="background-color:ivory" >&nbsp;%[%[%first_name_key_val;/%surname_key_val;/%occ;/%first_name; %surname;%]%]</span>
-      %end;
-    </div>
       %if;(wizard)
       <span>&nbsp;
         <a href="%prefix;;em=R;ei=%index;;m=NG;select=input;n=%user.name;;t=PN;spouse=on;long=on;et=S">
