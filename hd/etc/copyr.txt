@@ -1,15 +1,44 @@
-
+<!-- copyr.txt hg 2018-10-16 18:50 -->
 <div id="footer">
   <br />
   <hr />
   <div>
     <em>
-      <a href="https://github.com/geneweb/geneweb" target="_blank">
+<script type="text/javascript"><!--
+    document.write('<a href="'+document.URL+';opt=no_index">'+"%apply;interp([
+bg: Страницата
+de: Seite
+en: Page
+es: página
+et: Kasutusel
+fr: Page
+it: Pagina
+sl: Strani
+])</a>");
+--></script>
+%apply;interp([
+bg: е показана от
+de: angezeigt von
+en: displayed by
+es: mostrada por
+et: on
+fr: affichée par
+it: visualizzata da
+sl: ustvarjene z:
+])
+%sp;<a href="https://github.com/geneweb/geneweb" target="_blank">
       <img src="%image_prefix;/logo_bas.png"
-      style="vertical-align: middle; border: 0"
-      alt="GeneWeb" title="GeneWeb"%/></a>%sp;
+        style="vertical-align: middle; border: 0"
+        alt="GeneWeb" title="GeneWeb"%/></a>%sp;
       Version %version; %compilation_time;%sp;
       Copyright &copy; 1998-2016 %connections;%sq;
-    </em><br%/>
+    </em>
+%sp;<a href="https://geneweb.tuxfamily.org/wiki/GeneWeb%if;(lang!="en")/%lang;%end;"
+      target="_blank"
+      title="GeneWeb documentation MediaWiki">%nn;
+      <img src="%image_prefix;/logo_bas_mw.png"
+        style="vertical-align: middle; border: 0"
+        alt="Logo GeneWeb wiki"%/></a>
+    <br%/>
   </div>
 </div>
