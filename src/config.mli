@@ -49,6 +49,8 @@ type config =
     setup_link : mutable bool;
     access_by_key : bool;
     private_years : int;
+    private_years_death : int;
+    private_years_marriage : int;
     minor_age : int;
     hide_names : bool;
     use_restrict : bool;
