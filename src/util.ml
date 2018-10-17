@@ -587,45 +587,32 @@ value strictly_after_private_years conf lim a =
 ;
 
 value is_old_person conf p =
-  let test0 =
-    match p.death
+  match p.death
     with
     [ DontKnowIfDead ->
       p.access <> Private && conf.public_if_no_date
     | _ -> False ]
-  in
-  let test1 =
-    match Adef.od_of_codate p.birth
+  ||
+  match Adef.od_of_codate p.birth
     with
     [ Some (Dgreg d _) ->
       let a = CheckItem.time_elapsed d conf.today in
       strictly_after_private_years conf conf.private_years a
     | _ -> False ]
-  in
-  let test2 =
-    match Adef.od_of_codate p.baptism
+  ||
+  match Adef.od_of_codate p.baptism
     with
     [ Some (Dgreg d _) ->
       let a = CheckItem.time_elapsed d conf.today in
       strictly_after_private_years conf conf.private_years a
     | _ -> False ]
-  in
-  let test3 =
-    match (CheckItem.date_of_death p.death)
+  ||
+  match (CheckItem.date_of_death p.death)
     with
     [ Some (Dgreg d _) ->
       let a = CheckItem.time_elapsed d conf.today in
       strictly_after_private_years conf conf.private_years_death a
     | _ -> False ]
-  in
-  (*let _ = Printf.eprintf "is_old_person (%d) %d %d %d %d\n"
-    (Adef.int_of_iper p.key_index)
-    (if test0 then 1 else 0)
-    (if test1 then 1 else 0)
-    (if test2 then 1 else 0)
-    (if test3 then 1 else 0)
-  in*)
-  test0 || test1 || test2 || test3
   (*
   match
     (Adef.od_of_codate p.birth, Adef.od_of_codate p.baptism,
@@ -751,61 +738,45 @@ value authorized_age conf base p =
     let death = get_death p in
     if death = NotDead then conf.private_years = 0
     else do {
-      let test0 =
-        match get_death p
+      match get_death p
         with
         [ DontKnowIfDead ->
           get_access p <> Private && conf.public_if_no_date
         | _ -> False ]
-      in
-      let test1 =
-        match Adef.od_of_codate (get_birth p)
+      ||
+      match Adef.od_of_codate (get_birth p)
         with
         [ Some (Dgreg d _) ->
           let a = CheckItem.time_elapsed d conf.today in
           strictly_after_private_years conf conf.private_years a
         | _ -> False ]
-      in
-      let test2 =
-        match Adef.od_of_codate (get_baptism p)
+      ||
+      match Adef.od_of_codate (get_baptism p)
         with
         [ Some (Dgreg d _) ->
           let a = CheckItem.time_elapsed d conf.today in
           strictly_after_private_years conf conf.private_years a
         | _ -> False ]
-      in
-      let test3 =
-        match (CheckItem.date_of_death (get_death p))
+      ||
+      match (CheckItem.date_of_death (get_death p))
         with
         [ Some (Dgreg d _) ->
           let a = CheckItem.time_elapsed d conf.today in
           strictly_after_private_years conf conf.private_years_death a
         | _ -> False ]
+      ||
+      let rec loop i =
+        if i >= Array.length (get_family p) then False
+        else
+          let fam = foi base (get_family p).(i) in
+          match Adef.od_of_codate (get_marriage fam) with
+          [ Some (Dgreg d _) ->
+              let a = CheckItem.time_elapsed d conf.today in
+              strictly_after_private_years conf conf.private_years_marriage a
+          | _ -> loop (i + 1) ]
       in
-      let test4 =
-        let rec loop i =
-          if i >= Array.length (get_family p) then False
-          else
-            let fam = foi base (get_family p).(i) in
-            match Adef.od_of_codate (get_marriage fam) with
-            [ Some (Dgreg d _) ->
-                let a = CheckItem.time_elapsed d conf.today in
-                strictly_after_private_years conf conf.private_years_marriage a
-            | _ -> loop (i + 1) ]
-        in
-        loop 0
-      in
-      (*let _ = Printf.eprintf "authorized_age %s (%d) %d %d %d %d %d\n"
-        (designation base p) (Adef.int_of_iper (get_key_index p))
-        (if test0 then 1 else 0)
-        (if test1 then 1 else 0)
-        (if test2 then 1 else 0)
-        (if test3 then 1 else 0)
-        (if test4 then 1 else 0)
-      in*)
-      test0 || test1 || test2 || test3 || test4
+      loop 0
     }
-
   (*
     match
       (Adef.od_of_codate (get_birth p), Adef.od_of_codate (get_baptism p),
