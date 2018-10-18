@@ -54,6 +54,7 @@ type config =
     minor_age : int;
     hide_names : bool;
     use_restrict : bool;
+    use_restrict_rgpd : bool;
     no_image : bool;
     no_note : bool;
     modify_dict : bool;

@@ -2571,7 +2571,12 @@ and eval_bool_person_field conf base env (p, p_auth) =
   | "is_public" -> get_access p = Public
   | "is_friend" -> get_access p = Friend
   | "is_friend_m" -> get_access p = Friend_m
-  | "is_restricted" -> is_hidden p
+  | "is_restricted" ->
+      if conf.wizard then False
+      else if conf.use_restrict_rgpd then
+        not (authorized_age conf base p)
+      else if conf.friend then False
+      else is_hidden p
   | _ -> raise Not_found ]
 and eval_str_person_field conf base env ((p, p_auth) as ep) =
   fun

@@ -1318,6 +1318,9 @@ value make_conf cgi from_addr (addr, request) script_name contents env = do {
        else
          try List.assoc "use_restrict" base_env = "yes" with
          [ Not_found -> False ];
+     use_restrict_rgpd =
+         try List.assoc "use_restrict_rgpd" base_env = "yes" with
+         [ Not_found -> False ];
      no_image =
        if ar.ar_wizard || ar.ar_friend then False
        else
