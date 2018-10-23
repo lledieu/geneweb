@@ -790,6 +790,8 @@ and eval_simple_variable conf =
         (fun c (k, v) -> c ^ k ^ "=" ^ v ^ ";")
         c l
   | "version" -> Version.txt
+  | "duration" -> Printf.sprintf "%.3f"
+    (((Sys.time ()) -. Util.start_time.val))
   | "/" -> conf.xhs
   | s -> raise Not_found ]
 ;
@@ -1301,11 +1303,12 @@ value print_copyright conf =
   match Util.open_etc_file "copyr" with
   [ Some ic -> copy_from_templ conf [] ic
   | None -> do {
+      let duration = (Sys.time ()) -. Util.start_time.val in
       xtag "hr" "style=\"margin:0\"";
       tag "div" "style=\"font-size: 80%%\"" begin
         stag "em" begin
           Wserver.wprint
-            "Copyright (c) 1998-2007 INRIA - GeneWeb %s" Version.txt;
+            "Copyright (c) 1998-2018 - GeneWeb %s (%.3f sec)" Version.txt duration;
         end;
       end;
       xtag "br";

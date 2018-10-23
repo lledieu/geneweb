@@ -58,6 +58,7 @@ value set_base_dir = Secure.set_base_dir;
 add_lang_path sharelib;
 add_lang_path Filename.current_dir_name;
 
+value start_time = ref (Sys.time ());
 value cnt_dir = ref Filename.current_dir_name;
 value images_url = ref "";
 

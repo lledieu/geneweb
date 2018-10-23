@@ -31,7 +31,11 @@ sl: ustvarjene z:
         style="vertical-align: middle; border: 0"
         alt="GeneWeb" title="GeneWeb"%/></a>%sp;
       Version %version; %compilation_time;%sp;
-      Copyright &copy; 1998-2016 %connections;%sq;
+      Copyright &copy; 1998-2018 %connections;%sp;%nn;
+%apply;interp([
+en: in
+fr: en
+]) %duration; sec.%sq;
     </em>
 %sp;<a href="https://geneweb.tuxfamily.org/wiki/GeneWeb%if;(lang!="en")/%lang;%end;"
       target="_blank"

@@ -5,6 +5,7 @@ open Config;
 open Def;
 open Gwdb;
 
+value start_time : ref float;
 value add_lang_path : string -> unit;
 value add_doc_path : string -> unit;
 value set_base_dir : string -> unit;
