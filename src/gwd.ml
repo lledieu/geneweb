@@ -1963,6 +1963,7 @@ value main () =
       Wserver.sock_out.val := "gwd.sou";
     }
     ELSE () END;
+    Util.start_time.val := Sys.time ();
     let usage =
       "Usage: " ^ Filename.basename Sys.argv.(0) ^
       " [options] where options are:"
