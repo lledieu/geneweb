@@ -188,6 +188,13 @@ value birth_before_death base warning p =
   | _ -> () ]
 ;
 
+value birth_before_baptism base warning p =
+  match (Adef.od_of_codate (get_birth  p), Adef.od_of_codate (get_baptism p)) with
+  [ (Some d1, Some d2) ->
+      if strictly_after d1 d2 then warning (BirthAfterBaptism p) else ()
+  | _ -> () ]
+;
+
 value titles_after_birth base warning p t =
   let t_date_start = Adef.od_of_codate t.t_date_start in
   let t_date_end = Adef.od_of_codate t.t_date_end in
@@ -750,13 +757,19 @@ value check_marriage_sex base error warning fam =
   let moth = poi base (get_mother cpl) in
   do {
     match get_sex fath with
-    [ Male -> birth_before_death base warning fath
+    [ Male -> do {
+        birth_before_death base warning fath;
+        birth_before_baptism base warning fath
+      }
     | Female | Neuter ->
         if get_relation fam = NoSexesCheckNotMarried
         || get_relation fam = NoSexesCheckMarried then ()
         else error (BadSexOfMarriedPerson fath) ];
     match get_sex moth with
-    [ Female -> birth_before_death base warning moth
+    [ Female -> do {
+        birth_before_death base warning moth;
+        birth_before_baptism base warning moth
+      }
     | Male | Neuter ->
         if get_relation fam = NoSexesCheckNotMarried ||
            get_relation fam = NoSexesCheckMarried then ()
@@ -788,6 +801,7 @@ value check_children base error warning (ifam, fam) =
          let child = poi base child in
          do {
            birth_before_death base warning child;
+           birth_before_baptism base warning child;
            born_after_his_elder_sibling base error warning child np ifam
              des;
            close_siblings base error warning child np ifam des;
@@ -862,6 +876,7 @@ value check_sources base misc ifam fam =
 (* ************************************************************************* *)
 value person base warning p = do {
   birth_before_death base warning p;
+  birth_before_baptism base warning p;
   check_person_age base warning p;
   List.iter (titles_after_birth base warning p) (get_titles p);
   related_sex_is_coherent base warning p;

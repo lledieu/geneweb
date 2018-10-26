@@ -35,7 +35,9 @@ value print_base_warning oc base =
       fprintf oc "The difference of age between %s and %s is quite important: %d\n"
         (designation base fath) (designation base moth) a.year
   | BirthAfterDeath p ->
-      fprintf oc "%s\n  born after his/her death\n" (designation base p)
+      fprintf oc "%s\n  died before his/her birth\n" (designation base p)
+  | BirthAfterBaptism p ->
+      fprintf oc "%s\n  baptised before his/her birth\n" (designation base p)
   | ChangedOrderOfChildren ifam des _ _ ->
       let cpl = foi base ifam in
       fprintf oc "Changed order of children of %s and %s\n"

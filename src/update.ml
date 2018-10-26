@@ -287,6 +287,11 @@ value print_warning conf base =
         (fun _ ->
            Printf.sprintf "%s%s" (print_someone_strong conf base p)
              (Date.short_dates_text conf base p))
+  | BirthAfterBaptism p ->
+      Wserver.wprint (ftransl conf "%t baptised before his/her birth")
+        (fun _ ->
+           Printf.sprintf "%s%s" (print_someone_strong conf base p)
+             (Date.short_dates_text conf base p))
   | ChangedOrderOfChildren ifam des before after -> do {
       let cpl = foi base ifam in
       let fath = poi base (get_father cpl) in

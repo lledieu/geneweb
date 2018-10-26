@@ -481,6 +481,10 @@ sk: %t zomrel pred svojim narodením/zomrela pred svojim narodením
 sl: %t je umrl pred svojim rojstvom/umrla pred svojim rojstvom
 sv: %t dog före sin egen födelse
 
+    %t baptised before his/her birth
+en: %t baptised before his/her birth
+fr: %t est baptisé(e) avant sa naissance
+
     %t has incorrect title dates: %t
 af: %t die datum voor sy titel is verkeerd: %t
 bg: %t има некоректни данни за титла: %t
