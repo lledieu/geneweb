@@ -1503,7 +1503,7 @@ value conf_and_connection cgi from (addr, request) script_name contents env =
             }
         | _ ->
             match mode with
-            [ Some "DOC" -> Doc.print conf
+            [ Some "DOCX" -> Doc.print conf (* ancienne commande DOC *)
             | _ ->
                if conf.bname = "" then general_welcome conf
                else

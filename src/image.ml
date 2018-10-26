@@ -1,5 +1,5 @@
 (* camlp5r *)
-(* $Id: image.ml,v 5.8 2009-03-11 09:22:39 ddr Exp $ *)
+(* $Id: image.ml,v 5.8 2018-10-26 09:22:39 ddr Exp $ *)
 (* Copyright (c) 1998-2007 INRIA *)
 
 open Config;
@@ -19,17 +19,13 @@ open Config;
 value content cgi t len fname =
   do {
     if not cgi then Wserver.http "" else ();
-    Wserver.wprint "Content-type: image/%s" t;
-    Util.nl ();
-    Wserver.wprint "Content-length: %d" len;
-    Util.nl ();
+    Wserver.wprint "Content-type: %s" t;Util.nl ();
+    Wserver.wprint "Content-length: %d" len;Util.nl ();
     Wserver.wprint "Content-disposition: inline; filename=%s"
-      (Filename.basename fname);
-    Util.nl ();
+      (Filename.basename fname);Util.nl ();
     (* TODO: Utiliser un cache public pour les images non personelles. *)
     Wserver.wprint "Cache-control: private, max-age=%d" (60 * 60 * 24 * 30);
-    Util.nl ();
-    Util.nl ();
+    Util.nl ();Util.nl ();
     Wserver.wflush ();
   }
 ;
@@ -41,7 +37,8 @@ value content cgi t len fname =
     [Args] :
       - cgi : True en mode CGI, False en serveur autonome
       - fname : le chemin vers le fichier image
-      - itype : le type MIME de l'image, par exemple "png", "jpeg" ou "gif"
+      - itype : le content_type MIME du fichier, par exemple "image/png",
+                "image/jpeg" ou "application/pdf"
     [Retour] : True si le fichier image existe et qu'il a été servi en réponse
                HTTP.
     [Rem] : Ne pas utiliser en dehors de ce module.                           *)
@@ -76,10 +73,14 @@ value print_image_file cgi fname =
   List.exists
     (fun (suff, itype) ->
        if Filename.check_suffix fname suff ||
-          Filename.check_suffix fname (String.uppercase suff) then
+          Filename.check_suffix fname (String.uppercase_ascii suff)
+       then
          print_image_type cgi fname itype
        else False)
-    [(".png", "png"); (".jpg", "jpeg"); (".jpeg", "jpeg"); (".gif", "gif")]
+    [(".png", "image/png"); (".jpg", "image/jpeg");
+     (".jpeg", "image/jpeg"); (".pjpeg", "image/jpeg");
+     (".gif", "image/gif"); (".pdf", "application/pdf");
+     (".htm", "text/html"); (".html", "text/html")]
 ;
 
 (* ************************************************************************** *)

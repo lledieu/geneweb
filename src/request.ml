@@ -504,7 +504,7 @@ value family_m conf base =
   | Some "LEX" -> Srcfile.print_lexicon conf base
   | Some "MISC_NOTES" -> Notes.print_misc_notes conf base
   | Some "MISC_NOTES_SEARCH" -> Notes.print_misc_notes_search conf base
-  | Some "MOD_DATA" when (conf.wizard && conf.modify_dict || conf.manitou) -> 
+  | Some "MOD_DATA" when (conf.wizard && conf.modify_dict || conf.manitou) ->
       UpdateData.print_mod conf base
   | Some "MOD_DATA_OK" when (conf.wizard && conf.modify_dict || conf.manitou) ->
       UpdateData.print_mod_ok conf base
@@ -808,6 +808,14 @@ value treat_request conf base log = do {
   [ (Some s, _, _) -> print_moved conf base s
   | (_, Some "no_index", _) -> print_no_index conf base
   | (_, _, Some "IM") -> Image.print conf base
+  | (_, _, Some "DOC") ->
+      match p_getenv conf.env "s" with
+        [  Some f ->
+          if Filename.check_suffix f ".txt" then
+            let f = Filename.chop_suffix f ".txt" in
+            Srcfile.print_source conf base f
+          else Image.print conf base
+        | None -> Hutil.incorrect_request conf ]
   | _ ->
       do {
         set_owner conf;
