@@ -10,6 +10,18 @@ fr:  :
 en: WARNING
 fr: ATTENTION
 
+    consent
+en: consenting
+fr: consentant
+
+    default
+en: default
+fr: défaut
+
+    spouse parents
+en: spouse parents
+fr: parents du conjoint
+
     notes pointing to the new name
 en: notes pointing to the new name
 fr: notes pointant vers le nouveau nom
