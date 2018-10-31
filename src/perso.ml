@@ -2526,7 +2526,7 @@ and eval_bool_person_field conf base env (p, p_auth) =
       [ Some ifam -> Array.length (get_children (foi base ifam)) > 1
       | None -> False ]
   | "has_sources" ->
-      p_auth &&
+      (p_auth || conf.half_rgpd) &&
       (sou base (get_psources p) <> "" ||
        sou base (get_birth_src p) <> "" ||
        sou base (get_baptism_src p) <> "" ||
