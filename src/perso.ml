@@ -3552,7 +3552,7 @@ value print_foreach conf base print_ast eval_expr =
       else insert_loop (Util.translate_eval typ) src srcl
     in
     let srcl =
-      if p_auth then
+      if (p_auth || conf.half_rgpd) then
         (* On ajoute les source dans cet ordre :                             *)
         (* psource, naissance, baptême, mariage, fsource, décès, inhumation. *)
         let srcl = [] in

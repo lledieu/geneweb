@@ -15,8 +15,8 @@ en: consenting
 fr: consentant
 
     relation
-en: relation with
-fr: relation avec
+en: with
+fr: avec
 
     default
 en: default
