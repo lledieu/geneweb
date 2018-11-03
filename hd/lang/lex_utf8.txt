@@ -2,9 +2,40 @@
 en: in a few seconds
 fr: dans quelques secondes
 
+
     :
+af: :
+ar: :
+bg: :
+br:  :
+ca: :
+cs: :
+da: :
+de: :
 en: :
-fr:  :
+eo: :
+es: :
+et: :
+fi: :
+fr:  :
+he: :
+is: :
+it: :
+lv: :
+nl: :
+no: :
+oc: :
+pl: :
+pt: :
+ro: :
+ru: :
+sk: :
+sl: :
+sv: :
+
+    the user
+en: the user
+fr: l'utilisateur
 
     alert
 en: WARNING
@@ -10049,16 +10080,16 @@ pt: modo de cálculo
 sv: uträkningssätt
 
     relationship display options
-de: anzeigeoptionen der Verwandtschafts-Bäume:
-en: options:
-es: opciones de edición de los árboles de parentesco:
-fi: näyttötapa:
-fr: options d’affichage des arbres de parenté :
-it: opzioni di visualizzazione degli alberi di parentela:
+de: anzeigeoptionen der Verwandtschafts-Bäume
+en: options
+es: opciones de edición de los árboles de parentesco
+fi: näyttötapa
+fr: options d’affichage des arbres de parenté
+it: opzioni di visualizzazione degli alberi di parentela
 nl: toonopties van de verwantschapsstambomen
 no: visningsmåte
-oc: opcions d’afichatge dels arbres de parentat:
-pt: opções de edição das árvores de parentesco:
+oc: opcions d’afichatge dels arbres de parentat
+pt: opções de edição das árvores de parentesco
 sv: sätt att visa
 
     relationship link between
