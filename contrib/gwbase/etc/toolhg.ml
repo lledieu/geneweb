@@ -4,6 +4,7 @@
 open Def;
 open Gwdb;
 open Printf;
+open Gutil;
 
 value year_of p =
   match
@@ -62,6 +63,7 @@ value everybody = ref False;
 value testhg = ref False;
 value testhg1 = ref False;
 value set_friends = ref False;
+value marriages = ref False;
 value cnt = ref 0;
 value rgpd_files = ref ".";
 
@@ -83,7 +85,6 @@ value nbfn_ami = ref 0;
 value nbfn_amm = ref 0;
 value nbfn_prv = ref 0;
 value nbfn_oth = ref 0;
-
 
 (*
 type death =
@@ -228,10 +229,13 @@ value rec mark_ancestors base scanned old p =
           }
         else ();
         let gp = {(gen_person_of_person p) with access = Public} in
-        if execute.val then patch_person base gp.key_index gp 
-        else ();
-        incr changes;
+        if execute.val then do {
+          patch_person base gp.key_index gp;
+          incr changes;
         }
+        else ();
+        incr cnt;
+      }
       else ()
     else ();
     if ascend.val then 
@@ -252,14 +256,21 @@ value rec mark_ancestors base scanned old p =
   else ()
 ;
 
-value public_everybody old bname =
-  let base = Gwdb.open_base bname in
+value public_everybody old base bname =
+  let _ = printf "Public_everybody: %s\n" bname in
+  let _ = flush stderr in
   do {
     for i = 0 to nb_of_persons base - 1 do {
       let p = poi base (Adef.iper_of_int i) in
-      if get_access p <> Public then
+      if get_access p <> Public then do {
+        incr cnt;
         let gp = {(gen_person_of_person p) with access = Public} in
-        if execute.val then patch_person base gp.key_index gp else ()
+        if execute.val then do {
+          incr changes;
+          patch_person base gp.key_index gp
+        }
+        else ()
+      }
       else ();
     };
     if changes.val > 0 then do {
@@ -270,8 +281,9 @@ value public_everybody old bname =
   }
 ;
 
-value test_public old bname =
-  let base = Gwdb.open_base bname in
+value test_public old base bname =
+  let _ = printf "Test_public: %s\n" bname in
+  let _ = flush stderr in
   let () = load_ascends_array base in
   let () = load_couples_array base in
   do {
@@ -312,8 +324,9 @@ value test_public old bname =
   }
 ;
 
-value test_dead_child old bname =
-  let base = Gwdb.open_base bname in
+value test_dead_child old base bname =
+  let _ = printf "Test_dead_child: %s\n" bname in
+  let _ = flush stderr in
   let () = load_ascends_array base in
   let () = load_couples_array base in
   do {
@@ -348,8 +361,11 @@ value test_dead_child old bname =
               printf "Father of: %s, %s: %d; born: %d, dead: %d\n" (Gutil.designation base p)
                 pdreason dd fbd fdd;
               let gp = {(gen_person_of_person fa) with access = IfTitles} in
-              if execute.val then patch_person base gp.key_index gp else ();
-              incr changes;
+              if execute.val then do {
+                patch_person base gp.key_index gp;
+                incr changes;
+              }
+              else ()
             }
             else ();
             let mo = poi base (get_mother cpl) in
@@ -380,8 +396,9 @@ value test_dead_child old bname =
   }
 ;
 
-value public_all old bname lim_year =
-  let base = Gwdb.open_base bname in
+value public_all old base bname lim_year =
+  let _ = printf "Public_all: %s, with lim_year: %d\n" bname lim_year in
+  let _ = flush stderr in
   let () = load_ascends_array base in
   let () = load_couples_array base in
   do {
@@ -410,7 +427,7 @@ value public_all old bname lim_year =
       }
       else ();
     };
-    if changes.val > 0 then do {
+    if execute.val && changes.val > 0 then do {
       commit_patches base;
       printf "Patches applied\n"; flush stdout;
     }
@@ -475,6 +492,7 @@ value set_friend base p =
       printf "Status: %s.%s.%s, %s %s -> %s \n" fns ocs sns old_as tst new_as; flush stdout;
     }
     else ();
+    incr cnt;
     let gp = {(gen_person_of_person p) with access = new_access} in
     if execute.val && new_access <> old_access then do { 
       patch_person base gp.key_index gp;
@@ -484,9 +502,9 @@ value set_friend base p =
   }
 ;
 
-value set_friend_all bname =
+value set_friend_all base bname =
   let _ =printf "Set_friend_all: %s, rgpd: %s\n" bname rgpd_files.val in
-  let base = Gwdb.open_base bname in
+  let _ = flush stderr in
   let () = load_ascends_array base in
   let () = load_couples_array base in
   do {
@@ -511,8 +529,10 @@ value set_friend_all bname =
   }
 ;
 
-value public_some old bname lim_year key =
-  let base = Gwdb.open_base bname in
+value public_some old base bname lim_year key =
+  let _ = printf "Set_public_some: %s, for: %s with lim_year: %d\n"
+    bname key lim_year in 
+  let _ = flush stderr in
   match Gutil.person_ht_find_all base key with
   [ [ip] ->
       let p = poi base ip in
@@ -538,6 +558,93 @@ value public_some old bname lim_year key =
       } ]
 ;
 
+value compare_date d1 d2 =
+  match (d1, d2) with
+  [ (Dgreg dmy1 _, Dgreg dmy2 _) ->
+      match Pervasives.compare dmy1.year dmy2.year with
+      [ 0 ->
+          match Pervasives.compare dmy1.month dmy2.month with
+          [ 0 -> Pervasives.compare dmy1.day dmy2.day
+          | x -> x ]
+      | x -> x]
+  | (Dgreg dmy1 _, Dtext _) -> 1
+  | (Dtext _, Dgreg dmy2 _) -> -1
+  | (Dtext _, Dtext _) -> 0 ]
+;
+
+value check_marriages_order base warning p = do {
+  let b = Array.copy (get_family p) in
+  (* Astuce : on construire un tableau identique à la famille dans *)
+  (* lequel on remplace toutes les dates inconnues par la dernière *)
+  (* date maximale que l'on ait vu.                                *)
+  (* Exemple : Ma (mariage sans date), et M3 après M1              *)
+  (* ordre initial Ma M5 Mb M3 M1 ... devient Ma M1 M3 M5 Mb       *)
+  let (_, a) =
+    Array.fold_left
+      (fun (max_date, tab) ifam ->
+        let fam = foi base ifam in
+        let date =
+          match Adef.od_of_codate (get_marriage fam) with
+          [ Some d -> Some d
+          | None -> max_date ]
+        in
+        let max_date =
+          match (date, max_date) with
+          [ (Some d1, Some d2) ->
+              if compare_date d1 d2 = 1 then Some d1
+              else Some d2
+          | (Some d1, None) -> Some d1
+          | _ -> max_date ]
+        in
+        (max_date, Array.append tab [| (ifam, date) |]))
+      (None, [| |]) (get_family p)
+  in
+  Array.stable_sort
+    (fun (f1, d1) (f2, d2) ->
+      match (d1, d2) with
+      [ (Some d1, Some d2) -> compare_date d1 d2
+      | _ -> 0 ] )
+    a;
+  let a = Array.map (fun (f, _) -> f) a in
+  if a <> b then do {
+    incr cnt;
+    printf "Changed order of marriages of %s\n" (Gutil.designation base p)
+  }
+  else ();
+  if a <> b && execute.val then do {
+    warning (ChangedOrderOfMarriages p b a);
+    incr changes;
+    flush stdout;
+    let rec loop i fam =
+      if i = Array.length fam then ()
+      else do { fam.(i) := a.(i); loop (i + 1) fam }
+    in loop 0 (get_family p);
+  }
+  else ()
+};
+
+
+value check_marriages base bname = do {
+  printf "Checking order of marriages for %s\n" bname;
+  flush stdout;
+  let wl = ref [] in
+  let warning w = wl.val := [w :: wl.val] in
+  for i = 0 to nb_of_persons base - 1 do {
+    let p = poi base (Adef.iper_of_int i) in
+    check_marriages_order base warning p
+    (* On teste les deux conjoints! cela pose t'il un problème?
+       pour le commit_patches plus tard?? *)
+  };
+  List.iter
+  (fun
+    [ ChangedOrderOfMarriages p _ after ->
+         patch_union base (get_key_index p) {family = after}
+    | _ -> () ])
+  wl.val;
+  if execute.val then commit_patches base else ();
+  printf "Done checking order of marriages\n";
+  flush stdout;
+};
 
 value speclist =
   [("-lb", Arg.Int (fun i -> lim_b.val := i),
@@ -555,17 +662,20 @@ value speclist =
    ("-tro", Arg.Set trace_old, "trace set to old");
    ("-ma_no", Arg.Clear ascend, "do not mark ascendants");
    ("-rgpd", Arg.String (fun x -> rgpd_files.val := x), "Set RGPD folder");
-   ("-tst", Arg.Clear execute, "do not perform changes (test only)")
+   ("-tst", Arg.Clear execute, "do not perform changes (test only)");
+   ("-marriages", Arg.Set marriages, "check order of marriages")
    ]
 ;
 value anonfun i = bname.val := i;
-value usage = "Usage: public [-lb #] [-ld #] [-lm #] [-everybody] [-ind key] [-ma] [-tr] [-tst] base.\n";
+value usage = "Usage: toolhg [-lb #] [-ld #] [-lm #] 
+      [-everybody] [-testhg] [-testhg1] [-set_fr] [-ind] 
+      [-tro] [-ma_tro] [-rgpd] [-tst] [-marriages] base.\n";
   
 value main () =
   do {
     Arg.parse speclist anonfun usage;
     if bname.val = "" then do { Arg.usage speclist usage; exit 2; } else ();
-    printf "Executing public today (%d) on %s with -lb %d -ld %d -lm %d\n\n" 
+    printf "Executing toolhg today (%d) on %s with -lb %d -ld %d -lm %d\n\n" 
       today.val bname.val lim_b.val lim_d.val lim_m.val;
     flush stdout;
     let gcc = Gc.get () in
@@ -574,16 +684,18 @@ value main () =
     lim_year.val := today.val-lim_b.val;
     let base = Gwdb.open_base bname.val in
     let old = Array.make (nb_of_persons base) 0 in
-    if testhg.val then test_dead_child old bname.val
-    else if testhg1.val then test_public old bname.val
-    else if set_friends.val then set_friend_all bname.val
-    else if everybody.val then public_everybody old bname.val
-    else if ind.val = "" then public_all old bname.val lim_year.val
-    else public_some old bname.val lim_year.val ind.val;
+    if testhg.val then test_dead_child old base bname.val
+    else if marriages.val then check_marriages base bname.val
+    else if testhg1.val then test_public old base bname.val
+    else if set_friends.val then set_friend_all base bname.val
+    else if everybody.val then public_everybody old base bname.val
+    else if ind.val <> "" then public_some old base bname.val lim_year.val ind.val
+    else public_all old base bname.val lim_year.val;
     if trace_old.val then do {
       printf "Set %d persons to old\n" cnt.val; flush stdout;
     } else ();
-    printf "Changed %d persons\n" changes.val; flush stdout;
+    let mar = if marriages.val then "marriage order for " else "" in
+    printf "Changed %s%d (%d) persons\n" mar changes.val cnt.val; flush stdout;
   }
 ;
 
