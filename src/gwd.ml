@@ -533,6 +533,18 @@ let _ = let tm = Unix.localtime (Unix.time ()) in trace_auth conf.base_env (fun 
   Hutil.trailer conf;
 };
 
+value rec strip_heading_and_trailing_spaces s =
+  if String.length s > 0 then
+    if s.[0] = ' ' then
+      strip_heading_and_trailing_spaces
+        (String.sub s 1 (String.length s - 1))
+    else if s.[String.length s - 1] = ' ' then
+      strip_heading_and_trailing_spaces
+        (String.sub s 0 (String.length s - 1))
+    else s
+  else s
+;
+
 value gen_match_auth_file test_user_and_password auth_file =
   if auth_file = "" then (None, None)
   else
@@ -569,12 +581,14 @@ value gen_match_auth_file test_user_and_password auth_file =
               try
                 let i = String.index s2 '/' in
                 let len = String.length s2 in
-                let fn = String.sub s2 0 i in
+                let fn = strip_heading_and_trailing_spaces (String.sub s2 0 i) in
                 let s2 = String.sub s2 (i + 1) (len - i - 1) in
                 let i = String.index s2 '/' in
                 let len = String.length s2 in
-                let sn = String.sub s2 0 i in
-                let occ = String.sub s2 (i + 1) (len - i - 1) in
+                let sn = strip_heading_and_trailing_spaces (String.sub s2 0 i) in
+                let occ = strip_heading_and_trailing_spaces
+                  (String.sub s2 (i + 1) (len - i - 1))
+                in
                 fn ^ "." ^ occ ^ "+" ^ sn
               with
               [ Not_found -> "" ]
