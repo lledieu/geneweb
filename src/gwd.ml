@@ -581,11 +581,13 @@ value gen_match_auth_file test_user_and_password auth_file =
               try
                 let i = String.index s2 '/' in
                 let len = String.length s2 in
-                let fn = strip_heading_and_trailing_spaces (String.sub s2 0 i) in
+                let fn = Name.lower (strip_heading_and_trailing_spaces
+                  (String.sub s2 0 i)) in
                 let s2 = String.sub s2 (i + 1) (len - i - 1) in
                 let i = String.index s2 '/' in
                 let len = String.length s2 in
-                let sn = strip_heading_and_trailing_spaces (String.sub s2 0 i) in
+                let sn = Name.lower (strip_heading_and_trailing_spaces
+                  (String.sub s2 0 i)) in
                 let occ = strip_heading_and_trailing_spaces
                   (String.sub s2 (i + 1) (len - i - 1))
                 in
