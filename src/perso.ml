@@ -2569,7 +2569,7 @@ and eval_bool_person_field conf base env (p, p_auth) =
   | "is_male" -> get_sex p = Male
   | "is_private" -> get_access p = Private
   | "is_public" -> get_access p = Public
-  | "is_friend" -> get_access p = Friend
+  | "is_friend" -> get_access p = Friend (* TODO insuffisant pour les mineurs !! *)
   | "is_friend_m" -> get_access p = Friend_m
   | "is_restricted" ->
       if conf.wizard then False
