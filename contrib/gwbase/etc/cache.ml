@@ -141,7 +141,7 @@ value main () =
       (Hashtbl.length ht_cache)
     in
     let nb_ind = nb_of_persons base in
-    if list.val = True then do {
+    if list.val || list_tst.val = True then do {
       printf "Listing cache table\n";
       Hashtbl.iter
       (fun k v ->
