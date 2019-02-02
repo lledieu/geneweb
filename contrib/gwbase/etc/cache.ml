@@ -16,6 +16,7 @@ value set_false = ref False;
 value reset_all = ref False;
 value force = ref False;
 value list = ref False;
+value list_tst = ref False;
 value size = ref False;
 value trace = ref False;
 value test = ref False;
@@ -48,6 +49,7 @@ value notes_links_fname bname =
 
 value read_cache_person_linked_pages bname =
   let fname = cache_fname_person_linked_pages bname in
+  let fname = fname ^ (if list_tst.val then "_test" else "") in
   match try Some (Secure.open_in_bin fname) with [ Sys_error _ -> None ] with
   [ Some ic ->
       let ht : cache_person_linked_pages_t = input_value ic in
@@ -114,6 +116,7 @@ value speclist =
    ("-reset_all", Arg.Set reset_all, "Rbuild table");
    ("-force", Arg.Set force, "Force removal of index");
    ("-list", Arg.Set list, "List of entries");
+   ("-list_tst", Arg.Set list_tst, "List of entries of test file");
    ("-tr", Arg.Set trace, "Trace actions");
    ("-tst", Arg.Set test, "Test only");
    ("-size", Arg.Set size, "Size of cache table")
