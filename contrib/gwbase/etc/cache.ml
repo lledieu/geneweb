@@ -113,7 +113,7 @@ value speclist =
     "Occurence of person");
    ("-set", Arg.Set set_true, "Set to True");
    ("-reset", Arg.Set set_false, "Remove from table");
-   ("-reset_all", Arg.Set reset_all, "Rbuild table");
+   ("-reset_all", Arg.Set reset_all, "Rebuild table");
    ("-force", Arg.Set force, "Force removal of index");
    ("-list", Arg.Set list, "List of entries");
    ("-list_tst", Arg.Set list_tst, "List of entries of test file");
