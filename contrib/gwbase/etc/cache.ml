@@ -13,6 +13,7 @@ value sn = ref "";
 value oc = ref 0;
 value set_true = ref False;
 value set_false = ref False;
+value reset_all = ref False;
 value force = ref False;
 value list = ref False;
 value size = ref False;
@@ -34,6 +35,15 @@ value cache_fname_person_linked_pages bname =
     else bname ^ ".gwb"
   in
   "." ^ d_sep ^ bname ^ d_sep ^ "cache_person_linked_pages"
+;
+
+value notes_links_fname bname =
+  let d_sep = Filename.dir_sep in
+  let bname =
+    if Filename.check_suffix bname ".gwb" then bname
+    else bname ^ ".gwb"
+  in
+  "." ^ d_sep ^ bname ^ d_sep ^ "notes_links"
 ;
 
 value read_cache_person_linked_pages bname =
@@ -101,6 +111,7 @@ value speclist =
     "Occurence of person");
    ("-set", Arg.Set set_true, "Set to True");
    ("-reset", Arg.Set set_false, "Remove from table");
+   ("-reset_all", Arg.Set reset_all, "Rbuild table");
    ("-force", Arg.Set force, "Force removal of index");
    ("-list", Arg.Set list, "List of entries");
    ("-tr", Arg.Set trace, "Trace actions");
@@ -126,6 +137,7 @@ value main () =
       (cache_fname_person_linked_pages bname.val)
       (Hashtbl.length ht_cache)
     in
+    let nb_ind = nb_of_persons base in
     if list.val = True then do {
       printf "Listing cache table\n";
       Hashtbl.iter
@@ -143,6 +155,42 @@ value main () =
       }
     else if size.val = True then
       printf "Size of cache table is %d\n" (Hashtbl.length ht_cache)
+    else if reset_all.val = True then do {
+      Printf.eprintf "--- cache person linked pages\n";
+      flush stderr;
+      let fname = notes_links_fname bname.val in
+      let db = NotesLinks.read_db_from_file fname in
+      let ht_key = Hashtbl.create nb_ind in
+      List.iter
+        (fun (pg, (_, il)) ->
+          List.iter
+            (fun (k, _) -> Hashtbl.add ht_key k True)
+            il)
+        db;
+      ProgrBar.start ();
+      let ht_cache = Hashtbl.create 1 in
+      for i = 0 to nb_ind - 1 do {
+        let ip = Adef.iper_of_int i in
+        let p = poi base ip in
+        let key =
+          let fn = Name.lower (sou base (get_first_name p)) in
+          let sn = Name.lower (sou base (get_surname p)) in
+          (fn, sn, get_occ p)
+        in
+        if Hashtbl.mem ht_key key then Hashtbl.add ht_cache ip True
+        else ();
+        ProgrBar.run i nb_ind
+      };
+      ProgrBar.finish ();
+      let fname = cache_fname_person_linked_pages bname.val in
+      let fname = fname ^ (if test.val then "_test" else "") in
+      match try Some (Secure.open_out_bin fname) with [ Sys_error _ -> None ] with
+      [ Some oc ->
+          do {
+            output_value oc ht_cache;
+            close_out oc
+          }
+      | None -> () ] }
     else
       match get_someone base index.val fn.val sn.val oc.val with
         [ Some ip ->
@@ -159,7 +207,7 @@ value main () =
               }
             else do {
               printf "Person %s.%d %s (i=%d) does not have linked pages\n" fn oc sn (Adef.int_of_iper ip);
-              if set_true.val then 
+              if set_true.val then
                 patch_cache_person_linked_pages bname.val ht_cache ip True
               else ()
               }

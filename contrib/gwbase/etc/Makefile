@@ -16,7 +16,7 @@ CLEOPATRE_OBJS=$(STD_OBJS) gwlib.cmo cleopatre.cmo
 POPULE_OBJS=$(STD_OBJS) gwlib.cmo $(GWB)/src/calendar.cmo $(GWB)/src/outbase.cmo popule.cmo
 MODIF_OBJS=$(STD_OBJS) modif.cmo
 TOOLHG_OBJS=$(STD_OBJS) toolhg.cmo
-CACHE_OBJS=$(STD_OBJS) cache.cmo
+CACHE_OBJS=$(STD_OBJS) $(GWB)/src/progrBar.cmo $(GWB)/src/notesLinks.cmo cache.cmo
 PUBLIC2_OBJS=$(STD_OBJS) $(GWB)/src/progrBar.cmo public2.cmo
 DONADELLO_OBJS=$(STD_OBJS) donadello.cmo
 PARTICULE_OBJS=$(STD_OBJS) particule.cmo
@@ -45,7 +45,7 @@ toolhg.out: $(TOOLHG_OBJS)
 
 toolhg.opt: $(TOOLHG_OBJS:.cmo=.cmx)
 	$(OCAMLOPT) unix.cmxa $(LIBUNIX) $(TOOLHG_OBJS:.cmo=.cmx) -o toolhg.opt
-	
+
 cache.opt: $(CACHE_OBJS:.cmo=.cmx)
 	$(OCAMLOPT) unix.cmxa $(LIBUNIX) $(CACHE_OBJS:.cmo=.cmx) -o cache.opt
 
