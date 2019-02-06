@@ -714,10 +714,9 @@ value authorized_age conf base p =
     [ Friend -> True
     | _ ->
       match
-        (Adef.od_of_codate (get_birth p), Adef.od_of_codate (get_baptism p),
-         get_death p, CheckItem.date_of_death (get_death p))
+        (Adef.od_of_codate (get_birth p), Adef.od_of_codate (get_baptism p))
       with
-      [ (Some (Dgreg d _), _, _, _) | (_, Some (Dgreg d _), _, _) ->
+      [ (Some (Dgreg d _), _) | (_, Some (Dgreg d _)) ->
           let a = CheckItem.time_elapsed d conf.today in
           if a.year < conf.minor_age then
             match get_parents p with

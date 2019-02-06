@@ -2569,7 +2569,22 @@ and eval_bool_person_field conf base env (p, p_auth) =
   | "is_male" -> get_sex p = Male
   | "is_private" -> get_access p = Private
   | "is_public" -> get_access p = Public
-  | "is_friend" -> get_access p = Friend (* TODO insuffisant pour les mineurs !! *)
+  | "is_friend" -> 
+        match (* copy of code in util.ml, authorized_age *)
+          (Adef.od_of_codate (get_birth p), Adef.od_of_codate (get_baptism p))
+        with
+        [ (Some (Dgreg d _), _) | (_, Some (Dgreg d _)) ->
+          let a = CheckItem.time_elapsed d conf.today in
+          if a.year < conf.minor_age then
+            match get_parents p with
+            [ Some ifam ->
+              let cpl = foi base ifam in
+              (get_access (poi base (get_father cpl)) = Friend) ||
+              (get_access (poi base (get_mother cpl)) = Friend)
+            | None -> get_access p = Friend ]
+          else get_access p = Friend
+        | _ -> get_access p = Friend ]
+  (* TODO insuffisant pour les mineurs !! (1er essai à vérifier) *)
   | "is_friend_m" -> get_access p = Friend_m
   | "is_restricted" ->
       if conf.wizard then False

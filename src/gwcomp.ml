@@ -627,10 +627,19 @@ value s_correct_string s =
   if s = "" then "_" else s
 ;
 
+(* copied from Some *)
+value name_unaccent_lower s =
+  copy 0 0 where rec copy i len =
+    if i = String.length s then Buff.get len
+    else
+      let (t, j) = Name.unaccent_utf_8 True s i in
+      copy j (Buff.mstore len t)
+;
+
 value rgpd_access fn sn occ str l =
   let (access, l) = get_access str l in
-  let fns = s_correct_string fn in
-  let sns = s_correct_string sn in
+  let fns = name_unaccent_lower (s_correct_string fn) in
+  let sns = name_unaccent_lower (s_correct_string sn) in
   let ocs = string_of_int occ in
   let (access, l) =
     let d_sep = Filename.dir_sep in
