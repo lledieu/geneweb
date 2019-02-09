@@ -37,7 +37,8 @@ en: in
 fr: en
 ]) %duration; sec.%sq;
     </em>
-%sp;<a href="https://geneweb.tuxfamily.org/wiki/GeneWeb%if;(lang!="en")/%lang;%end;"
+%( %evar.lang; ne marche aps dans ce conetxte %)
+%sp;<a href="https://geneweb.tuxfamily.org/wiki/GeneWeb/fr"
       target="_blank"
       title="GeneWeb documentation MediaWiki">%nn;
       <img src="%image_prefix;/logo_bas_mw.png"
