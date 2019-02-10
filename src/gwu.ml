@@ -913,7 +913,7 @@ value read_file_contents fname =
         loop () where rec loop () =
           do { len.val := Buff.store len.val (input_char ic); loop () }
       with
-      [ End_of_file -> Buff.get len.val ]
+      [ End_of_file -> do { close_in ic; Buff.get len.val } ]
   | None -> "" ]
 ;
 
