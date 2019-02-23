@@ -683,10 +683,14 @@ value print_nldb bname = do {
         | NotesLinks.PgMisc str -> ("Misc", str)
         | NotesLinks.PgWizard str -> ("Wizard", str)]
       in
-      if nldb_kind.val <> "" && nldb_kind.val = kind then do {
+      if nldb_kind.val <> "" && nldb_kind.val = kind ||
+        nldb_kind.val = "Misc" && List.length list_nt > 0 ||
+        nldb_kind.val =  "" then do {
         printf "%s: %s \n" kind str;
         List.iter (fun nt -> printf "  note: %s\n" nt) list_nt;
-        List.iter (fun ((fn, sn, oc), _link) -> printf "  ind: %s %s %d\n" fn sn oc) list_ind}
+        if nldb_kind.val <> "Misc" then
+          List.iter (fun ((fn, sn, oc), _link) -> printf "  ind: %s %s %d\n" fn sn oc) list_ind
+        else ()}
       else ()
     }
   ) db
