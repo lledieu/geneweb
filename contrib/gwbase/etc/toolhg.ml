@@ -77,6 +77,9 @@ value cnt = ref 0;
 value rgpd_files = ref ".";
 value pr_nldb = ref False;
 value nldb_kind = ref "";
+value count_notes = ref False;
+value list_notes = ref False;
+value details = ref False;
 
 value nb_ift = ref 0;
 value nb_pub = ref 0;
@@ -673,27 +676,56 @@ value print_nldb bname = do {
   let fname = Filename.concat bdir "notes_links" in
   let db = NotesLinks.read_db_from_file fname in
   (*  else [(who, (list_nt, list_ind)) :: db] *)
+  let ht = Hashtbl.create 2000 in
   List.iter (
     fun (who, (list_nt, list_ind)) -> do {
       let (kind, str) =
         match who with
         [ NotesLinks.PgInd iper -> ("Person", (Gutil.designation base (poi base iper)))
         | NotesLinks.PgFam  ifam -> ("Family", (string_of_int (Adef.int_of_ifam ifam)))
-        | NotesLinks.PgNotes -> ("Notes", "0")
+        | NotesLinks.PgNotes -> ("Notes", "Main note")
         | NotesLinks.PgMisc str -> ("Misc", str)
         | NotesLinks.PgWizard str -> ("Wizard", str)]
       in
+      if kind = "Misc" || kind = "Notes" then
+        if not (Hashtbl.mem ht str) then
+          Hashtbl.add ht str (str, 1)
+        else do {
+          let (s, i) = Hashtbl.find ht str in
+          Hashtbl.replace ht str (s, i + 1)
+        } else ();
       if nldb_kind.val <> "" && nldb_kind.val = kind ||
         nldb_kind.val = "Misc" && List.length list_nt > 0 ||
         nldb_kind.val =  "" then do {
-        printf "%s: %s \n" kind str;
-        List.iter (fun nt -> printf "  note: %s\n" nt) list_nt;
-        if nldb_kind.val <> "Misc" then
+        if details.val then printf "%s: %s \n" kind str else ();
+        List.iter (fun nt -> do {
+          if details.val then printf "  note: %s\n" nt else ();
+          let str = nt in
+          if not (Hashtbl.mem ht str) then
+            Hashtbl.add ht str (str, 1)
+          else do {
+            let (s, i) = Hashtbl.find ht str in
+            Hashtbl.replace ht str (s, i + 1)
+          }}
+        ) list_nt;
+        if nldb_kind.val <> "Misc" && details.val then
           List.iter (fun ((fn, sn, oc), _link) -> printf "  ind: %s %s %d\n" fn sn oc) list_ind
         else ()}
       else ()
     }
-  ) db
+  ) db;
+  let list = Hashtbl.fold (fun _s (s, c) l -> [(s, c) :: l]) ht [] in
+  let list = List.sort (fun (s1, c1) (s2, c2) -> Gutil.alphabetic_utf_8 s1 s2) list in
+  
+  printf "\n";
+  if count_notes.val then
+    printf "Nbr of notes files: %d\n" (List.length list)
+  else ();
+  if list_notes.val then do {
+    printf "Nbr of notes files: %d\n" (List.length list);
+    List.iter (fun (s, c) -> printf "Note: %s (%d)\n" s c) list;
+    printf "Nbr of notes files: %d\n" (List.length list)}
+  else ()
 };
 
 value speclist =
@@ -715,6 +747,9 @@ value speclist =
    ("-tst", Arg.Clear execute, "do not perform changes (test only)");
    ("-pr_nldb", Arg.Set pr_nldb, "print nldb");
    ("-nldb_kind", Arg.String (fun x -> nldb_kind.val := x), "filter nldb kind");
+   ("-details", Arg.Set details, "give details");
+   ("-count", Arg.Set count_notes, "count nbr of notes");
+   ("-list", Arg.Set list_notes, "list notes");
    ("-marriages", Arg.Set marriages, "check order of marriages")
    ]
 ;
