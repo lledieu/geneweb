@@ -5,6 +5,15 @@ open Def;
 open Gwdb;
 open Printf;
 open Gutil;
+open NotesLinks;
+
+value add_in_db db who (list_nt, list_ind) =
+  let db = List.remove_assoc who db in
+  if list_nt = [] && list_ind = [] then db
+  else [(who, (list_nt, list_ind)) :: db]
+;
+
+value char_dir_sep = ':';
 
 value year_of p =
   match
@@ -66,6 +75,8 @@ value set_friends = ref False;
 value marriages = ref False;
 value cnt = ref 0;
 value rgpd_files = ref ".";
+value pr_nldb = ref False;
+value nldb_kind = ref "";
 
 value nb_ift = ref 0;
 value nb_pub = ref 0;
@@ -110,6 +121,16 @@ value tr c1 c2 s =
           if s.[i] = c1 then c2 else s.[i]
   | None -> s ]
 ;
+
+(*
+    let nldb () =
+      let bdir = Util.base_path [] (conf.bname ^ ".gwb") in
+      let fname = Filename.concat bdir "notes_links" in
+      let db = NotesLinks.read_db_from_file fname in
+      let db = Notes.merge_possible_aliases conf db in
+      Vnldb db
+    in
+*)
 
 value get_b_dates base p =
   let (reason, d, d2) =
@@ -274,7 +295,7 @@ value public_everybody old base bname =
       else ();
     };
     if changes.val > 0 then do {
-      commit_patches base;
+      Gwdb.commit_patches base;
       printf "Patches applied\n"; flush stdout;
       }
     else ();
@@ -317,7 +338,7 @@ value test_public old base bname =
       printf "Nb of persone: %d\n" cnt.val
     else ();
     if changes.val > 0 then do {
-      commit_patches base;
+      Gwdb.commit_patches base;
       printf "Patches applied\n"; flush stdout;
     }
     else ();
@@ -386,7 +407,7 @@ value test_dead_child old base bname =
       | None -> () ]
     };
     if changes.val > 0 then do {
-      commit_patches base;
+      Gwdb.commit_patches base;
       printf "Patches applied\n"; flush stdout;
     }
     else ();
@@ -428,7 +449,7 @@ value public_all old base bname lim_year =
       else ();
     };
     if execute.val && changes.val > 0 then do {
-      commit_patches base;
+      Gwdb.commit_patches base;
       printf "Patches applied\n"; flush stdout;
     }
     else ();
@@ -513,7 +534,7 @@ value set_friend_all base bname =
       set_friend base (poi base (Adef.iper_of_int i))
     };
     if changes.val > 0 then do {
-      commit_patches base;
+      Gwdb.commit_patches base;
       printf "Patches applied\n"; flush stdout;
     }
     else ();
@@ -544,7 +565,7 @@ value public_some old base bname lim_year key =
       do {
         mark_ancestors base scanned old p;
         if changes.val > 0 then do {
-          commit_patches base;
+          Gwdb.commit_patches base;
           printf "Patches applied\n"; flush stdout;
         }
         else ();
@@ -641,9 +662,34 @@ value check_marriages base bname = do {
          patch_union base (get_key_index p) {family = after}
     | _ -> () ])
   wl.val;
-  if execute.val then commit_patches base else ();
+  if execute.val then Gwdb.commit_patches base else ();
   printf "Done checking order of marriages\n";
   flush stdout;
+};
+
+value print_nldb bname = do {
+  let base = Gwdb.open_base bname in
+  let bdir = bname ^ ".gwb" in
+  let fname = Filename.concat bdir "notes_links" in
+  let db = NotesLinks.read_db_from_file fname in
+  (*  else [(who, (list_nt, list_ind)) :: db] *)
+  List.iter (
+    fun (who, (list_nt, list_ind)) -> do {
+      let (kind, str) =
+        match who with
+        [ NotesLinks.PgInd iper -> ("Person", (Gutil.designation base (poi base iper)))
+        | NotesLinks.PgFam  ifam -> ("Family", (string_of_int (Adef.int_of_ifam ifam)))
+        | NotesLinks.PgNotes -> ("Notes", "0")
+        | NotesLinks.PgMisc str -> ("Misc", str)
+        | NotesLinks.PgWizard str -> ("Wizard", str)]
+      in
+      if nldb_kind.val <> "" && nldb_kind.val = kind then do {
+        printf "%s: %s \n" kind str;
+        List.iter (fun nt -> printf "  note: %s\n" nt) list_nt;
+        List.iter (fun ((fn, sn, oc), _link) -> printf "  ind: %s %s %d\n" fn sn oc) list_ind}
+      else ()
+    }
+  ) db
 };
 
 value speclist =
@@ -663,6 +709,8 @@ value speclist =
    ("-ma_no", Arg.Clear ascend, "do not mark ascendants");
    ("-rgpd", Arg.String (fun x -> rgpd_files.val := x), "Set RGPD folder");
    ("-tst", Arg.Clear execute, "do not perform changes (test only)");
+   ("-pr_nldb", Arg.Set pr_nldb, "print nldb");
+   ("-nldb_kind", Arg.String (fun x -> nldb_kind.val := x), "filter nldb kind");
    ("-marriages", Arg.Set marriages, "check order of marriages")
    ]
 ;
@@ -690,6 +738,7 @@ value main () =
     else if set_friends.val then set_friend_all base bname.val
     else if everybody.val then public_everybody old base bname.val
     else if ind.val <> "" then public_some old base bname.val lim_year.val ind.val
+    else if pr_nldb.val then print_nldb bname.val
     else public_all old base bname.val lim_year.val;
     if trace_old.val then do {
       printf "Set %d persons to old\n" cnt.val; flush stdout;
