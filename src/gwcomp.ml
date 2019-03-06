@@ -713,6 +713,11 @@ value rgpd_access fn sn occ str l =
     let rgpd_file =
        rgpd_files.val ^ d_sep ^ fns ^ "." ^ ocs ^ "." ^ sns
     in
+    let _ = 
+      if String.contains rgpd_file '%' then
+        Printf.eprintf "Bad encoding for RGPD filename: %s\n" rgpd_file
+      else ()
+    in 
       (* if Public, stay Public *)
     if access = Public then (Public, l)
       (* if one of the files exist, set the Friend or Friend_m value *)
