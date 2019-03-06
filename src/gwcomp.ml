@@ -32,6 +32,15 @@ value hexa_digit x =
   else Char.chr (Char.code '0' + x)
 ;
 
+value string_contains s ss =
+  let sslen = String.length ss in
+  let mlen = String.length s - sslen in
+  loop 0 where rec loop i =
+    if i >= mlen then False
+    else if String.sub s i sslen = ss then True
+    else loop (i + 1)
+;
+
 value special =
   fun
   [ '\000'..'\031' | '\127'..'\255' | '<' | '>' | '"' | '#' | '%' | '{' |
@@ -72,10 +81,14 @@ value encode s =
       copy_code_in s1 (succ i) i1
     else Bytes.unsafe_to_string s1
   in
-  if need_code 0 then
-    let len = compute_len 0 0 in
-    copy_code_in (Bytes.create len) 0 0
-  else s
+  let s =
+    if need_code 0 then
+      let len = compute_len 0 0 in
+      copy_code_in (Bytes.create len) 0 0
+    else s
+  in
+  (* apostrophe typographique *)
+  Str.global_replace (Str.regexp "%E2%80%99") "+" s
 ;
 (* end copy from wserver *)
 
@@ -692,8 +705,8 @@ value name_unaccent_lower s =
 
 value rgpd_access fn sn occ str l =
   let (access, l) = get_access str l in
-  let fns = encode (Name.lower (s_correct_string fn)) in
-  let sns = encode (Name.lower (s_correct_string sn)) in
+  let fns = encode (name_unaccent_lower fn) in
+  let sns = encode (name_unaccent_lower sn) in
   let ocs = string_of_int occ in
   let (access, l) =
     let d_sep = Filename.dir_sep in

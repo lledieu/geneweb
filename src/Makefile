@@ -76,16 +76,16 @@ gwlib.ml:
 	echo ";" >> gwlib.ml
 
 gwc1.out: $(GWC_OBJS)
-	$(OCAMLC) -custom $(STATIC) unix.cma $(GWC_OBJS) $(LIBUNIX) -o gwc1.out
+	$(OCAMLC) -custom $(STATIC) unix.cma str.cma $(GWC_OBJS) $(LIBUNIX) -o gwc1.out
 
 gwc1.opt: $(GWC_OBJS:.cmo=.cmx)
-	$(OCAMLOPT) $(STATIC) unix.cmxa $(GWC_OBJS:.cmo=.cmx) $(LIBUNIX) -o gwc1.opt
+	$(OCAMLOPT) $(STATIC) unix.cmxa str.cmxa $(GWC_OBJS:.cmo=.cmx) $(LIBUNIX) -o gwc1.opt
 
 gwc2.out: $(GWC2_OBJS)
-	$(OCAMLC) -custom $(STATIC) unix.cma $(GWC2_OBJS) $(LIBUNIX) -o gwc2.out
+	$(OCAMLC) -custom $(STATIC) unix.cmxa str.cma $(GWC2_OBJS) $(LIBUNIX) -o gwc2.out
 
 gwc2.opt: $(GWC2_OBJS:.cmo=.cmx)
-	$(OCAMLOPT) $(STATIC) unix.cmxa $(GWC2_OBJS:.cmo=.cmx) $(LIBUNIX) -o gwc2.opt
+	$(OCAMLOPT) $(STATIC) unix.cmxa str.cmxa $(GWC2_OBJS:.cmo=.cmx) $(LIBUNIX) -o gwc2.opt
 
 consang.out: $(CONSANG_OBJS)
 	$(OCAMLC) -custom $(STATIC) unix.cma $(LIBUNIX) $(CONSANG_OBJS) -o consang.out
