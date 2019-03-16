@@ -44,8 +44,8 @@ value string_contains s ss =
 value special =
   fun
   [ '\000'..'\031' | '\127'..'\255' | '<' | '>' | '"' | '#' | '%' | '{' |
-    '}' | '|' | '\\' | '^' | '~' | '[' | ']' | '`' | ';' | '/' | '?' | ':' |
-    '@' | '=' | '&' | '+' ->
+    '}' | '|' | '\\' | '^' | '~' | '[' | ']' | '\'' | '`' | ';' | '/' | '?' | ':' |
+    '@' | '=' | '&' | '+' | '-' ->
       True
   | _ -> False ]
 ;
@@ -88,7 +88,10 @@ value encode s =
     else s
   in
   (* apostrophe typographique *)
-  Str.global_replace (Str.regexp "%E2%80%99") "+" s
+  let s = Str.global_replace (Str.regexp "%E2%80%99") "+" s in
+  let s = Str.global_replace (Str.regexp "%2D") "+" s in
+  let s = Str.global_replace (Str.regexp "%27") "+" s in
+  s
 ;
 (* end copy from wserver *)
 
