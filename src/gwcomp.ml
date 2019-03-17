@@ -61,16 +61,19 @@ value encode s =
       compute_len (succ i) i1
     else i1
   in
+  let good i1 s1 =
+  	i1 < Bytes.length s1
+  in
   let rec copy_code_in s1 i i1 =
     if i < String.length s then
       let di =
         match Name.nbc s.[i] with
         [ -1 | 1 -> 
         	if special s.[i] then
-        		do { Bytes.set s1 i1 '+'; 1 }
+        		do { if good i1 s1 then Bytes.set s1 i1 '+' else (); 1 }
         	else
-        		do { Bytes.set s1 i1 s.[i]; 1 }
-        | _ -> do { Bytes.set s1 i1 s.[i]; Name.nbc s.[i] } ]
+        		do { if good i1 s1 then Bytes.set s1 i1 s.[i] else (); 1 }
+        | _ -> do { if good i1 s1 then Bytes.set s1 i1 s.[i] else (); Name.nbc s.[i] } ]
       in
       copy_code_in s1 ( i + di ) (succ i1)
     else Bytes.unsafe_to_string s1
