@@ -41,13 +41,10 @@ value string_contains s ss =
     else loop (i + 1)
 ;
 
-value special =
-  fun
-  [ '\000'..'\031' | '\127'..'\255' | '<' | '>' | '"' | '#' | '%' | '{' |
-    '}' | '|' | '\\' | '^' | '~' | '[' | ']' | '\'' | '`' | ';' | '/' | '?' | ':' |
-    '@' | '=' | '&' | '+' | '-' ->
-      True
-  | _ -> False ]
+value special c =
+  match c with
+  [ '0'..'9' | 'a'..'z'-> False
+  | _ -> True ]
 ;
 
 value encode s =
@@ -60,25 +57,22 @@ value encode s =
   in
   let rec compute_len i i1 =
     if i < String.length s then
-      let i1 = if special s.[i] then i1 + 3 else succ i1 in
+      let i1 = i1 + Name.nbc s.[i] in
       compute_len (succ i) i1
     else i1
   in
   let rec copy_code_in s1 i i1 =
     if i < String.length s then
-      let i1 =
-        match s.[i] with
-        [ ' ' -> do { Bytes.set s1 i1 '+'; succ i1 }
-        | c ->
-            if special c then do {
-              Bytes.set s1 i1 '%';
-              Bytes.set s1 (i1+1) (hexa_digit (Char.code c / 16));
-              Bytes.set s1 (i1+2) (hexa_digit (Char.code c mod 16));
-              i1 + 3
-            }
-            else do { Bytes.set s1 i1 c; succ i1 } ]
+      let di =
+        match Name.nbc s.[i] with
+        [ -1 | 1 -> 
+        	if special s.[i] then
+        		do { Bytes.set s1 i1 '+'; 1 }
+        	else
+        		do { Bytes.set s1 i1 s.[i]; 1 }
+        | _ -> do { Bytes.set s1 i1 s.[i]; Name.nbc s.[i] } ]
       in
-      copy_code_in s1 (succ i) i1
+      copy_code_in s1 ( i + di ) (succ i1)
     else Bytes.unsafe_to_string s1
   in
   let s =
@@ -87,10 +81,6 @@ value encode s =
       copy_code_in (Bytes.create len) 0 0
     else s
   in
-  (* apostrophe typographique *)
-  let s = Str.global_replace (Str.regexp "%E2%80%99") "+" s in
-  let s = Str.global_replace (Str.regexp "%2D") "+" s in
-  let s = Str.global_replace (Str.regexp "%27") "+" s in
   s
 ;
 (* end copy from wserver *)
