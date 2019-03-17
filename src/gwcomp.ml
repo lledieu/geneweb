@@ -47,6 +47,10 @@ value special c =
   | _ -> True ]
 ;
 
+value why s l i1 k =
+  Printf.eprintf "Bad name (%d)(%d): %s (%d)\n" k i1 s l
+;
+
 value encode s =
   let rec need_code i =
     if i < String.length s then
@@ -57,10 +61,14 @@ value encode s =
   in
   let rec compute_len i i1 =
     if i < String.length s then
+      let _ = if Name.nbc s.[i] = -1 then
+      	Printf.eprintf "Case -1: %s %d\n" s i else ()
+      in
       let i1 = i1 + Name.nbc s.[i] in
       compute_len (succ i) i1
     else i1
   in
+  let len = compute_len 0 0 in
   let good i1 s1 =
   	i1 < Bytes.length s1
   in
@@ -70,17 +78,16 @@ value encode s =
         match Name.nbc s.[i] with
         [ -1 | 1 -> 
         	if special s.[i] then
-        		do { if good i1 s1 then Bytes.set s1 i1 '+' else (); 1 }
+        		do { if good i1 s1 then Bytes.set s1 i1 '+' else why s len i1 1; 1 }
         	else
-        		do { if good i1 s1 then Bytes.set s1 i1 s.[i] else (); 1 }
-        | _ -> do { if good i1 s1 then Bytes.set s1 i1 s.[i] else (); Name.nbc s.[i] } ]
+        		do { if good i1 s1 then Bytes.set s1 i1 s.[i] else why s len i1 2; 1 }
+        | _ -> do { if good i1 s1 then Bytes.set s1 i1 s.[i] else why s len i1 3; Name.nbc s.[i] } ]
       in
       copy_code_in s1 ( i + di ) (succ i1)
     else Bytes.unsafe_to_string s1
   in
   let s =
     if need_code 0 then
-      let len = compute_len 0 0 in
       copy_code_in (Bytes.create len) 0 0
     else s
   in
