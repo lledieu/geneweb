@@ -47,6 +47,17 @@ value special c =
   | _ -> True ]
 ;
 
+value nbc c =
+  if Char.code c < 0b10000000 then 1
+  else if Char.code c < 0b11000000 then 1
+  else if Char.code c < 0b11100000 then 2
+  else if Char.code c < 0b11110000 then 3
+  else if Char.code c < 0b11111000 then 4
+  else if Char.code c < 0b11111100 then 5
+  else if Char.code c < 0b11111110 then 6
+  else -1
+;
+
 value why s l i1 k =
   Printf.eprintf "Bad name (%d)(%d): %s (%d)\n" k i1 s l
 ;
@@ -61,11 +72,10 @@ value encode s =
   in
   let rec compute_len i i1 =
     if i < String.length s then
-      let _ = if Name.nbc s.[i] = -1 then
+      let _ = if nbc s.[i] = -1 then
       	Printf.eprintf "Case -1: %s %d\n" s i else ()
       in
-      let i1 = i1 + Name.nbc s.[i] in
-      compute_len (succ i) i1
+      compute_len (i + (nbc s.[i])) (i1 + 1)
     else i1
   in
   let len = compute_len 0 0 in
@@ -75,13 +85,13 @@ value encode s =
   let rec copy_code_in s1 i i1 =
     if i < String.length s then
       let di =
-        match Name.nbc s.[i] with
-        [ -1 | 1 -> 
+        match nbc s.[i] with
+        [ 1 -> 
         	if special s.[i] then
         		do { if good i1 s1 then Bytes.set s1 i1 '+' else why s len i1 1; 1 }
         	else
         		do { if good i1 s1 then Bytes.set s1 i1 s.[i] else why s len i1 2; 1 }
-        | _ -> do { if good i1 s1 then Bytes.set s1 i1 s.[i] else why s len i1 3; Name.nbc s.[i] } ]
+        | _ -> do { if good i1 s1 then Bytes.set s1 i1 '+' else why s len i1 3; nbc s.[i] } ]
       in
       copy_code_in s1 ( i + di ) (succ i1)
     else Bytes.unsafe_to_string s1
@@ -717,7 +727,8 @@ value rgpd_access fn sn occ str l =
        rgpd_files.val ^ d_sep ^ fns ^ "." ^ ocs ^ "." ^ sns
     in
     let _ = 
-      if String.contains rgpd_file '%' then
+      if String.contains sn '%'  
+      then
         Printf.eprintf "Bad encoding for RGPD filename: %s\n" rgpd_file
       else ()
     in 
