@@ -269,8 +269,7 @@ value specify conf base n pl =
          tag "li" begin
            Perso.print_sosa conf base p True;
            match tl with
-           [ [] ->
-               Wserver.wprint "\n%s" (referenced_person_title_text conf base p)
+           [ [] -> Wserver.wprint "\n%s" (Util.referenced_person_title_text conf base p)
            | [t :: _] ->
                do {
                  tag "a" "href=\"%s%s\"" (commd conf) (acces conf base p)
@@ -282,7 +281,9 @@ value specify conf base n pl =
                       Wserver.wprint "%s" (one_title_text conf base p t))
                    tl;
                } ];
+           Wserver.wprint " [%d]" (get_occ p);
            Wserver.wprint "%s" (Date.short_dates_text conf base p);
+           Util.specify_homonymous conf base p True;
            if authorized_age conf base p then
              match get_first_names_aliases p with
              [ [] -> ()
@@ -299,6 +300,7 @@ value specify conf base n pl =
                    Wserver.wprint ")</em>";
                  } ]
            else ();
+           (* specify_homonymous has displayed first spouse
            let spouses =
              List.fold_right
                (fun ifam spouses ->
@@ -319,6 +321,7 @@ value specify conf base n pl =
                    (person_title_text conf base h) hl
                in
                Wserver.wprint ", <em>&amp; %s</em>\n" s ];
+           *)
          end)
       ptll;
     Wserver.wprint "</ul>\n";
