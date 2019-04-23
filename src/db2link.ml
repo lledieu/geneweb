@@ -20,8 +20,8 @@ type file_info =
     f_sep_file_inx : mutable int }
 ;
 
-value max_warnings = 10;
-value max_errors = 10;
+value max_warnings = 50;
+value max_errors = 50;
 
 type family =
   { fam : gen_family iper string;
