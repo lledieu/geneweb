@@ -1208,6 +1208,19 @@ value gwu base in_dir out_dir out_oc src_oc_ht anc desc ancdesc =
                else [m :: ml])
             ifaml []
         in
+        (* ajout pour sortir les mariages dans le bon ordre *)
+        let ml =
+          List.stable_sort
+            (fun m1 m2 ->
+              match
+                (Adef.od_of_codate (get_marriage m1.m_fam),
+                 Adef.od_of_codate (get_marriage m2.m_fam))
+              with
+              [ (Some d1, Some d2) -> CheckItem.compare_date d1 d2
+              | _ -> 0 ])
+            ml
+        in
+        (* *)
         if ml <> [] then do {
           gen.notes_pl_p := [];
           if not first.val then fprintf oc "\n" else ();

@@ -15,6 +15,7 @@ value strictly_before : Def.date -> Def.date -> bool;
 value strictly_after_dmy : Def.dmy -> Def.dmy -> bool;
 value strictly_after : Def.date -> Def.date -> bool;
 value date_of_death : Def.death -> option Adef.date;
+value compare_date : Def.date -> Def.date -> int;
 
 value person :
   base -> (base_warning -> unit) -> person ->
