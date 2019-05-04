@@ -266,6 +266,13 @@ function no_options () {
 
     <div class="descends_menu_other">
       <label>
+        <input type="radio" name="t" value="CARTO" onclick="no_options ()"%/>[
+en: Cartography
+fr: Cartographie
+]
+      </label>
+      <br%/><br%/>
+      <label>
         <input type="radio" name="t" value="S" onclick="no_options ()"%/>
         [*descendants at the generation]
       </label>

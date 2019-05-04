@@ -382,6 +382,13 @@ function no_options () {
     
     <div class="ascends_menu_other">
       <label>
+        <input type="radio" name="t" value="CARTO" onclick="no_options()"%/>[
+en: Cartography
+fr: Cartographie
+]
+      </label><br%/><br%>
+
+      <label>
         <input type="radio" name="t" value="L" onclick="no_options()"%/>
         [*list/list (ancestors)]1
         %if;(bvar.max_anc_level = "" and max_anc_level >= 8)

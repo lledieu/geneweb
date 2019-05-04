@@ -1493,6 +1493,7 @@ value print conf base p =
   let templ =
     match p_getenv conf.env "t" with
     [ Some ("F" | "L" | "M") -> "deslist"
+    | Some "CARTO" -> "descarto"
     | Some _ -> ""
     | _ -> "desmenu" ]
   in

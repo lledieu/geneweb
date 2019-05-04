@@ -3887,6 +3887,7 @@ value print_ascend conf base p =
         [ Some ("E" | "F" | "H" | "L") -> "anclist"
         | Some ("D" | "G" | "M" | "N" | "P" | "Z") -> "ancsosa"
         | Some ("A" | "C" | "T") -> "anctree"
+        | Some "CARTO" -> "anccarto"
         | _ -> "ancmenu" ]
       in
       interp_templ templ conf base p ]
