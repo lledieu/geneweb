@@ -1,11 +1,14 @@
 <!-- sources -->
 
-%if;(has_sources or has_linked_page.BIBLIO)
+%if;(has_sources or has_linked_page.BIBLIO or has_source2)
   <h3 class="highlight">[*source/sources]1</h3>
   <em>
     <ul>
       %foreach;source;
         <li>%apply;capitalize(source_type): %source;</li>
+      %end;
+      %foreach;source2;
+        <li>%apply;capitalize(source_type2): %source2;</li>
       %end;
     </ul>
   </em>
