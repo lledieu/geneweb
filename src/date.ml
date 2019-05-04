@@ -851,6 +851,23 @@ value print_dates conf base p =
   }
 ;
 
+value short_dates_min conf base p =
+  if authorized_age conf base p then
+    let (birth_date, _, _) = get_birth_death_date p in
+    match birth_date with
+    [ Some (Dgreg d _) -> string_of_int d.year
+    | _ -> "" ]
+  else ""
+;
+value short_dates_max conf base p =
+  if authorized_age conf base p then
+    let (_, death_date, _) = get_birth_death_date p in
+    match death_date with
+    [ Some (Dgreg d _) -> string_of_int d.year
+    | _ -> "" ]
+  else ""
+;
+
 
 (* ********************************************************************** *)
 (*  [Fonc] compare_date : date -> date -> int                             *)

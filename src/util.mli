@@ -76,6 +76,8 @@ type p_access = (base -> person -> string * base -> person -> string);
 value std_access : p_access;
 value raw_access : p_access;
 
+value sub_string_index : string -> string -> option int;
+
 (* Fonctions d'écriture du nom et prénom d'un individu en fonction de : *)
 (*   - son/ses titre de noblesse                                        *)
 (*   - son/ses nom public                                               *)

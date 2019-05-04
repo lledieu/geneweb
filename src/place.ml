@@ -48,6 +48,23 @@ value fold_place inverted s =
   if inverted then List.rev list else list
 ;
 
+value place_short base p =
+  let s = sou base (get_birth_place p) in
+  let s =
+    if String.equal s "" then sou base (get_death_place p)
+    else s
+  in
+  let l_str = fold_place True s in
+  let rec loop liste =
+    match liste with
+    [ [ "?" :: others] -> loop others
+    | [first :: others] when first.[1] = '[' -> loop others
+    | [first :: _] -> first
+    | [] -> "" ]
+  in
+  loop l_str
+;
+
 value get_all conf base =
   let add_birth = p_getenv conf.env "bi" = Some "on" in
   let add_baptism = p_getenv conf.env "bp" = Some "on" in

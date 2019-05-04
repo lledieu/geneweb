@@ -16,6 +16,8 @@ value day_text : dmy -> string;
 value month_text : dmy -> string;
 value year_text : dmy -> string;
 value short_dates_text : config -> base -> person -> string;
+value short_dates_min : config -> base -> person -> string;
+value short_dates_max : config -> base -> person -> string;
 value short_marriage_date_text :
   config -> base -> family -> person -> person -> string;
 value print_dates : config -> base -> person -> unit;

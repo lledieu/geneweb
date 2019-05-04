@@ -778,6 +778,14 @@ value raw_access =
 
 value restricted_txt conf = ".....";
 
+value sub_string_index s t =
+  loop 0 0 where rec loop i j =
+    if j = String.length t then Some (i - j)
+    else if i = String.length s then None
+    else if s.[i] = t.[j] then loop (i + 1) (j + 1)
+    else loop (i + 1) 0
+;
+
 
 (* ************************************************************************** *)
 (*  [Fonc] gen_person_text : fun -> fun -> config -> base -> person -> string *)

@@ -933,6 +933,41 @@ value tree_generation_list conf base gv p =
   enrich_tree gen
 ;
 
+(* FIXME: copied from place.ml *)
+value fold_place inverted s =
+  let rec loop iend list i ibeg =
+    if i = iend then
+      if i > ibeg then [String.sub s ibeg (i - ibeg) :: list] else list
+    else
+      let (list, ibeg) =
+        match s.[i] with
+        [ ',' ->
+            let list =
+              if i > ibeg then [String.sub s ibeg (i - ibeg) :: list]
+              else list
+            in
+            (list, i + 1)
+        | ' ' -> if i = ibeg then (list, i + 1) else (list, ibeg)
+        | _ -> (list, ibeg) ]
+      in
+      loop iend list (i + 1) ibeg
+  in
+  let (iend, rest) =
+    if String.length s > 0 && s.[String.length s - 1] = ')' then
+      match Mutil.rindex s '(' with
+      [ Some i when i < String.length s - 2 ->
+          let j =
+            loop (i - 1) where rec loop i =
+              if i >= 0 && s.[i] = ' ' then loop (i - 1) else i + 1
+          in
+          (j, [String.sub s (i + 1) (String.length s - i - 2)])
+      | _ -> (String.length s, []) ]
+    else (String.length s, [])
+  in
+  let list = rest @ loop iend [] 0 0 in
+  if inverted then List.rev list else list
+;
+
 (* Ancestors surnames list *)
 
 value get_date_place conf base auth_for_all_anc p =
@@ -2636,6 +2671,10 @@ and eval_str_person_field conf base env ((p, p_auth) as ep) =
   | "cremation_place" ->
       if p_auth then Util.string_of_place conf (sou base (get_burial_place p))
       else ""
+  | "date_min" ->
+      if p_auth then Date.short_dates_min conf base p else ""
+  | "date_max" ->
+      if p_auth then Date.short_dates_max conf base p else ""
   | "dates" ->
       if p_auth then Date.short_dates_text conf base p else ""
   | "death_age" ->
@@ -2666,6 +2705,16 @@ and eval_str_person_field conf base env ((p, p_auth) as ep) =
   | "father_age_at_birth" -> string_of_parent_age conf base ep get_father
   | "first_name" ->
       if not p_auth && (is_hide_names conf p) then "x" else p_first_name base p
+  | "first_name_full" ->
+      if not p_auth && conf.hide_names then "x" else
+      let fn = p_first_name base p in
+      match get_first_names_aliases p with
+      [ [first :: _ ] ->
+        let fna = sou base first in
+        match Util.sub_string_index fna fn with
+        [ Some i -> fna
+        | None -> fn ]
+      | [] -> fn ]
   | "first_name_key" ->
       if (is_hide_names conf p) && not p_auth then ""
       else code_varenv (Name.lower (p_first_name base p))
@@ -2856,6 +2905,23 @@ and eval_str_person_field conf base env ((p, p_auth) as ep) =
           [ Some "yes" -> (Date.string_of_ondate conf d) ^ (Date.get_wday conf d)
           | _ -> Date.string_of_ondate conf d ]
       | _ -> "" ]
+  | "place_short" ->
+      if p_auth then
+        let s = sou base (get_birth_place p) in
+        let s =
+          if String.equal s "" then sou base (get_death_place p)
+          else s
+        in
+        let l_str = fold_place True s in
+        let rec loop liste =
+          match liste with
+          [ [ "?" :: others] -> loop others
+          | [first :: others] when first.[1] = '[' -> loop others
+          | [first :: _] -> first
+          | [] -> "" ]
+        in
+        loop l_str
+      else ""
   | "slash_death_date" ->
       match (p_auth, get_death p) with
       [ (True, Death _ d) ->
