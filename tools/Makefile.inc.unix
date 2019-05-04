@@ -13,7 +13,7 @@ OCAMLD=
 STRIP=strip
 RM=/bin/rm -f
 EXE=
-STATIC=-ccopt -static
+STATIC=-ccopt -static -ccopt -Wl,--no-export-dynamic
 STATIC=
 TEST_DIR=test $$(basename "$<") = "$<" || { echo "Please run 'make' in directory '$$(dirname "$<")' first"; exit 1; }
 
