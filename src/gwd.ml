@@ -9,6 +9,8 @@ open Mutil;
 open Printf;
 open Util;
 
+value default_base = ref "";
+
 value green_color = "#2f6400";
 value selected_addr = ref None;
 value selected_port = ref 2317;
@@ -1139,6 +1141,8 @@ value make_conf cgi from_addr (addr, request) script_name contents env = do {
   let (command, base_file, passwd, env, access_type) =
     let (base_passwd, env) =
       let (x, env) = extract_assoc "b" env in
+      if x = "" && cgi && default_base.val <> "" then
+        (default_base.val, env) else
       if x <> "" || cgi then (x, env) else (script_name, env)
     in
     let ip = index '_' base_passwd in
@@ -1963,6 +1967,7 @@ value main () =
 <dir>
        Directory for socket communication (Windows) and access count.");
        ("-cgi", Arg.Set cgi, "\n       Force cgi mode.");
+       ("-b", Arg.String (fun x -> default_base.val := x), "\n       Default database name (cgi mode only).");
        ("-images_url", Arg.String (fun x -> Util.images_url.val := x),
         "<url>\n       URL for GeneWeb images (default: gwd send them)");
        ("-images_dir", Arg.String (fun x -> images_dir.val := x), "\
