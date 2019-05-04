@@ -29,6 +29,7 @@ type config =
     just_friend_wizard : bool;
     user : string;
     username : string;
+    userkey : string;
     auth_scheme : auth_scheme_kind;
     cgi : bool;
     pure_xhtml : bool;
