@@ -1096,7 +1096,7 @@ value print_mod o_conf base =
     let ofs = family_structure conf base sfam.fam_index in
     let (ifam, fam, cpl, des) = effective_mod conf base sfam scpl sdes in
     let s =
-      let sl = [fam.comment; fam.fsources] in
+      let sl = [fam.comment; fam.fsources; fam.marriage_src] in
       String.concat " " (List.map (sou base) sl)
     in
     Notes.update_notes_links_db conf (NotesLinks.PgFam ifam) s;

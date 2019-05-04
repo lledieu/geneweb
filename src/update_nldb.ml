@@ -160,7 +160,7 @@ value compute base bdir =
       let fam = foi base (Adef.ifam_of_int i) in
       if not (is_deleted_family fam) then do {
         let s =
-          let sl = [get_comment; get_fsources] in
+          let sl = [get_comment; get_fsources; get_marriage_src] in
           String.concat " " (List.map (fun f -> sou base (f fam)) sl)
         in
         let list = notes_links s in

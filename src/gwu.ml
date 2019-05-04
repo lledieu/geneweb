@@ -343,6 +343,25 @@ value add_linked_files gen from s some_linked_files =
     else loop new_linked_files (i + 1)
 ;
 
+(* need gen param to solve #549 *)
+value print_infos2 oc base is_child csrc cbp gen p =
+  do {
+    let f _ =
+      sprintf "person \"%s.%d %s\"" (p_first_name base p) (get_occ p)
+        (p_surname base p)
+    in
+    let s =
+      let sl =
+        [get_birth_src; get_baptism_src; get_death_src;
+         get_burial_src; get_psources]
+      in
+      String.concat " " (List.map (fun f -> sou base (f p)) sl)
+    in
+    ignore (add_linked_files gen f s [] : list _);
+    print_infos oc base is_child csrc cbp p
+  }
+;
+
 value print_parent oc base gen fam p =
   let has_printed_parents =
     match get_parents p with
@@ -363,14 +382,14 @@ value print_parent oc base gen fam p =
       (if get_occ p = 0 || first_name = "?" || surname = "?" then ""
        else "." ^ string_of_int (get_occ p));
     if pr then
-      if has_infos then print_infos oc base False "" "" p
+      if has_infos then print_infos2 oc base False "" "" gen p
       else if first_name <> "?" && surname <> "?" then fprintf oc " 0"
       else ()
     else ()
   }
 ;
 
-value print_child oc base fam_surname csrc cbp p =
+value print_child oc base fam_surname csrc cbp gen p =
   do {
     fprintf oc "-";
     match get_sex p with
@@ -385,7 +404,7 @@ value print_child oc base fam_surname csrc cbp p =
     if not (eq_istr (get_surname p) fam_surname) then
       fprintf oc " %s" (s_correct_string_nonum (sou base (get_surname p)))
     else ();
-    print_infos oc base True csrc cbp p;
+    print_infos2 oc base True csrc cbp gen p;
     fprintf oc "\n"
   }
 ;
@@ -440,7 +459,7 @@ value print_witness oc base gen p =
        not gen.mark.(Adef.int_of_iper (get_key_index p))
     then do {
       gen.mark.(Adef.int_of_iper (get_key_index p)) := True;
-      if has_infos base p then print_infos oc base False "" "" p
+      if has_infos base p then print_infos2 oc base False "" "" gen p
       else fprintf oc " 0";
       match sou base (get_notes p) with
       [ "" -> ()
@@ -531,7 +550,7 @@ value print_family oc base gen m =
           Array.iter
             (fun p ->
                if gen.per_sel (get_key_index p) then
-                 print_child oc base fam_surname csrc cbp p
+                 print_child oc base fam_surname csrc cbp gen p
                else ())
             m.m_chil;
           fprintf oc "end\n"
@@ -543,7 +562,11 @@ value print_family oc base gen m =
         (p_first_name base m.m_moth) (get_occ m.m_moth)
         (p_surname base m.m_moth)
     in
-    ignore (add_linked_files gen f fsources [] : list _);
+    let s =
+      let sl = [get_comment; get_fsources; get_marriage_src] in
+      String.concat " " (List.map (fun f -> sou base (f fam)) sl)
+    in
+    ignore (add_linked_files gen f s [] : list _);
   }
 ;
 
@@ -715,7 +738,7 @@ value get_persons_with_relations base m list =
     (Array.to_list m.m_chil) list
 ;
 
-value print_relation_parent oc base mark defined_p p =
+value print_relation_parent oc base mark defined_p gen p =
   do {
     fprintf oc "%s %s%s" (correct_string base (get_surname p))
       (correct_string base (get_first_name p))
@@ -724,7 +747,7 @@ value print_relation_parent oc base mark defined_p p =
        not mark.(Adef.int_of_iper (get_key_index p))
     then do {
       mark.(Adef.int_of_iper (get_key_index p)) := True;
-      if has_infos base p then print_infos oc base False "" "" p
+      if has_infos base p then print_infos2 oc base False "" "" gen p
       else fprintf oc " 0";
       defined_p.val := [p :: defined_p.val]
     }
@@ -774,13 +797,13 @@ value print_relation_for_person oc base gen def_p p r =
         | _ -> () ];
         fprintf oc ": ";
         match (fath, moth) with
-        [ (Some fath, None) -> print_relation_parent oc base gen.mark def_p fath
-        | (None, Some moth) -> print_relation_parent oc base gen.mark def_p moth
+        [ (Some fath, None) -> print_relation_parent oc base gen.mark def_p gen fath
+        | (None, Some moth) -> print_relation_parent oc base gen.mark def_p gen moth
         | (Some fath, Some moth) ->
             do {
-              print_relation_parent oc base gen.mark def_p fath;
+              print_relation_parent oc base gen.mark def_p gen fath;
               fprintf oc " + ";
-              print_relation_parent oc base gen.mark def_p moth
+              print_relation_parent oc base gen.mark def_p gen moth
             }
         | _ -> () ];
         fprintf oc "\n"
@@ -805,7 +828,7 @@ value print_relations_for_person oc base gen def_p is_definition p =
     fprintf oc "rel %s %s%s" surn fnam
       (if get_occ p = 0 then "" else "." ^ string_of_int (get_occ p));
     if is_definition then do {
-      if has_infos base p then print_infos oc base False "" "" p
+      if has_infos base p then print_infos2 oc base False "" "" gen p
       else fprintf oc " 0";
       match get_sex p with
       [ Male -> fprintf oc " #h"
