@@ -62,7 +62,7 @@ compilation.ml: always
 	> compilation.ml
 	echo "open Def;" >> compilation.ml
 ifeq ("$(STATIC)","")
-	echo "value static = \" - static\";" >> compilation.ml
+	echo "value static = \"\";" >> compilation.ml
 else
 	echo "value static = \" - static\";" >> compilation.ml
 endif
