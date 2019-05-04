@@ -577,7 +577,7 @@ value html_of_tlsw conf s =
     [ [_] -> []
     | l -> l ]
   in
-  hotl conf (Some lines) first_cnt None sections_nums [] ["" :: lines]
+  hotl conf (Some lines) first_cnt None sections_nums [] lines
 ;
 
 value html_with_summary_of_tlsw conf wi edit_opt s =
