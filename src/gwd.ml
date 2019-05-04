@@ -1214,6 +1214,13 @@ value make_conf cgi from_addr (addr, request) script_name contents env = do {
     (if x = "" then 0 else int_of_string x, env)
   in
   let base_env = read_base_env cgi base_file in
+  let _ =
+    if Util.images_url.val = "" then
+      try
+        Util.images_url.val := List.assoc "images_url" base_env
+      with [ Not_found -> () ]
+    else ()
+  in
   let default_lang =
     try
       let x = List.assoc "default_lang" base_env in
