@@ -516,9 +516,7 @@ value print_branch conf base psn name =
                | Some (_, False) -> ()
                | None ->
                    if Array.length children <> 0 then
-                     stagn "dl" begin
-                       stag "dd" begin Wserver.wprint "..."; end;
-                     end
+                     Wserver.wprint "..."
                    else () ];
                False
              })
