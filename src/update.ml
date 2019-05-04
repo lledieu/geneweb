@@ -95,6 +95,85 @@ value print_same_name conf base p =
       end ]
 ;
 
+value print_same_name_radio_list conf base plist =
+  tag "ul" begin
+    Mutil.list_iter_first
+      (fun first p ->
+ 	stag "li" begin
+          let checked =
+            if first then " checked=\"checked\""
+            else ""
+          in
+          xtag "input" "type=\"radio\" name=\"link_occ\" value=\"%d\"%s"
+            (get_occ p) checked;
+ 	  stag "a" "href=\"%s%s\"" (commd conf) (acces conf base p)
+ 	  begin
+ 	    Wserver.wprint "%s.%d %s"
+ 	      (p_first_name base p) (get_occ p)
+ 	      (p_surname base p);
+ 	  end;
+ 	  Wserver.wprint "%s\n" (Date.short_dates_text conf base p);
+ 	end)
+      plist;
+  end
+;
+
+value print_same_name_radio conf base p =
+  let f = p_first_name base p in
+  let s = p_surname base p in
+  let ipl = Gutil.person_ht_find_all base (f ^ " " ^ s) in
+  let f = Name.strip_lower f in
+  let s = Name.strip_lower s in
+  let pl =
+    List.fold_left
+      (fun pl ip ->
+         let p = poi base ip in
+         if Name.strip_lower (p_first_name base p) = f
+         && Name.strip_lower (p_surname base p) = s then
+           [p :: pl]
+         else pl)
+      [] ipl
+  in
+  let pl =
+    Sort.list
+      (fun p1 p2 ->
+         match
+           (Adef.od_of_codate (get_birth p1), (get_death p1),
+            Adef.od_of_codate (get_birth p2), (get_death p2))
+         with
+         [ (Some d1, _, Some d2, _) -> CheckItem.strictly_before d1 d2
+         | (Some d1, _, _, Death _ d2) ->
+             CheckItem.strictly_before d1 (Adef.date_of_cdate d2)
+         | (_, Death _ d1, Some d2, _) ->
+             CheckItem.strictly_before (Adef.date_of_cdate d1) d2
+         | (_, Death _ d1, _, Death _ d2) ->
+             CheckItem.strictly_before (Adef.date_of_cdate d1) (Adef.date_of_cdate d2)
+         | (Some _, _, _, _) -> False
+         | (_, Death _ _, _, _) -> False
+         | (_, _, Some _, _) -> True
+         | (_, _, _, Death _ _) -> True
+         | _ ->
+             let c = alphabetic (p_surname base p1) (p_surname base p2) in
+             if c == 0 then
+               let c =
+                 alphabetic (p_first_name base p1) (p_first_name base p2)
+               in
+               if c == 0 then (get_occ p1) > (get_occ p2) else c > 0
+             else c > 0 ])
+      pl
+  in
+  match pl with
+  [ [] -> ()
+  | _ ->
+      do {
+        tag "dl" begin
+          tag "dt" begin
+            print_same_name_radio_list conf base pl;
+          end;
+        end;
+      }]
+;
+
 value print_return conf =
   tag "p" begin
     tag "form" "method=\"post\" action=\"%s\"" conf.command begin
@@ -878,14 +957,16 @@ value print_create_conflict conf base p var =
           Wserver.wprint (ftransl conf "click on \"%s\"") (transl conf "back");
           Wserver.wprint " %s %s." (transl_nth conf "and" 0)
             (transl conf "use \"link\" instead of \"create\"");
+          print_same_name_radio conf base p;
         end;
       end;
       xtag "input" "type=\"submit\" name=\"create\" value=\"%s\""
         (capitale (transl conf "create"));
+      xtag "input" "type=\"submit\" name=\"link\" value=\"%s\""
+        (capitale (transl conf "link"));
       xtag "input" "type=\"submit\" name=\"return\" value=\"%s\""
         (capitale (transl conf "back"));
     end;
-    print_same_name conf base p;
     trailer conf;
     raise ModErr
   }
