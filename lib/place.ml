@@ -277,8 +277,23 @@ let print_all_places_surnames conf base =
   let add_burial = p_getenv conf.env "bu" = Some "on" in
   match p_getenv conf.env "k" with
   | Some ini ->
-    print_all_places_surnames_long conf base ~add_birth ~add_baptism ~add_death ~add_burial
-      (if ini = "" then fun _ -> true else fun x -> List.hd x = ini)
+    let fun_cmp =
+      if ini = "" then fun _ -> true
+      else
+        let inverted =
+          try List.assoc "places_inverted" conf.base_env = "yes"
+          with Not_found -> false
+        in
+        let k = fold_place_long inverted ini in
+        let rec cmp ls lp =
+          match ls, lp with
+            [], _ -> true
+          | ls_e :: ls_r, lp_e :: lp_r when ls_e = lp_e -> cmp ls_r lp_r
+          | _ -> false
+        in
+        fun x -> cmp k x
+    in
+    print_all_places_surnames_long conf base ~add_birth ~add_baptism ~add_death ~add_burial fun_cmp
   | None ->
     if (p_getenv conf.base_env "ps_short_display" = Some "on") ||
       (nb_of_persons base > 1000000 && add_birth && add_baptism && add_death && add_burial)
