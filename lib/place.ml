@@ -47,7 +47,7 @@ let fold_place_long inverted s =
     else len, []
   in
   let list = List.rev_append rest @@ loop iend [] 0 0 in
-  if inverted then List.rev list else list
+  (s, if inverted then List.rev list else list)
 
 let fold_place_short s =
   let len = String.length s in
@@ -138,7 +138,7 @@ let get_all =
     ht ;
   array
 
-let print_html_places_surnames conf base (array : (string list * (string * Adef.iper list) list) array) =
+let print_html_places_surnames conf base (array : ((string * string list) * (string * Adef.iper list) list) array) =
   let list = Array.to_list array in
   let link_to_ind =
     match p_getenv conf.base_env "place_surname_link_to_ind" with
@@ -153,16 +153,19 @@ let print_html_places_surnames conf base (array : (string list * (string * Adef.
     else Wserver.printf "m=N&v=%s" (code_varenv sn);
     Wserver.printf "\">%s</a> (%d)" sn len
   in
-  let print_sn_list (snl : (string * Adef.iper list) list) =
+  let print_sn_list (snl : (string * Adef.iper list) list) so =
     let snl = List.sort (fun (sn1, _) (sn2, _) -> Gutil.alphabetic_order sn1 sn2) snl in
-    Wserver.printf "<li>\n";
+    (* FIXME: dummy title to show it works *)
+    Wserver.printf "<li title=\"%s\">\n" so;
     Mutil.list_iter_first (fun first x -> if not first then Wserver.printf ",\n" ; print_sn x) snl ;
     Wserver.printf "\n";
     Wserver.printf "</li>\n"
   in
+  let r = Str.regexp "\"" in
   let rec loop prev =
     function
-      (pl, snl) :: list ->
+      ((so, pl), snl) :: list ->
+        let so = Str.global_replace r "&quot;" so in
         let rec loop1 prev pl =
           match prev, pl with
             [], l2 -> List.iter (fun x -> Wserver.printf "<li>%s<ul>\n" x) l2
@@ -177,7 +180,7 @@ let print_html_places_surnames conf base (array : (string list * (string * Adef.
           | _ -> assert false
         in
         loop1 prev pl;
-        print_sn_list snl;
+        print_sn_list snl so;
         loop pl list
     | [] -> List.iter (fun _ -> Wserver.printf "</ul></li>\n") prev
   in
@@ -237,7 +240,7 @@ let print_all_places_surnames_long conf base filter ~add_birth ~add_baptism ~add
   in
   let array =
     get_all conf base ~add_birth ~add_baptism ~add_death ~add_burial
-      [] [] (fold_place_long inverted) filter
+      ("", []) [] (fold_place_long inverted) filter
       (fun prev p ->
          let value = (get_surname p, get_key_index p) in
          match prev with Some list -> value :: list | None -> [ value ])
@@ -260,7 +263,7 @@ let print_all_places_surnames_long conf base filter ~add_birth ~add_baptism ~add
         if Gutil.alphabetic_order s1 s2 = 0 then sort_place_utf8 pl11 pl22
         else Gutil.alphabetic_order s1 s2
   in
-  Array.sort (fun (pl1, _) (pl2, _) -> sort_place_utf8 pl1 pl2) array ;
+  Array.sort (fun ((_, pl1), _) ((_, pl2), _) -> sort_place_utf8 pl1 pl2) array ;
   let title _ =
     Wserver.printf "%s / %s" (capitale (transl conf "place"))
       (capitale (transl_nth conf "surname/surnames" 0))
@@ -284,14 +287,14 @@ let print_all_places_surnames conf base =
           try List.assoc "places_inverted" conf.base_env = "yes"
           with Not_found -> false
         in
-        let k = fold_place_long inverted ini in
+        let (_, k) = fold_place_long inverted ini in
         let rec cmp ls lp =
           match ls, lp with
             [], _ -> true
           | ls_e :: ls_r, lp_e :: lp_r when ls_e = lp_e -> cmp ls_r lp_r
           | _ -> false
         in
-        fun x -> cmp k x
+        fun (_, x) -> cmp k x
     in
     print_all_places_surnames_long conf base ~add_birth ~add_baptism ~add_death ~add_burial fun_cmp
   | None ->
