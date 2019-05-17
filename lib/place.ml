@@ -145,27 +145,33 @@ let print_html_places_surnames conf base (array : ((string * string list) * (str
       Some "yes" -> true
     | _ -> false
   in
-  let print_sn (sn, ips) =
+  let events = "" in
+  let events = if p_getenv conf.env "bi" = Some "on" then events ^ "&event_birth=on" else events in
+  let events = if p_getenv conf.env "bp" = Some "on" then events ^ "&event_bapt=on" else events in
+  let events = if p_getenv conf.env "de" = Some "on" then events ^ "&event_death=on" else events in
+  let events = if p_getenv conf.env "bu" = Some "on" then events ^ "&event_burial=on" else events in
+  let events = if p_getenv conf.env "ma" = Some "on" then events ^ "&event_marriage=on" else events in
+  let print_sn (sn, ips) so =
     let len = List.length ips in
-    Wserver.printf "<a href=\"%s" (commd conf);
-    if link_to_ind && len = 1
-    then Wserver.printf "%s" (acces conf base @@ pget conf base @@ List.hd ips)
-    else Wserver.printf "m=N&v=%s" (code_varenv sn);
-    Wserver.printf "\">%s</a> (%d)" sn len
+    Wserver.printf "<a href=\"%sm=N&v=%s\">%s</a> (" (commd conf) (code_varenv sn) sn;
+    if link_to_ind then
+      if len = 1 then (* FIXME: events ! Count persons is better ? *)
+        Wserver.printf "<a href=\"%s%s\">1</a>" (commd conf) (acces conf base @@ pget conf base @@ List.hd ips)
+      else Wserver.printf "<a href=\"%sm=AS_OK&surname=%s&place=%s&search_type=OR&max=%d%s\">%d</a>"
+        (commd conf) (code_varenv sn) (code_varenv so) (2*len) events len (* FIXME better adjust max ? *)
+    else Wserver.printf "%d" len ;
+    Wserver.printf ")"
   in
   let print_sn_list (snl : (string * Adef.iper list) list) so =
     let snl = List.sort (fun (sn1, _) (sn2, _) -> Gutil.alphabetic_order sn1 sn2) snl in
-    (* FIXME: dummy title to show it works *)
-    Wserver.printf "<li title=\"%s\">\n" so;
-    Mutil.list_iter_first (fun first x -> if not first then Wserver.printf ",\n" ; print_sn x) snl ;
+    Wserver.printf "<li>\n";
+    Mutil.list_iter_first (fun first x -> if not first then Wserver.printf ",\n" ; print_sn x so) snl ;
     Wserver.printf "\n";
     Wserver.printf "</li>\n"
   in
-  let r = Str.regexp "\"" in
   let rec loop prev =
     function
       ((so, pl), snl) :: list ->
-        let so = Str.global_replace r "&quot;" so in
         let rec loop1 prev pl =
           match prev, pl with
             [], l2 -> List.iter (fun x -> Wserver.printf "<li>%s<ul>\n" x) l2
