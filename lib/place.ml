@@ -196,7 +196,7 @@ let print_all_places_surnames_short conf base ~add_birth ~add_baptism ~add_death
       (fun x -> x)
   in
   let title _ = Wserver.printf "%s" (capitale (transl conf "place")) in
-  Array.sort (fun (s1, _) (s2, _) -> Gutil.alphabetic_order s2 s1) array ;
+  Array.sort (fun (s1, _) (s2, _) -> Gutil.alphabetic_order s1 s2) array ;
   let list = Array.to_list array in
   let add_birth = p_getenv conf.env "bi" = Some "on" in
   let add_baptism = p_getenv conf.env "bp" = Some "on" in
@@ -218,15 +218,16 @@ let print_all_places_surnames_short conf base ~add_birth ~add_baptism ~add_death
   Wserver.printf "</a>";
   Wserver.printf "</p>\n";
   Wserver.printf "<p>\n";
-  List.iter
-    (fun (s, x) ->
+  List.iteri
+    (fun i (s, x) ->
+       if i != 0 then Wserver.printf ",\n" ;
        Wserver.printf "<a href=\"%sm=PS%s&k=%s\">" (commd conf) opt
          (Util.code_varenv s);
        Wserver.printf "%s" s;
        Wserver.printf "</a>";
-       Wserver.printf " (%d),\n" x)
+       Wserver.printf " (%d)" x)
     list;
-  Wserver.printf "</p>\n";
+  Wserver.printf "\n</p>\n";
   Hutil.trailer conf
 
 let print_all_places_surnames_long conf base filter ~add_birth ~add_baptism ~add_death ~add_burial =
@@ -279,7 +280,8 @@ let print_all_places_surnames conf base =
     print_all_places_surnames_long conf base ~add_birth ~add_baptism ~add_death ~add_burial
       (if ini = "" then fun _ -> true else fun x -> List.hd x = ini)
   | None ->
-    if nb_of_persons base > 1000000 && add_birth && add_baptism && add_death && add_burial
+    if (p_getenv conf.base_env "ps_short_display" = Some "on") ||
+      (nb_of_persons base > 1000000 && add_birth && add_baptism && add_death && add_burial)
     then print_all_places_surnames_short conf base ~add_birth ~add_baptism ~add_death ~add_burial
     else print_all_places_surnames_long conf base ~add_birth ~add_baptism ~add_death ~add_burial (fun _ -> true)
 
