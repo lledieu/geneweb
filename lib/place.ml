@@ -174,7 +174,17 @@ let print_html_places_surnames conf base (array : ((string * string list) * (str
       ((so, pl), snl) :: list ->
         let rec loop1 prev pl =
           match prev, pl with
-            [], l2 -> List.iter (fun x -> Wserver.printf "<li>%s<ul>\n" x) l2
+            [], [x2] ->
+              let link =
+                if conf.wizard then
+                  Printf.sprintf " <a href=\"%sm=MOD_DATA&data=place&s=%s\" target=\"_blank\"><span class=\"fa fa-edit\" title=\"%s\">&nbsp;</span></a>"
+                      (commd conf) (code_varenv so) (capitale (Util.transl_decline conf "modify" ""))
+                else ""
+              in
+              Wserver.printf "<li>%s%s<ul>\n" x2 link
+          | [], x2 :: l2 ->
+              Wserver.printf "<li>%s<ul>\n" x2;
+              loop1 [] l2
           | x1 :: l1, x2 :: l2 ->
               if x1 = x2 then loop1 l1 l2
               else
