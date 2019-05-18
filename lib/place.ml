@@ -152,14 +152,15 @@ let print_html_places_surnames conf base (array : ((string * string list) * (str
   let events = if p_getenv conf.env "bu" = Some "on" then events ^ "&event_burial=on" else events in
   let events = if p_getenv conf.env "ma" = Some "on" then events ^ "&event_marriage=on" else events in
   let print_sn (sn, ips) so =
-    let len = List.length ips in
+    let len_e = List.length ips in
+    let len_p = List.length (List.sort_uniq (fun ip1 ip2 -> (Adef.int_of_iper ip1) - (Adef.int_of_iper ip2)) ips) in
     Wserver.printf "<a href=\"%sm=N&v=%s\">%s</a> (" (commd conf) (code_varenv sn) sn;
     if link_to_ind then
-      if len = 1 then (* FIXME: events ! Count persons is better ? *)
-        Wserver.printf "<a href=\"%s%s\">1</a>" (commd conf) (acces conf base @@ pget conf base @@ List.hd ips)
-      else Wserver.printf "<a href=\"%sm=AS_OK&surname=%s&place=%s&search_type=OR&max=%d%s\">%d</a>"
-        (commd conf) (code_varenv sn) (code_varenv so) (2*len) events len (* FIXME better adjust max ? *)
-    else Wserver.printf "%d" len ;
+      if len_p = 1 then
+        Wserver.printf "<a href=\"%s%s\">%d / 1</a>" (commd conf) (acces conf base @@ pget conf base @@ List.hd ips) len_e
+      else Wserver.printf "<a href=\"%sm=AS_OK&surname=%s&place=%s&search_type=OR&max=%d%s\">%d / %d</a>"
+        (commd conf) (code_varenv sn) (code_varenv so) len_p events len_e len_p
+    else Wserver.printf "%d / %d" len_e len_p ;
     Wserver.printf ")"
   in
   let print_sn_list (snl : (string * Adef.iper list) list) so =
