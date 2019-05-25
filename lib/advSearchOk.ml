@@ -354,26 +354,52 @@ let advanced_search conf base max_answers =
     done;
   List.rev !list, !len
 
-let print_result conf base max_answers (list, len) =
-  let list =
-    if len > max_answers then Util.reduce_list max_answers list else list
+let print_result_json conf base max_answers (list, len) =
+  let charset = if conf.charset = "" then "utf-8" else conf.charset in
+  Wserver.header "Content-type: application/json; charset=%s" charset ;
+  let truncated = if max_answers = len then "true" else "false" in
+  Wserver.printf "{\"truncated\":%s,\"data\":[" truncated;
+  let r = Str.regexp "\"" in
+  let escape_json s = (Str.global_replace r "\"" s) in
+  let get_fn =
+    match p_getenv conf.env "first_name" with
+    | Some "" | None -> true
+    | _ -> false
   in
-  if len = 0 then Wserver.printf "%s\n" (capitale (transl conf "no match"))
-  else
-    let () = Perso.build_sosa_ht conf base in
-    Wserver.printf "<ul>\n";
-    List.iter
-      (fun p ->
-         html_li conf;
-         Perso.print_sosa conf base p true;
-         Wserver.printf "\n%s" (referenced_person_text conf base p);
-         Wserver.printf "%s" (Date.short_dates_text conf base p);
-         Wserver.printf "<em>";
-         specify_homonymous conf base p false;
-         Wserver.printf "</em>")
-      list;
-    if len > max_answers then begin html_li conf; Wserver.printf "...\n" end;
-    Wserver.printf "</ul>\n"
+  let get_sn =
+    match p_getenv conf.env "surname" with
+    | Some "" | None -> true
+    | _ -> false
+  in
+  Mutil.list_iter_first (fun first p ->
+    if not first then Wserver.printf ",";
+    Wserver.printf "{";
+    Wserver.printf "\"id\":\"%d\"," (Adef.int_of_iper (get_key_index p));
+    if get_fn then Wserver.printf "\"fn\":\"%s\"," (escape_json (sou base (get_first_name p)));
+    if get_sn then Wserver.printf "\"sn\":\"%s\"," (escape_json (sou base (get_surname p)));
+    let prec, year, julian_day =
+      match Adef.od_of_cdate (get_birth p) with
+      | Some d -> begin match d with
+        | Dgreg (dmy, _) -> Date.prec_text conf dmy, string_of_int dmy.year, string_of_int (Calendar.sdn_of_julian dmy)
+        | _ -> "", "", ""
+        end
+      | _ -> "", "", ""
+    in
+    Wserver.printf "\"bid\":{\"d\":\"%s%s\",\"jd\":\"%s\"}," prec year julian_day;
+    let prec, year, julian_day =
+      match get_death p with
+      | Death (_, cd) -> begin match Adef.od_of_cdate cd with
+        | Some (Dgreg (dmy, _)) -> Date.prec_text conf dmy, string_of_int dmy.year, string_of_int (Calendar.sdn_of_julian dmy)
+        | _ -> "", "", ""
+        end
+      | _ -> "", "", ""
+    in
+    Wserver.printf "\"ded\":{\"d\":\"%s%s\",\"jd\":\"%s\"}," prec year julian_day;
+    Wserver.printf "\"pa\":\"%s\"," (escape_json (child_of_parent conf base p));
+    Wserver.printf "\"sp\":{\"d\":\"%s\",\"jd\":\"%s\"}" (escape_json (husband_wife conf base p true)) "jd";
+    Wserver.printf "}";
+  ) list;
+  Wserver.printf "]}"
 
 let searching_fields conf =
   let test_string x =
@@ -530,18 +556,23 @@ let searching_fields conf =
   string_field "occu" (search ^ sep)
 
 let print conf base =
-  let title _ =
-    Wserver.printf "%s" (capitale (transl_nth conf "advanced request" 0))
-  in
-  let max_answers =
-    match p_getint conf.env "max" with
-      Some n -> n
-    | None -> 100
-  in
-  Hutil.header conf title;
-  Wserver.printf "<p>\n";
-  Wserver.printf "%s %s." (capitale (transl conf "searching all"))
-    (searching_fields conf);
-  Wserver.printf "</p>\n";
-  let list = advanced_search conf base max_answers in
-  print_result conf base max_answers list; Hutil.trailer conf
+  match p_getenv conf.env "json" with
+  | Some "on" ->
+    let max_answers =
+      match p_getint conf.env "max" with
+        Some n -> n
+      | None -> 100
+    in
+    let (list, len) = advanced_search conf base max_answers in
+    let list =
+      if len > max_answers then Util.reduce_list max_answers list else list
+    in
+    print_result_json conf base max_answers (list, len)
+  | _ ->
+     let new_env = ("request_text",
+       Printf.sprintf "%s %s." (capitale (transl conf "searching all"))
+         (searching_fields conf)) :: conf.env
+     in
+     let conf = {conf with env = new_env } in
+     let conf = {conf with senv = ("request_text", "") :: conf.senv } in
+     Srcfile.print conf base "result"
