@@ -371,12 +371,14 @@ let print_result_json conf base max_answers (list, len) =
     | Some "" | None -> true
     | _ -> false
   in
+  let get_first_name p = escape_json (sou base (get_first_name p)) in
+  let get_surname p = escape_json (sou base (get_surname p)) in
   Mutil.list_iter_first (fun first p ->
     if not first then Wserver.printf ",";
     Wserver.printf "{";
     Wserver.printf "\"id\":\"%d\"," (Adef.int_of_iper (get_key_index p));
-    if get_fn then Wserver.printf "\"fn\":\"%s\"," (escape_json (sou base (get_first_name p)));
-    if get_sn then Wserver.printf "\"sn\":\"%s\"," (escape_json (sou base (get_surname p)));
+    if get_fn then Wserver.printf "\"fn\":\"%s\"," (get_first_name p);
+    if get_sn then Wserver.printf "\"sn\":\"%s\"," (get_surname p);
     let prec, year, julian_day =
       match Adef.od_of_cdate (get_birth p) with
       | Some d -> begin match d with
@@ -395,8 +397,69 @@ let print_result_json conf base max_answers (list, len) =
       | _ -> "", "", ""
     in
     Wserver.printf "\"ded\":{\"d\":\"%s%s\",\"jd\":\"%s\"}," prec year julian_day;
-    Wserver.printf "\"pa\":\"%s\"," (escape_json (child_of_parent conf base p));
-    Wserver.printf "\"sp\":{\"d\":\"%s\",\"jd\":\"%s\"}" (escape_json (husband_wife conf base p true)) "jd";
+    let a = pget conf base (get_key_index p) in
+    let ifam =
+      match get_parents a with
+      | Some ifam ->
+          let cpl = foi base ifam in
+          let fath =
+            let fath = pget conf base (get_father cpl) in
+            if p_first_name base fath = "?" then None else Some fath
+          in
+          let moth =
+            let moth = pget conf base (get_mother cpl) in
+            if p_first_name base moth = "?" then None else Some moth
+          in
+          Some (fath, moth)
+      | None -> None
+    in
+    let fa_fn, mo_fn, mo_sn =
+      match ifam with
+      | Some (None, None) | None -> "", "", ""
+      | Some (fath, moth) -> begin match fath, moth with
+          | Some fath, None -> get_first_name fath, "", ""
+          | None, Some moth -> "", get_first_name moth, get_surname moth
+          | Some fath, Some moth ->
+              get_first_name fath, get_first_name moth, get_surname moth
+          | _ -> "", "", ""
+          end
+    in
+    Wserver.printf "\"fafn\":\"%s\",\"mofn\":\"%s\",\"mosn\":\"%s\"," fa_fn mo_fn mo_sn;
+    let jd =
+      if Array.length (get_family p) > 0 then
+        let fam = foi base (get_family p).(0) in
+        match Adef.od_of_cdate (get_marriage fam) with
+        | Some d -> begin match d with
+            | Dgreg (dmy, _) -> string_of_int (Calendar.sdn_of_julian dmy)
+            | _ -> ""
+            end
+        | None -> ""
+      else ""
+    in
+    let text =
+      let rec loop i res =
+        let sep = if i = 0 then "" else "<br>" in
+        if i < Array.length (get_family p) then
+          let fam = foi base (get_family p).(i) in
+          let prec_year =
+            match Adef.od_of_cdate (get_marriage fam) with
+            | Some d -> begin match d with
+              | Dgreg (dmy, _) -> (Date.prec_text conf dmy) ^ (string_of_int dmy.year)
+              | _ -> ""
+              end
+            | _ -> ""
+          in
+          let conjoint = Gutil.spouse (get_key_index p) fam in
+          let conjoint = pget conf base conjoint in
+          if know base conjoint then
+            loop (i + 1)
+             (res ^ sep ^ prec_year ^ " " ^ (get_first_name conjoint) ^ " " ^ (get_surname conjoint))
+          else loop (i + 1) (res ^ sep)
+        else res
+      in
+      loop 0 ""
+    in
+    Wserver.printf "\"sp\":{\"d\":\"%s\",\"jd\":\"%s\"}" (escape_json text) jd;
     Wserver.printf "}";
   ) list;
   Wserver.printf "]}"

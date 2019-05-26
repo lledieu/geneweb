@@ -12,7 +12,7 @@
   %include;hed
 </head>
 <body%body_prop;>
-<div class="container">
+<div class="container-fluid">
 <h1>[*advanced request]0</h1>
 <p>%evar.request_text;</p>
 
@@ -22,8 +22,9 @@
   %if(evar.surname = "")<th>[*surname/surnames]0</th>%end;
   <th>[*birth]</th>
   <th>[*death]</th>
-  <th>[*parents]</th>
-  <th>[*marriage/marriages]1</th><th></th>
+  <th>[*father/mother]0</th>
+  <th>[*father/mother]1</th><th></th>
+  <th>[*marriage/marriages]1</th>
  </tr></thead>
 </table>
 
@@ -36,33 +37,66 @@
 <script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/plug-ins/1.10.19/sorting/intl.js"></script>
 <script>
-// Locale with configuration options
-  $.fn.dataTable.ext.order.intl('%lang;', {
-    sensitivity: 'base'
-  } );
+// FIXME: Add a specific lang parameter into gwf file ? It not linked to visitor language...
+$.fn.dataTable.ext.order.intl( "%lang;", {
+  "sensitivity": "base"
+} );
 
 $(document).ready(function() {
   var table = $('#result').DataTable( {
      "ajax": "%url;json=on",
+     "deferRender": true,
      "columns": %[
         %if(evar.firt_name = ""){ "data": "fn" },%end;
         %if(evar.surname = ""){ "data": "sn" },%end;
         { "data": "bid", render: { "_": "d", "sort": "jd" } },
         { "data": "ded", render: { "_": "d", "sort": "jd" } },
-        { "data": "pa" },
-        { "data": "sp", render: { "_": "d", "sort": "jd" } },
-     ],
-     "deferRender": true,
+        { "data": "fafn" },
+        { "data": "mofn" },
+        { "data": "mosn" },
+        { "data": "sp", render: { "_": "d", "sort": "jd" } }
+     %],
+     "scrollY": "70vh",
+     "scrollCollapse": true,
+     "paging": false,
      "language": {
        "url": "//cdn.datatables.net/plug-ins/9dcbecd42ad/i18n/[
+af: Afrikaans
+bg: Bulgarian
+br: FIXME
+ca: Catalan
+co: FIXME
+cs: Czech
+da: Danish
+de: German
 en: English
+eo: FIXME
+es: Spaicsh
+et: Estonian
+fi: Finnish
 fr: French
+he: Hebrew
+is: Icelandic
+it: Italian
+lv: Latvian
+nl: Dutch
+no: Norwegian-Nynorsk
+oc: FIXME
+pl: Polish
+pt: Portuguese
+pt-br: Portuguese-Brasil
+ro: Romanian
+ru: Russian
+sk: Slovak
+sl: Slovenian
+sv: Swedish
+zh: Chinese
 ].json"
      }
   } );
   $('#result tbody').on('click', 'tr', function () {
     var data = table.row(this).data();
-    window.open( "%prefix;i="+data.id, "from_result");
+    window.open( "%prefix;i="+data.id, "_blank");
   } );
 } );
 </script>
