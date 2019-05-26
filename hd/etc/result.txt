@@ -34,17 +34,22 @@
 </div>
 %include;js
 <script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/plug-ins/1.10.19/sorting/chinese-string.js"></script>
+<script src="https://cdn.datatables.net/plug-ins/1.10.19/sorting/intl.js"></script>
 <script>
+// Locale with configuration options
+  $.fn.dataTable.ext.order.intl('%lang;', {
+    sensitivity: 'base'
+  } );
+
 $(document).ready(function() {
   var table = $('#result').DataTable( {
      "ajax": "%url;json=on",
      "columns": %[
-        %if(evar.firt_name = ""){ "data": "fn", "type": "chinese-string" },%end;
-        %if(evar.surname = ""){ "data": "sn", "type": "chinese-string" },%end;
+        %if(evar.firt_name = ""){ "data": "fn" },%end;
+        %if(evar.surname = ""){ "data": "sn" },%end;
         { "data": "bid", render: { "_": "d", "sort": "jd" } },
         { "data": "ded", render: { "_": "d", "sort": "jd" } },
-        { "data": "pa", "type": "chinese-string" },
+        { "data": "pa" },
         { "data": "sp", render: { "_": "d", "sort": "jd" } },
      ],
      "deferRender": true,

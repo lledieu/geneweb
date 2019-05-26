@@ -81,16 +81,16 @@
         %end;
         %if;("xx"="")
           <div class="form-group-inline justify-content-end">
-            <label class="form-inline-label" for="event_birth">[birth]</label>
             <input class="form_inclune-control" id="event_birth" type="checkbox" name="event_birth" checked>
-            <label class="form-inline-label" for="event_bapt">[baptism]</label>
+            <label class="form-inline-label" for="event_birth">[birth]</label>
             <input class="form_inclune-control" id="event_bapt" type="checkbox" name="event_bapt">
-            <label class="form-inline-label" for="event_marriage">[marriage/marriages]0</label>
+            <label class="form-inline-label" for="event_bapt">[baptism]</label>
             <input class="form_inclune-control" id="event_marriage" type="checkbox" name="event_marriage" checked>
-            <label class="form-inline-label" for="event_death">[death]</label>
+            <label class="form-inline-label" for="event_marriage">[marriage/marriages]0</label>
             <input class="form_inclune-control" id="event_death" type="checkbox" name="event_death" checked>
-            <label class="form-inline-label" for="event_burial">[burial]</label>
+            <label class="form-inline-label" for="event_death">[death]</label>
             <input class="form_inclune-control" id="event_burial" type="checkbox" name="event_burial">
+            <label class="form-inline-label" for="event_burial">[burial]</label>
           </div>
         %end;
       </div>
@@ -174,6 +174,15 @@
             <label class="form-check-label" for="mA" >-</label>
           </div>
         </div>
+      </div>
+      <div class="row">
+          <div class="form-inline col justify-content-end">
+            <select class="form-control" name="death">
+              <option value="Dead">[*died]2</option>
+              <option value="NotDead">[*alive]2</option>
+              <option value="" selected="selected">-</option>
+            </select>
+          </div>
       </div>
       %end;
     </div>
