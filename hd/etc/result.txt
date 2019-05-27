@@ -14,7 +14,10 @@
 <body%body_prop;>
 <div class="container-fluid">
 <h1>[*advanced request]0</h1>
-<p>%evar.request_text;</p>
+<p>%evar.request_text;<span id="too_much" style="display: none"><br>[
+en: Too much results, be more specific...
+fr: Trop de résultats, affinez votre recherche...
+]</span></p>
 
 <table id="result" class="display" style="width=100%">
  <thead><tr>
@@ -95,6 +98,12 @@ zh: Chinese
 ].json"
      },
      "initComplete": function( settings, json) {
+       // Too much results ?
+       if( typeof json === "undefined" || !json.truncated ) {
+         $("#too_much").hide();
+       } else {
+         $("#too_much").show();
+       }
        // Remove accented character from search input as well
        $('#result_filter input').keyup( function () {
          table

@@ -302,7 +302,8 @@ let advanced_search conf base max_answers =
   in
   let match_person p search_type =
     if search_type <> "OR" then
-      (if match_civil_status p && match_baptism_date p true &&
+      (if authorized_age conf base p && know base p &&
+          match_civil_status p && match_baptism_date p true &&
           match_baptism_place p true && match_birth_date p true &&
           match_birth_place p true && match_burial_date p true &&
           match_burial_place p true && match_death_date p true &&
@@ -312,7 +313,7 @@ let advanced_search conf base max_answers =
        then
          begin list := p :: !list; incr len end)
     else if
-      match_civil_status p &&
+      authorized_age conf base p && know base p && match_civil_status p &&
       (gets "place" = "" && gets "date2_yyyy" = "" &&
        gets "date1_yyyy" = "" ||
        (match_baptism_date p false || match_baptism_place p false) &&
@@ -354,10 +355,9 @@ let advanced_search conf base max_answers =
     done;
   List.rev !list, !len
 
-let print_result_json conf base max_answers (list, len) =
+let print_result_json conf base list truncated =
   let charset = if conf.charset = "" then "utf-8" else conf.charset in
   Wserver.header "Content-type: application/json; charset=%s" charset ;
-  let truncated = if max_answers = len then "true" else "false" in
   Wserver.printf "{\"truncated\":%s,\"data\":[" truncated;
   let r = Str.regexp "\"" in
   let escape_json s = (Str.global_replace r "\"" s) in
@@ -372,13 +372,20 @@ let print_result_json conf base max_answers (list, len) =
     | _ -> false
   in
   let get_first_name p = escape_json (sou base (get_first_name p)) in
-  let get_surname p = escape_json (sou base (get_surname p)) in
+  let get_surname p particle_at_the_end =
+    let s = sou base (get_surname p) in
+    let s =
+      if particle_at_the_end then surname_without_particle base s ^ surname_particle base s
+      else s
+    in
+    escape_json s
+  in
   Mutil.list_iter_first (fun first p ->
     if not first then Wserver.printf ",";
     Wserver.printf "{";
     Wserver.printf "\"id\":\"%d\"," (Adef.int_of_iper (get_key_index p));
     if get_fn then Wserver.printf "\"fn\":\"%s\"," (get_first_name p);
-    if get_sn then Wserver.printf "\"sn\":\"%s\"," (get_surname p);
+    if get_sn then Wserver.printf "\"sn\":\"%s\"," (get_surname p true);
     let prec, year, julian_day =
       match Adef.od_of_cdate (get_birth p) with
       | Some d -> begin match d with
@@ -418,9 +425,9 @@ let print_result_json conf base max_answers (list, len) =
       | Some (None, None) | None -> "", "", ""
       | Some (fath, moth) -> begin match fath, moth with
           | Some fath, None -> get_first_name fath, "", ""
-          | None, Some moth -> "", get_first_name moth, get_surname moth
+          | None, Some moth -> "", get_first_name moth, get_surname moth true
           | Some fath, Some moth ->
-              get_first_name fath, get_first_name moth, get_surname moth
+              get_first_name fath, get_first_name moth, get_surname moth true
           | _ -> "", "", ""
           end
     in
@@ -453,7 +460,7 @@ let print_result_json conf base max_answers (list, len) =
           let conjoint = pget conf base conjoint in
           if know base conjoint then
             loop (i + 1)
-             (res ^ sep ^ prec_year ^ " " ^ (get_first_name conjoint) ^ " " ^ (get_surname conjoint))
+             (res ^ sep ^ prec_year ^ " " ^ (get_first_name conjoint) ^ " " ^ (get_surname conjoint false))
           else loop (i + 1) (res ^ sep)
         else res
       in
@@ -623,14 +630,22 @@ let print conf base =
   | Some "on" ->
     let max_answers =
       match p_getint conf.env "max" with
-        Some n -> n
+        Some n ->
+          let threshold = 5000 in
+          let threshold =
+            match p_getint conf.base_env "threshold_max_results" with
+            | Some i -> i
+            | None -> threshold
+          in
+          if n > threshold then threshold else n
       | None -> 100
     in
     let (list, len) = advanced_search conf base max_answers in
-    let list =
-      if len > max_answers then Util.reduce_list max_answers list else list
+    let (list, truncated) =
+      if len > max_answers then Util.reduce_list max_answers list, "true"
+      else list, "false"
     in
-    print_result_json conf base max_answers (list, len)
+    print_result_json conf base list truncated
   | _ ->
      let new_env = ("request_text",
        Printf.sprintf "%s %s." (capitale (transl conf "searching all"))
