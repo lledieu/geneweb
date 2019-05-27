@@ -36,9 +36,10 @@
 %include;js
 <script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/plug-ins/1.10.19/sorting/intl.js"></script>
+<script src="css/accent-neutralise.js"></script>
 <script>
 // FIXME: Add a specific lang parameter into gwf file ? It not linked to visitor language...
-$.fn.dataTable.ext.order.intl( "%lang;", {
+$.fn.dataTable.ext.order.intl( %["%lang;"%], {
   "sensitivity": "base"
 } );
 
@@ -47,14 +48,14 @@ $(document).ready(function() {
      "ajax": "%url;json=on",
      "deferRender": true,
      "columns": %[
-        %if(evar.firt_name = ""){ "data": "fn" },%end;
-        %if(evar.surname = ""){ "data": "sn" },%end;
-        { "data": "bid", render: { "_": "d", "sort": "jd" } },
-        { "data": "ded", render: { "_": "d", "sort": "jd" } },
-        { "data": "fafn" },
-        { "data": "mofn" },
-        { "data": "mosn" },
-        { "data": "sp", render: { "_": "d", "sort": "jd" } }
+        %if(evar.firt_name = ""){ "data": "fn", "type" : "string" },%end;
+        %if(evar.surname = ""){ "data": "sn", "type" : "string" },%end;
+        { "data": "bid", "type" : "num", render: { "_": "d", "sort": "jd" } },
+        { "data": "ded", "type" : "num", render: { "_": "d", "sort": "jd" } },
+        { "data": "fafn", "type" : "string" },
+        { "data": "mofn", "type" : "string" },
+        { "data": "mosn", "type" : "string" },
+        { "data": "sp", "type" : "num", render: { "_": "d", "sort": "jd" } }
      %],
      "scrollY": "70vh",
      "scrollCollapse": true,
@@ -92,6 +93,16 @@ sl: Slovenian
 sv: Swedish
 zh: Chinese
 ].json"
+     },
+     "initComplete": function( settings, json) {
+       // Remove accented character from search input as well
+       $('#result_filter input').keyup( function () {
+         table
+           .search(
+              jQuery.fn.DataTable.ext.type.search.string( this.value )
+           )
+           .draw()
+       } );
      }
   } );
   $('#result tbody').on('click', 'tr', function () {
