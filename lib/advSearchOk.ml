@@ -622,8 +622,10 @@ let searching_fields conf =
       else search
     else search
   in
-  let sep = if search <> "" then "," else "" in
-  string_field "occu" (search ^ sep)
+  if test_string "occu" then
+    let sep = if search <> "" then "," else "" in
+    search ^ sep ^ " " ^ gets "occu"
+  else search
 
 let print conf base =
   match p_getenv conf.env "json" with

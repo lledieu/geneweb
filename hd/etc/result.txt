@@ -8,18 +8,19 @@
   <link rel="shortcut icon" href="%image_prefix;/favicon_gwd.png">
   <link rel="apple-touch-icon" href="%image_prefix;/favicon_gwd.png">
   %include;css
-<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css">
   %include;hed
 </head>
 <body%body_prop;>
 <div class="container-fluid">
+%include;home
 <h1>[*advanced request]0</h1>
 <p>%evar.request_text;<span id="too_much" style="display: none"><br>[
-en: Too much results, be more specific...
-fr: Trop de résultats, affinez votre recherche...
+en: Too much results, be more specific&hellip;
+fr: Trop de résultats, affinez votre recherche&hellip;
 ]</span></p>
 
-<table id="result" class="display" style="width=100%">
+<table id="result" class="display compact" style="width=100%">
  <thead><tr>
   %if(evar.firt_name = "")<th>[*first name/first names]0</th>%end;
   %if(evar.surname = "")<th>[*surname/surnames]0</th>%end;
@@ -39,7 +40,7 @@ fr: Trop de résultats, affinez votre recherche...
 %include;js
 <script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/plug-ins/1.10.19/sorting/intl.js"></script>
-<script src="css/accent-neutralise.js"></script>
+<script src="%if;(cgi)%bvar.static_path;%end;css/accent-neutralise.js"></script>
 <script>
 // FIXME: Add a specific lang parameter into gwf file ? It not linked to visitor language...
 $.fn.dataTable.ext.order.intl( %["%lang;"%], {
