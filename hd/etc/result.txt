@@ -55,7 +55,7 @@ $(document).ready(function() {
         { "data": "fafn", "type" : "string" },
         { "data": "mofn", "type" : "string" },
         { "data": "mosn", "type" : "string" },
-        { "data": "sp", "type" : "num", render: { "_": "d", "sort": "jd" } }
+        { "data": "sp", render: { "_": "d", "sort": "jd" } }
      %],
      "scrollY": "70vh",
      "scrollCollapse": true,
