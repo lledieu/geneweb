@@ -189,7 +189,7 @@ fr: Les <strong>droits des magiciens</strong> sont actuellement <strong>suspendu
       <a role="button" class="btn btn-outline-primary border-0" href="%prefix;m=STAT"><i class="far fa-chart-bar fa-fw mr-2" aria-hidden="true"></i>[*statistics]</a>
       <a role="button" class="btn btn-outline-primary border-0" href="%prefix;m=ANM"><i class="fa fa-birthday-cake fa-fw mr-2" aria-hidden="true"></i>[*anniversaries]</a>
       %if;(has_history and bvar.history="yes")
-        <a role="button" class="btn btn-outline-primary border-0" href="%prefix;m=HIST;k=20"><i class="fas fa-history fa-fw mr-2" aria-hidden="true"></i>[*history]</a>
+        <a role="button" class="btn btn-outline-primary border-0" href="%prefix;m=HIST&k=20"><i class="fas fa-history fa-fw mr-2" aria-hidden="true"></i>[*history]</a>
       %end;
       %if;(bvar.disable_forum != "yes")
         <a class="btn  btn-outline-primary border-0" href="%prefix;m=FORUM"><i class="far fa-comments fa-fw mr-2" aria-hidden="true"></i>[*forum]</a>
@@ -206,7 +206,7 @@ fr: Les <strong>droits des magiciens</strong> sont actuellement <strong>suspendu
       <a role="button" class="mx-2" href="%prefix;m=PS"><i class="fas fa-globe fa-fw mr-1" aria-hidden="true"></i>[*places] [by] [surname/surnames]0</a>·
     %end;
     %if;(bvar.hide_advanced_request = "no")
-      <a role="button" class="mx-2" href="%prefix;m=H;v=advanced"><i class="fa fa-search-plus fa-fw mr-1" aria-hidden="true"></i>[*advanced request]0</a>·
+      <a role="button" class="mx-2" href="%prefix;m=H&v=advanced&search_type=OR"><i class="fa fa-search-plus fa-fw mr-1" aria-hidden="true"></i>[*advanced request]0</a>·
     %end;
     <a role="button" class="mx-2" href="%prefix;m=CAL"><i class="far fa-calendar-alt fa-fw mr-1" aria-hidden="true"></i>[*calendar/calendars]1</a>
     </div>

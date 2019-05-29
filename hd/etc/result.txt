@@ -9,20 +9,25 @@
   <link rel="apple-touch-icon" href="%image_prefix;/favicon_gwd.png">
   %include;css
 <link rel="stylesheet" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css">
+<style>
+#result_filter {
+margin-right: 2em;
+}
+</style>
   %include;hed
 </head>
 <body%body_prop;>
 <div class="container-fluid">
 %include;home
 <h1>[*advanced request]0</h1>
-<p>%evar.request_text;<span id="too_much" style="display: none"><br>[
+<p><span id="request_text"></span><span id="too_much" style="display: none"><br>[
 en: Too much results, be more specific&hellip;
 fr: Trop de résultats, affinez votre recherche&hellip;
 ]</span></p>
 
 <table id="result" class="display compact" style="width=100%">
  <thead><tr>
-  %if(evar.firt_name = "")<th>[*first name/first names]0</th>%end;
+  %if(evar.first_name = "")<th>[*first name/first names]0</th>%end;
   %if(evar.surname = "")<th>[*surname/surnames]0</th>%end;
   <th>[*birth]</th>
   <th>[*death]</th>
@@ -52,13 +57,13 @@ $(document).ready(function() {
      "ajax": "%url;json=on",
      "deferRender": true,
      "columns": %[
-        %if(evar.firt_name = ""){ "data": "fn", "type" : "string" },%end;
+        %if(evar.first_name = ""){ "data": "fn", "type" : "string" },%end;
         %if(evar.surname = ""){ "data": "sn", "type" : "string" },%end;
         { "data": "bid", "type" : "num", render: { "_": "d", "sort": "jd" } },
         { "data": "ded", "type" : "num", render: { "_": "d", "sort": "jd" } },
         { "data": "fafn", "type" : "string" },
-        { "data": "mofn", "type" : "string" },
-        { "data": "mosn", "type" : "string" },
+        { "data": "mo.fn", "type" : "string" },
+        { "data": "mo.sn", "type" : "string" },
         { "data": "sp", render: { "_": "d", "sort": "jd" } }
      %],
      "scrollY": "70vh",
@@ -99,13 +104,14 @@ zh: Chinese
 ].json"
      },
      "initComplete": function( settings, json) {
+       $("#request_text").text( json.request_text );
        // Too much results ?
        if( typeof json === "undefined" || !json.truncated ) {
          $("#too_much").hide();
        } else {
          $("#too_much").show();
        }
-       // Remove accented character from search input as well
+       // Remove accented character from search input
        $('#result_filter input').keyup( function () {
          table
            .search(

@@ -31,20 +31,25 @@
 %end;
 </div>
 
-
 %define;date(xx,zz)
   %if;([ !dates order]0 = "ddmmyy" or [ !dates order]0 = "ddmmyyyy" or [ !dates order]0 = "dmyyyy")
-    <input type="text" class="form-inline-control" name="xxdatezz_dd" placeholder="[year/month/day]2" pattern="0?[1-9]|[12][0-9]|3[01]" size="2">/
-    <input type="text" class="form-inline-control" name="xxdatezz_mm" placeholder="[year/month/day]1" pattern="0?[1-9]|1[0-2]" size="2">/
-    <input type="text" class="form-inline-control" name="xxdatezz_yyyy" placeholder="[year/month/day]0" pattern="[0-9]{1,4}" size="4">
+    <div class="input-group">
+      <input type="number" class="form-control" name="xxdatezz_dd" aria-label="[*year/month/day]2" placeholder="[*year/month/day]2" pattern="0?[1-9]|[12][0-9]|3[01]"  min="1" max="31">
+      <input type="number" class="form-control" name="xxdatezz_mm" aria-label="[*year/month/day]1" placeholder="[*year/month/day]1" pattern="0?[1-9]|1[0-2]" min="1" max="12">
+      <input type="text" class="form-control" name="xxdatezz_yyyy" aria-label="[*year/month/day]0" placeholder="[*year/month/day]0" pattern="[0-9]{1,4}" size="4">
+    </div>
   %elseif;([ !dates order]0 = "mmddyyyy")
-    <input type="text" class="form-inline-control" name="xxdatezz_mm" placeholder="[year/month/day]1" pattern="0?[1-9]|1[0-2]" size="2">/
-    <input type="text" class="form-inline-control" name="xxdatezz_dd" placeholder="[year/month/day]2" pattern="0?[1-9]|[12][0-9]|3[01]" size="2">/
-    <input type="text" class="form-inline-control" name="xxdatezz_yyyy" placeholder="[year/month/day]0" pattern="[0-9]{1,4}" size="4">
+    <div class="input-group">
+      <input type="number" class="form-control" name="xxdatezz_mm" aria-label="[*year/month/day]1" placeholder="[*year/month/day]1" pattern="0?[1-9]|1[0-2]" min="1" max="12">
+      <input type="number" class="form-control" name="xxdatezz_dd" aria-label="[*year/month/day]2" placeholder="[*year/month/day]2" pattern="0?[1-9]|[12][0-9]|3[01]"  min="1" max="31">
+      <input type="text" class="form-control" name="xxdatezz_yyyy" aria-label="[*year/month/day]0" placeholder="[*year/month/day]0" pattern="[0-9]{1,4}" size="4">
+    </div>
   %else;
-    <input type="text" class="form-inline-control" name="xxdatezz_yyyy" placeholder="[year/month/day]0" pattern="[0-9]{1,4}" size="4">/
-    <input type="text" class="form-inline-control" name="xxdatezz_mm" placeholder="[year/month/day]1" pattern="0?[1-9]|1[0-2]" size="2">/
-    <input type="text" class="form-inline-control" name="xxdatezz_dd" placeholder="[year/month/day]2" pattern="0?[1-9]|[12][0-9]|3[01]" size="2">
+    <div class="input-group">
+      <input type="text" class="form-control" name="xxdatezz_yyyy" aria-label="[*year/month/day]0" placeholder="[*year/month/day]0" pattern="[0-9]{1,4}" size="4">
+      <input type="number" class="form-control" name="xxdatezz_mm" aria-label="[*year/month/day]1" placeholder="[*year/month/day]1" pattern="0?[1-9]|1[0-2]" min="1" max="12">
+      <input type="number" class="form-control" name="xxdatezz_dd" aria-label="[*year/month/day]2" placeholder="[*year/month/day]2" pattern="0?[1-9]|[12][0-9]|3[01]"  min="1" max="31">
+    </div>
   %end;
 %end;
 
