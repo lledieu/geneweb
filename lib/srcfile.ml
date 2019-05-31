@@ -564,6 +564,17 @@ let print conf base fname =
       [] ()
   else gen_print true Lang conf base fname
 
+let print_no_header conf base fname =
+  if Sys.file_exists (Util.etc_file_name conf fname) then
+    Hutil.interp_no_header conf fname
+      {Templ.eval_var = eval_var conf base;
+       Templ.eval_transl = (fun _env -> Templ.eval_transl conf);
+       Templ.eval_predefined_apply = eval_predefined_apply conf;
+       Templ.get_vother = get_vother; Templ.set_vother = set_vother;
+       Templ.print_foreach = print_foreach conf}
+      [] ()
+  else Wserver.printf "<!-- Cannot access file \"%s.txt\". -->\n" fname
+
 (* lexicon (info) *)
 
 let print_lexicon conf _base =

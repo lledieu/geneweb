@@ -1,0 +1,42 @@
+<!-- ps_form.txt -->
+%define;event_cb(ztypz, ztxtz, ztitz, zdefz)
+      <div class="form-check form-check-inline">
+        <input type="checkbox" class="form-check-input" name="ztypz"
+          id="ztypz"%if(evar.ztypz = "on" or (zdefz and evar.bi = "" and evar.ba = "" and evar.ma = "" and evar.de = "" and evar.bu = "")) checked%end;>
+        <label class="form-check-label" for="ztypz" title="ztitz">ztxtz</label>
+      </div>
+%end;
+
+<form name="ps_form" method="get" action="%action;">
+  <input type="hidden" name="m" value="PS">
+  <div class="form-check form-check-inline">
+    <div class="form-group w-100">
+      <span>[*event/events]1[:]</span>
+      %apply;event_cb("bi", [*birth], [*birth place], "true")
+      %apply;event_cb("ba", [*baptism], [*baptism place], "false")
+      %apply;event_cb("ma", [*marriage/marriages]0, [*marriage place], "true")
+      %apply;event_cb("de", [*death], [*death place], "true")
+      %apply;event_cb("bu", [*burial], [*burial place], "false")
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-auto">
+      <div class="form-check form-check-inline align-middle">
+        <input id="ld" type="checkbox" class="form-check-input"%if(has_evar.k) checked%end; onclick="ps_short_long();">
+        <label class="form-check-label" for="ld">[*long display]</label>
+      </div>
+    </div>
+    <div class="form-group col-auto">
+      <label class="sr-only" for="k">[*place]</label>
+      <input type="text" class="form-control" id="k" name="k" value="%evar.k;" placeholder="[*place]"%if(not has_evar.k) disabled%end;>
+    </div>
+    <div class="form-group col-auto">
+      <button type="submit" class="btn btn-primary"><span class="fa fa-search"></span> [*search/case sensitive]0</button>
+    </div>
+  </div>
+</form>
+<script>
+function ps_short_long() {
+  $("#k").prop( "disabled", !$("#ld").prop("checked") );
+}
+</script>

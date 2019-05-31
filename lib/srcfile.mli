@@ -5,6 +5,7 @@ open Gwdb
 open Config
 
 val print : config -> base -> string -> unit
+val print_no_header : config -> base -> string -> unit
 val print_source : config -> base -> string -> unit
 val print_start : config -> base -> unit
 val incr_welcome_counter : config -> (int * int * string) option

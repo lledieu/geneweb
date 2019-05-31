@@ -947,6 +947,11 @@ let templ_eval_var conf =
     ["cancel_links"] -> VVbool conf.cancel_links
   | ["cgi"] -> VVbool !(Wserver.cgi)
   | ["false"] -> VVbool false
+  | ["has_evar"; v] ->
+      begin match Util.p_getenv (conf.env @ conf.henv) v with
+      | Some _ -> VVbool true
+      | None -> VVbool false
+      end
   | ["has_referer"] ->
       (* deprecated since version 5.00 *)
       VVbool (Wserver.extract_param "referer: " '\n' conf.request <> "")

@@ -231,12 +231,8 @@ let print_all_places_surnames_short conf base ~add_birth ~add_baptism ~add_death
     (if add_marriage then "&ma=on" else "")
   in
   Hutil.header conf title;
-  Hutil.print_link_to_welcome conf true;
-  Wserver.printf "<p>\n";
-  Wserver.printf "<a href=\"%sm=PS%s&k=\">" (commd conf) opt;
-  Wserver.printf "%s" (transl conf "long display");
-  Wserver.printf "</a>";
-  Wserver.printf "</p>\n";
+  Srcfile.print_no_header conf base "home";
+  Srcfile.print_no_header conf base "ps_form";
   Wserver.printf "<p>\n";
   List.iteri
     (fun i (s, x) ->
@@ -286,7 +282,8 @@ let print_all_places_surnames_long conf base filter ~add_birth ~add_baptism ~add
       (capitale (transl_nth conf "surname/surnames" 0))
   in
   Hutil.header conf title;
-  Hutil.print_link_to_welcome conf true;
+  Srcfile.print_no_header conf base "home";
+  Srcfile.print_no_header conf base "ps_form";
   if array <> [||] then print_html_places_surnames conf base array;
   Hutil.trailer conf
 
