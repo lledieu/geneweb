@@ -11,18 +11,10 @@
 </head>
 <body%body_prop;>
 <div class="container">
-<div class="d-flex justify-content-between">
 
   <h1 class="my-2">[*advanced request]0</h1>
-  %if;not cancel_links;
-    <div class="btn-group mt-4">
-      %if;(referer != "")
-        <a href="%referer;"><span class="fa fa-arrow-left fa-lg" title="<<"></span></a>
-      %end;
-      <a href="%prefix;"><span class="fa fa-home fa-lg mx-1" title="[*home]"></span></a>
-    </div>
-  %end;
-</div>
+  %include;home
+
 <div>
 %if;(evar.search_type = "OR")
 <a href="%prefix;m=H&v=advanced">[search_type AND/search type OR]0</a>.
@@ -122,9 +114,9 @@
 %end;
 
 <form class="mx-2 mt-3" method="POST" action="%action;">
+<div class="d-flex flex-wrap justify-content-between">
   %hidden;
   <input type="hidden" name="m" value="AS_OK">
-  <div class="row">
     <div class="col-auto m-2">
       <div class="row">
         <h4>[*person/persons]0</h4>
@@ -202,7 +194,7 @@
       %apply;event("death_","death")
       %apply;event("burial_","burial")
     %end;
-  </div>
+</div>
   <div class="row justify-content-around my-3">
     <div class="col-auto">
       <div class="form-inline">
@@ -212,6 +204,7 @@
       </div>
     </div>
     <button type="submit" class="btn btn-outline-primary btn-lg">[*search/case sensitive]0</button>
+    <input type="reset" class="btn btn-outline-secondary btn-lg">
   </div>
 </form>
 %include;trl

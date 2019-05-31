@@ -45,7 +45,7 @@ fr: Trop de résultats, affinez votre recherche&hellip;
 %include;js
 <script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/plug-ins/1.10.19/sorting/intl.js"></script>
-<script src="%if;(cgi)%bvar.static_path;%end;css/accent-neutralise.js"></script>
+<script src="%if;(cgi)%bvar.static_path;%end;js/accent-neutralise.js"></script>
 <script>
 // FIXME: Add a specific lang parameter into gwf file ? It not linked to visitor language...
 $.fn.dataTable.ext.order.intl( %["%lang;"%], {
