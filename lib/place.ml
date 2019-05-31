@@ -140,11 +140,6 @@ let get_all =
 
 let print_html_places_surnames conf base (array : ((string * string list) * (string * Adef.iper list) list) array) =
   let list = Array.to_list array in
-  let link_to_ind =
-    match p_getenv conf.base_env "place_surname_link_to_ind" with
-      Some "yes" -> true
-    | _ -> false
-  in
   let events = "" in
   let events = if p_getenv conf.env "bi" = Some "on" then events ^ "&event_birth=on" else events in
   let events = if p_getenv conf.env "bp" = Some "on" then events ^ "&event_bapt=on" else events in
@@ -154,14 +149,15 @@ let print_html_places_surnames conf base (array : ((string * string list) * (str
   let print_sn (sn, ips) so =
     let len_e = List.length ips in
     let len_p = List.length (List.sort_uniq (fun ip1 ip2 -> (Adef.int_of_iper ip1) - (Adef.int_of_iper ip2)) ips) in
-    Wserver.printf "<a href=\"%sm=N&v=%s\">%s</a> (" (commd conf) (code_varenv sn) sn;
-    if link_to_ind then
-      if len_p = 1 then
-        Wserver.printf "<a href=\"%s%s\">%d / 1</a>" (commd conf) (acces conf base @@ pget conf base @@ List.hd ips) len_e
-      else Wserver.printf "<a href=\"%sm=AS_OK&surname=%s&place=%s&search_type=OR&max=%d%s\">%d / %d</a>"
-        (commd conf) (code_varenv sn) (code_varenv so) len_p events len_e len_p
-    else Wserver.printf "%d / %d" len_e len_p ;
-    Wserver.printf ")"
+    let len =
+      if len_e = len_p then Printf.sprintf "%d" len_p
+      else Printf.sprintf "%d/%d" len_e len_p
+    in
+    Wserver.printf "<a href=\"%s" (commd conf);
+    if len_p = 1 then Wserver.printf "%s" (acces conf base @@ pget conf base @@ List.hd ips)
+    else Wserver.printf "m=AS_OK&surname=%s&place=%s&place_oper=on&search_type=OR&max=%d%s"
+      (code_varenv sn) (code_varenv so) len_p events;
+    Wserver.printf "\">%s</a> (%s)" sn len
   in
   let print_sn_list (snl : (string * Adef.iper list) list) so =
     let snl = List.sort (fun (sn1, _) (sn2, _) -> Gutil.alphabetic_order sn1 sn2) snl in
