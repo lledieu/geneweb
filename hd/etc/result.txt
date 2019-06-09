@@ -47,7 +47,7 @@ fr: Trop de résultats, affinez votre recherche&hellip;
 <script src="https://cdn.datatables.net/plug-ins/1.10.19/sorting/intl.js"></script>
 <script src="%if;(cgi)%bvar.static_path;%end;js/accent-neutralise.js"></script>
 <script>
-// FIXME: Add a specific lang parameter into gwf file ? It not linked to visitor language...
+// FIXME: Add a specific lang parameter into gwf file ? It is not linked to visitor language...
 $.fn.dataTable.ext.order.intl( %["%lang;"%], {
   "sensitivity": "base"
 } );
@@ -57,16 +57,16 @@ $(document).ready(function() {
      "ajax": "%url;json=on",
      "deferRender": true,
      "columns": %[
-        %if(evar.first_name = ""){ "data": "fn", "type" : "string" },%end;
-        %if(evar.surname = ""){ "data": "sn", "type" : "string" },%end;
-        { "data": "bid", "type" : "num", render: { "_": "d", "sort": "jd" } },
-        { "data": "ded", "type" : "num", render: { "_": "d", "sort": "jd" } },
-        { "data": "fafn", "type" : "string" },
-        { "data": "mo.fn", "type" : "string" },
-        { "data": "mo.sn", "type" : "string" },
-        { "data": "sp", render: { "_": "d", "sort": "jd" } }
+        %if(evar.first_name = ""){ "data": "fn", "type" : "string", "defaultContent": "" },%end;
+        %if(evar.surname = ""){ "data": "sn", "type" : "string", "defaultContent": "" },%end;
+        { "data": { "_": "bid.d", "sort": "bid.jd" }, "defaultContent": "" },
+        { "data": { "_": "ded.d", "sort": "ded.jd" }, "defaultContent": "" },
+        { "data": "fa.fn", "type" : "string", "defaultContent": "" },
+        { "data": "mo.fn", "type" : "string", "defaultContent": "" },
+        { "data": "mo.sn", "type" : "string", "defaultContent": "" },
+        { "data": { "_": "sp.d", "sort": "sp.jd" }, "defaultContent": "" }
      %],
-     "scrollY": "70vh",
+     "scrollY": "65vh",
      "scrollCollapse": true,
      "paging": false,
      "language": {

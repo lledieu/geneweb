@@ -512,125 +512,14 @@ let searching_fields conf =
   else search
 
 let print_result_json conf base list truncated =
-  let r = Str.regexp "\"" in
-  let escape_json s = (Str.global_replace r "\\\"" s) in
-  let charset = if conf.charset = "" then "utf-8" else conf.charset in
-  Wserver.header "Content-type: application/json; charset=%s" charset ;
   let request_text =
     (Printf.sprintf "%s %s." (capitale (transl conf "searching all"))
          (searching_fields conf))
   in
-  Wserver.printf "{\"truncated\":%s,\"request_text\":\"%s\",\"data\":["
-    truncated (escape_json request_text);
-  let get_fn =
-    match p_getenv conf.env "first_name" with
-    | Some "" | None -> true
-    | _ -> false
-  in
-  let get_sn =
-    match p_getenv conf.env "surname" with
-    | Some "" | None -> true
-    | _ -> false
-  in
-  let get_first_name p = escape_json (sou base (get_first_name p)) in
-  let get_surname p particle_at_the_end =
-    let s = sou base (get_surname p) in
-    let s =
-      if particle_at_the_end then surname_without_particle base s ^ surname_particle base s
-      else s
-    in
-    escape_json s
-  in
-  Mutil.list_iter_first (fun first p ->
-    if not first then Wserver.printf ",";
-    Wserver.printf "{";
-    Wserver.printf "\"id\":\"%d\"," (Adef.int_of_iper (get_key_index p));
-    if get_fn then Wserver.printf "\"fn\":\"%s\"," (get_first_name p);
-    if get_sn then Wserver.printf "\"sn\":\"%s\"," (get_surname p true);
-    let prec, year, julian_day =
-      match Adef.od_of_cdate (get_birth p) with
-      | Some d -> begin match d with
-        | Dgreg (dmy, _) -> Date.prec_text conf dmy, string_of_int dmy.year, string_of_int (Calendar.sdn_of_julian dmy)
-        | _ -> "", "", ""
-        end
-      | _ -> "", "", ""
-    in
-    Wserver.printf "\"bid\":{\"d\":\"%s%s\",\"jd\":\"%s\"}," prec year julian_day;
-    let prec, year, julian_day =
-      match get_death p with
-      | Death (_, cd) -> begin match Adef.od_of_cdate cd with
-        | Some (Dgreg (dmy, _)) -> Date.prec_text conf dmy, string_of_int dmy.year, string_of_int (Calendar.sdn_of_julian dmy)
-        | _ -> "", "", ""
-        end
-      | _ -> "", "", ""
-    in
-    Wserver.printf "\"ded\":{\"d\":\"%s%s\",\"jd\":\"%s\"}," prec year julian_day;
-    let a = pget conf base (get_key_index p) in
-    let ifam =
-      match get_parents a with
-      | Some ifam ->
-          let cpl = foi base ifam in
-          let fath =
-            let fath = pget conf base (get_father cpl) in
-            if p_first_name base fath = "?" then None else Some fath
-          in
-          let moth =
-            let moth = pget conf base (get_mother cpl) in
-            if p_first_name base moth = "?" then None else Some moth
-          in
-          Some (fath, moth)
-      | None -> None
-    in
-    let fa_fn, mo_fn, mo_sn =
-      match ifam with
-      | Some (None, None) | None -> "", "", ""
-      | Some (fath, moth) -> begin match fath, moth with
-          | Some fath, None -> get_first_name fath, "", ""
-          | None, Some moth -> "", get_first_name moth, get_surname moth true
-          | Some fath, Some moth ->
-              get_first_name fath, get_first_name moth, get_surname moth true
-          | _ -> "", "", ""
-          end
-    in
-    Wserver.printf "\"fafn\":\"%s\",\"mo\":{\"fn\":\"%s\",\"sn\":\"%s\"}," fa_fn mo_fn mo_sn;
-    let jd =
-      if Array.length (get_family p) > 0 then
-        let fam = foi base (get_family p).(0) in
-        match Adef.od_of_cdate (get_marriage fam) with
-        | Some d -> begin match d with
-            | Dgreg (dmy, _) -> string_of_int (Calendar.sdn_of_julian dmy)
-            | _ -> ""
-            end
-        | None -> ""
-      else ""
-    in
-    let text =
-      let rec loop i res =
-        let sep = if i = 0 then "" else "<br>" in
-        if i < Array.length (get_family p) then
-          let fam = foi base (get_family p).(i) in
-          let prec_year =
-            match Adef.od_of_cdate (get_marriage fam) with
-            | Some d -> begin match d with
-              | Dgreg (dmy, _) -> (Date.prec_text conf dmy) ^ (string_of_int dmy.year)
-              | _ -> ""
-              end
-            | _ -> ""
-          in
-          let conjoint = Gutil.spouse (get_key_index p) fam in
-          let conjoint = pget conf base conjoint in
-          if know base conjoint then
-            loop (i + 1)
-             (res ^ sep ^ prec_year ^ " " ^ (get_first_name conjoint) ^ " " ^ (get_surname conjoint false))
-          else loop (i + 1) (res ^ sep)
-        else res
-      in
-      loop 0 ""
-    in
-    Wserver.printf "\"sp\":{\"d\":\"%s\",\"jd\":\"%s\"}" (escape_json text) jd;
-    Wserver.printf "}";
-  ) list;
-  Wserver.printf "]}"
+  let charset = if conf.charset = "" then "utf-8" else conf.charset in
+  Wserver.header "Content-type: application/json; charset=%s" charset ;
+  Wserver.printf "%s"
+    (Json.print_results conf base truncated request_text list)
 
 let print conf base =
   match p_getenv conf.env "json" with
@@ -649,8 +538,8 @@ let print conf base =
     in
     let (list, len) = advanced_search conf base max_answers in
     let (list, truncated) =
-      if len > max_answers then Util.reduce_list max_answers list, "true"
-      else list, "false"
+      if len > max_answers then Util.reduce_list max_answers list, true
+      else list, false
     in
     print_result_json conf base list truncated
   | _ -> Srcfile.print conf base "result"
