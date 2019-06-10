@@ -1022,7 +1022,8 @@ let reference_flags with_id conf base p s =
     String.concat ""
       ["<a href=\""; commd conf; acces conf base p;
        if with_id then "\" id=\"i" else "";
-       string_of_int (Adef.int_of_iper iper); "\">"; s; "</a>"]
+       if with_id then string_of_int (Adef.int_of_iper iper) else "";
+       "\">"; s; "</a>"]
 
 let reference = reference_flags true
 
