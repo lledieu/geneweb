@@ -190,9 +190,9 @@ let persons_of_fsname conf base base_strings_of_fsname find proj x =
 
 let print_elem conf base is_surname (p, xl) =
   Mutil.list_iter_first
-    (fun (*first*)_ x ->
+    (fun first x ->
        let iper = get_key_index x in
-       (*if not first then Wserver.printf "</li>\n<li>\n  ";*)
+       if not first then Wserver.printf "</li>\n<li>\n  ";
        Perso.print_sosa conf base x true;
        Wserver.printf "<a href=\"%s%s\" id=\"i%s\">" (commd conf)
          (acces conf base x) (string_of_int (Adef.int_of_iper iper));
