@@ -255,9 +255,9 @@ let print_linked_list conf base pgl =
   Wserver.printf "<ul>\n";
   List.iter
     (fun pg ->
-       Wserver.printf "<li>";
        begin match pg with
          NotesLinks.PgInd ip ->
+           Wserver.printf "<li>";
            Wserver.printf "<tt>";
            if conf.wizard then
              begin
@@ -274,11 +274,13 @@ let print_linked_list conf base pgl =
                (Date.short_dates_text conf base p);
              Wserver.printf "</span>"
            end;
-           Wserver.printf "</tt>\n"
+           Wserver.printf "</tt>\n";
+           Wserver.printf "</li>\n"
        | NotesLinks.PgFam ifam ->
            let fam = foi base ifam in
            let fath = pget conf base (get_father fam) in
            let moth = pget conf base (get_mother fam) in
+           Wserver.printf "<li>";
            Wserver.printf "<tt>";
            if conf.wizard then
              begin
@@ -296,8 +298,10 @@ let print_linked_list conf base pgl =
              (Util.referenced_person_title_text conf base moth)
              (Date.short_dates_text conf base moth);
            Wserver.printf "</span>";
-           Wserver.printf "</tt>\n"
+           Wserver.printf "</tt>\n";
+           Wserver.printf "</li>\n"
        | NotesLinks.PgNotes ->
+           Wserver.printf "<li>";
            Wserver.printf "<tt>";
            if conf.wizard then
              begin
@@ -310,11 +314,16 @@ let print_linked_list conf base pgl =
              (commd conf);
            Wserver.printf "%s" (transl_nth conf "note/notes" 1);
            Wserver.printf "</a>\n";
-           Wserver.printf "</tt>\n"
+           Wserver.printf "</tt>\n";
+           Wserver.printf "</li>\n"
        | NotesLinks.PgMisc fnotes ->
+           if (not conf.wizard && not conf.friend && String.sub fnotes 0 2 = "p:") ||
+              (not conf.wizard && String.sub fnotes 0 3 = "pw:") then ()
+           else begin
            let (nenv, _) = read_notes base fnotes in
            let title = try List.assoc "TITLE" nenv with Not_found -> "" in
            let title = Util.safe_html title in
+           Wserver.printf "<li>";
            Wserver.printf "<tt>";
            if conf.wizard then
              begin
@@ -329,8 +338,11 @@ let print_linked_list conf base pgl =
            Wserver.printf "%s" fnotes;
            Wserver.printf "</a>";
            if title <> "" then Wserver.printf "(%s)" title;
-           Wserver.printf "</tt>\n"
+           Wserver.printf "</tt>\n";
+           Wserver.printf "</li>\n"
+           end
        | NotesLinks.PgWizard wizname ->
+           Wserver.printf "<li>";
            Wserver.printf "<tt>";
            if conf.wizard then
              begin
@@ -348,7 +360,8 @@ let print_linked_list conf base pgl =
            Wserver.printf "(%s)"
              (transl_nth conf "wizard/wizards/friend/friends/exterior" 0);
            Wserver.printf "</i>";
-           Wserver.printf "</tt>\n"
+           Wserver.printf "</tt>\n";
+           Wserver.printf "</li>\n"
        end;
        Wserver.printf "</li>\n")
     pgl;
@@ -385,6 +398,15 @@ let print conf base =
     match p_getenv conf.env "f" with
       Some f -> if NotesLinks.check_file_name f <> None then f else ""
     | None -> ""
+  in
+  let fnotes =
+    try
+      if (not conf.wizard && not conf.friend &&
+          String.sub fnotes 0 2 = "p:") ||
+         (not conf.wizard && String.sub fnotes 0 3 = "pw:") then
+        "p:MsgPrivate"
+      else fnotes
+    with Invalid_argument _ -> fnotes
   in
   match p_getenv conf.env "ref" with
     Some "on" -> print_what_links conf base fnotes
@@ -501,6 +523,16 @@ let print_misc_notes conf base =
       Some d -> d
     | None -> ""
   in
+  let d =
+    try
+      if (not conf.wizard && not conf.friend && d = "p") ||
+         (not conf.wizard && d = "pw") ||
+         (not conf.wizard && not conf.friend && String.sub d 0 2 = "p:") ||
+         (not conf.wizard && String.sub d 0 3 = "pw:") then
+        "Private Zone"
+      else d
+    with Invalid_argument _ -> d
+  in
   let title h =
     Wserver.printf "%s"
       (if d = "" then
@@ -577,16 +609,21 @@ let print_misc_notes conf base =
                  (if txt = "" then "" else " : " ^ txt);
                Wserver.printf "</li>\n"
            | None ->
-               Wserver.printf "<li class=\"folder\">\n";
-               Wserver.printf "<tt>";
-               Wserver.printf "<a href=\"%sm=MISC_NOTES&d=%s\">" (commd conf)
-                 (if d = "" then r
-                  else d ^ String.make 1 NotesLinks.char_dir_sep ^ r);
-               Wserver.printf "%s " r;
-               Wserver.printf "--&gt;";
-               Wserver.printf "</a>";
-               Wserver.printf "</tt>";
-               Wserver.printf "</li>\n")
+               if d = "" &&
+                  ((not conf.wizard && not conf.friend && r = "p") ||
+                   (not conf.wizard && r = "pw")) then ()
+               else begin
+                 Wserver.printf "<li class=\"folder\">\n";
+                 Wserver.printf "<tt>";
+                 Wserver.printf "<a href=\"%sm=MISC_NOTES&d=%s\">" (commd conf)
+                   (if d = "" then r
+                    else d ^ String.make 1 NotesLinks.char_dir_sep ^ r);
+                 Wserver.printf "%s " r;
+                 Wserver.printf "--&gt;";
+                 Wserver.printf "</a>";
+                 Wserver.printf "</tt>";
+                 Wserver.printf "</li>\n"
+               end)
         db;
       Wserver.printf "</ul>\n"
     end;
@@ -615,6 +652,13 @@ let search_text conf base s =
     let rec loop =
       function
         fnotes :: list ->
+          if try (not conf.wizard && not conf.friend &&
+                  String.sub fnotes 0 2 = "p:") ||
+                 (not conf.wizard && String.sub fnotes 0 3 = "pw:")
+             with Invalid_argument _ -> false
+          then
+            loop list
+          else
           let (nenv, nt) = read_notes base fnotes in
           let tit = try List.assoc "TITLE" nenv with Not_found -> "" in
           if in_text case_sens s tit || in_text case_sens s nt then

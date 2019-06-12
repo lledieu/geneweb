@@ -1610,8 +1610,18 @@ let links_to_ind conf base db key =
                let fam = foi base ifam in
                if is_deleted_family fam then false
                else authorized_age conf base (pget conf base (get_father fam))
-           | NotesLinks.PgNotes | NotesLinks.PgMisc _ |
-             NotesLinks.PgWizard _ ->
+           | NotesLinks.PgMisc n  ->
+               let p =
+                 try String.sub n 0 2 = "p:"
+                 with Invalid_argument _ -> false
+               in
+               let pw =
+                 try String.sub n 0 3 = "pw:"
+                 with Invalid_argument _ -> false
+               in
+               conf.wizard || (conf.friend && not pw) || (not p && not pw)
+           | NotesLinks.PgNotes
+           | NotesLinks.PgWizard _ ->
                true
          in
          if record_it then
