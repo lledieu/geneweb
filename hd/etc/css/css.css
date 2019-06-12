@@ -1406,6 +1406,8 @@ span.notesourcecolor {
 }
 
 /* surname by branch m=N */
+.hidden { display: none; }
+.bullet { font-size: small; }
 #surname_by_branch {
     white-space: nowrap;
 }

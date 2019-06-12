@@ -371,29 +371,17 @@ let has_children_with_that_name conf base des name =
 
 (* List selection bullets *)
 
-let bullet_sel_txt = "o"
-let bullet_unsel_txt = "+"
-let bullet_nosel_txt = "o"
-let print_selection_bullet conf =
+let bullet_sel_txt = "&#x229D;"
+let bullet_unsel_txt = "&#x2295;"
+let bullet_nosel_txt = "&#x2299;"
+let print_selection_bullet =
   function
-    Some (txt, sel) ->
-      let req =
-        List.fold_left
-          (fun req (k, v) ->
-             if not sel && k = "u" && v = txt then req
-             else
-               let s = k ^ "=" ^ v in if req = "" then s else req ^ "&" ^ s)
-          "" conf.env
-      in
-      if conf.cancel_links then ()
-      else
-        Wserver.printf "<a id=\"i%s\" href=\"%s%s%s%s\" rel=\"nofollow\">" txt
-          (commd conf) req (if sel then "&u=" ^ txt else "")
-          (if sel || List.mem_assoc "u" conf.env then "#i" ^ txt else "");
-      Wserver.printf "%s" (if sel then bullet_sel_txt else bullet_unsel_txt);
-      if conf.cancel_links then () else Wserver.printf "</a>";
-      Wserver.printf "\n"
-  | None -> Wserver.printf "%s\n" bullet_nosel_txt
+  | Some (txt, sel) ->
+      Wserver.printf "<span class=\"bullet toggle%s\" title=\"%s\">%s</span>\n"
+        (if sel then "" else " toggled")
+        txt
+        (if sel then bullet_sel_txt else bullet_unsel_txt)
+  | None -> Wserver.printf "<span class=\"bullet\">%s</span>\n" bullet_nosel_txt
 
 let unselected_bullets conf =
   List.fold_left
@@ -413,16 +401,16 @@ let print_branch conf base psn name =
       List.map
         (fun ifam ->
            let fam = foi base ifam in
-           let c = Gutil.spouse (get_key_index p) fam in
-           let c = pget conf base c in
+           let sp = Gutil.spouse (get_key_index p) fam in
+           let sp = pget conf base sp in
            let down = has_children_with_that_name conf base fam name in
            let down =
-             if get_sex p = Female && p_surname base c = name then false
+             if get_sex p = Female && p_surname base sp = name then false
              else down
            in
            let i = Adef.int_of_ifam ifam in
            let sel = not (List.mem i unsel_list) in
-           fam, c, (if down then Some (string_of_int i, sel) else None))
+           fam, sp, (if down then Some (string_of_int i, sel) else None))
         (Array.to_list (get_family u))
     in
     let first_select =
@@ -452,7 +440,7 @@ let print_branch conf base psn name =
         (Date.short_dates_text conf base p)
     in
     Wserver.printf "<li>";
-    print_selection_bullet conf first_select;
+    print_selection_bullet first_select;
     print_elem p true true;
     if Array.length (get_family u) = 0 then ()
     else
@@ -461,7 +449,7 @@ let print_branch conf base psn name =
           (fun first (fam, sp, select) ->
              if not first then begin
                Wserver.printf "<li>";
-               print_selection_bullet conf select;
+               print_selection_bullet select;
                print_elem p false true
              end;
              Wserver.printf " &amp;";
@@ -470,19 +458,19 @@ let print_branch conf base psn name =
              print_elem sp true false;
              let children = get_children fam in
              begin match select with
-               Some (_, true) ->
-                 Wserver.printf "<ul>\n";
+             | Some (_, sel) ->
+                 Wserver.printf "<ul%s>\n"
+                   (if sel then "" else " class=\"hidden\"");
                  List.iter
                    (fun e ->
                       loop (pget conf base e);
                       Wserver.printf "</li>\n")
                    (Array.to_list children);
                  Wserver.printf "</ul>\n"
-             | Some (_, false) -> ()
              | None ->
                  if Array.length children <> 0 then
                    Wserver.printf "<ul class=\"posterity\">\
-                                   <li>...</li>\
+                                   <li>&hellip;</li>\
                                    </ul>\n";
              end;
              Wserver.printf "</li>";
@@ -561,6 +549,20 @@ let print_one_surname_by_branch conf base x xl (bhl, str) =
   Util.print_tips_relationship conf;
   (* Menu afficher par branche/ordre alphabetique *)
   if br = None then print_branch_to_alphabetic conf x len;
+  Wserver.printf "<span class=\"fa fa-toggle-off toggle_all\">%s</span>\n"
+    (capitale (transl_nth conf "toggle all/untoggle all" 0));
+  Wserver.printf "<span class=\"fa fa-toggle-on untoggle_all\">%s</span>\n"
+    (capitale (transl_nth conf "toggle all/untoggle all" 1));
+  let req =
+    List.fold_left
+      (fun req (k, v) ->
+         if k = "u" then req
+         else req ^ "&" ^ k ^ "=" ^ v)
+      "" conf.env
+  in
+  Wserver.printf "<a class=\"fa fa-anchor toggle_fix\" href=\"%s%s\">%s</a>\n"
+    (commd conf) req
+    (capitale (transl_nth conf "fix toggle in URL" 1));
   Wserver.printf "<div id=\"surname_by_branch\">\n";
   if len > 1 && br = None then
     begin

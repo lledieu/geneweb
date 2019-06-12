@@ -70,3 +70,4 @@
    %end;
   <script>autosize(document.querySelectorAll('textarea'));</script>
 %end;
+<script src=%if;(cgi)%bvar.static_path;%end;js/surname_by_branch.js></script>
