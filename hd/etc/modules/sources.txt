@@ -9,20 +9,14 @@
     <li>%apply;capitalize(linked_page.BIBLIO)</li>
   </ul>
 %end;
-%reset_count;
-%if;has_sources;%incr_count;%end;
-%foreach;event;
-  %if;event.has_src;%incr_count;%end;
-%end;
-%if;(count>0)
-  %if;(count=1)
-    <h2>[*source/sources]0</h2>
-  %else;
-    <h2>[*source/sources]1</h2>
-  %end;
-  <ul>
-  %foreach;source;
-    <li>%apply;capitalize(source_type)[:] %source;.</li>
+
+%if;(has_sources or has_sources2)
+<div class="sources">
+  <em>[*source/sources]1</em>[:]</em>
+  %if;has_sources;
+    %foreach;source;
+      <br>- %source_type;[:] %source;
+    %end;
   %end;
   %if;(op_m=2)
     %reset_count;
@@ -37,16 +31,22 @@
           event.name!="special" and
           event.name!="special1" and
           event.name!="special2")
-          <li>%apply;capitalize(event.name)[:] %event.src;.</li>
+          <br>- %event.name;[:] %event.src;
         %end;
         %if;((event.name="special" or
              event.name="special1" or
              event.name="special2") and count=0)
-          <li>[timeline][:] %linked_page.TIMELINE;
+          <br>- [timeline][:] %linked_page.TIMELINE;
           %incr_count;
         %end;
       %end;
     %end;
   %end;
-  </ul>
+  %if;has_sources2;
+    %foreach;source2;
+      <br>- %source_type2;[:] %source2;
+    %end;
+  %end;
+  <br>
+</div>
 %end;
