@@ -1108,7 +1108,21 @@ let make_conf from_addr request script_name env =
         in
         let access_type =
           match passwd with
-            "" | "w" | "f" -> ATnone
+            "" ->
+             if not !(Wserver.cgi) then ATnone
+             else
+               (* authentification managed by apache *)
+               let mode = try Sys.getenv "GW_MODE" with Not_found -> "" in
+               let r_user =
+                 try Sys.getenv "REMOTE_USER" with Not_found -> ""
+               in
+               begin match (mode, r_user) with
+                 (_, "") -> ATnone
+               | ("F", u) -> ATfriend u
+               | ("W", u) -> ATwizard u
+               | _ -> ATnone
+               end
+          | "w" | "f" -> ATnone
           | _ -> get_token true utm from_addr base_passwd
         in
         passwd, env, access_type
