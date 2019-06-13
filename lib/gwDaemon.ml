@@ -13,6 +13,8 @@ module Make
   : (sig val run : ?speclist:(string * Arg.spec * string) list -> unit -> unit end)
 = struct
 
+let default_base = ref ""
+
 let green_color = "#2f6400"
 let selected_addr = ref None
 let selected_port = ref 2317
@@ -1081,6 +1083,8 @@ let make_conf from_addr request script_name env =
   let (command, base_file, passwd, env, access_type) =
     let (base_passwd, env) =
       let (x, env) = extract_assoc "b" env in
+      if x = "" && !(Wserver.cgi) && !default_base <> "" then
+        (!default_base, env) else
       if x <> "" || b_arg_for_basename then x, env else script_name, env
     in
     let ip = index base_passwd '_' in
@@ -1825,6 +1829,8 @@ let main ~speclist () =
      "<dir>\n       \
       Directory for socket communication (Windows) and access count.") ::
     ("-cgi", Arg.Set force_cgi, "\n       Force CGI mode.") ::
+    ("-b", Arg.String (fun x -> default_base := x),
+     "\n       Default database name (cgi mode only).") ::
     ("-images_url", Arg.String (fun x -> images_url := x),
      "<url>\n       URL for GeneWeb images (default: gwd send them)") ::
     ("-images_dir", Arg.String (fun x -> images_dir := x),
