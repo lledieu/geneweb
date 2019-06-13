@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="%lang;">
+<head>
+%define;title()
+[
+en: Cartography
+fr: Cartographie
+] -
+  %apply;a_of_b%with;
+    [ancestors]%nn;
+  %and;
+    %if;(public_name != "")%public_name;%else;%first_name;%end;
+    %if;(qualifier != "") %qualifier;%end;
+    %sp;%surname;
+  %end;
+%end;
+  <title>%apply;title()</title>
+  <meta charset="UTF-8" />
+  %include.css;
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css"
+    integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
+    crossorigin="" />
+  <style>
+    html { height: 100%% }
+    body { height: 100%%; margin: 0; padding: 0 }
+    #EmplacementDeMaCarte { height: 84%% }
+    .right{ float: right; }
+  </style>
+</head>
+
+%define;tothegen(xx)
+  [*to the %s generation:::xx]%nn;
+%end;
+
+%define;togen(xx)
+  %if;(evar.xx = 1)[*specify::generation/generations]0%nn;
+  %elseif;(evar.xx = 2)[*to the parents]%nn;
+  %elseif;(evar.xx = 3)[*to the grandparents]%nn;
+  %elseif;(evar.xx = 4)[*to the great-grandparents]%nn;
+  %else;
+    %apply;tothegen%with;
+      %apply;nth([nth (generation)], xx)
+    %end;
+  %end;
+%end;
+
+%define;somebody_long_info(xx)
+  %if;(xx.has_birth_date and xx.has_birth_place)
+    %( %xx.on_birth_date; %)
+    { key: "%xx.birth_place;", annee: "%xx.birth_date.year;" },
+  %end;
+  %if;xx.is_dead;
+    %if;(xx.has_death_date and xx.has_death_place)
+      %( %xx.on_death_date; %)
+      { key: "%xx.death_place;", annee: "%xx.death_date.year;" },
+    %end;
+  %end;
+%end;
+%define;long_display_ancestor_families()
+  %if;ancestor.is_male;
+    %foreach;ancestor.family;
+      %if;(family.index = ancestor.family.index)
+        %if;(on_marriage_date != "" and marriage_place != "")
+          %( %on_marriage_date; %)
+          { key: "%marriage_place;", annee: "%marriage_date.year;" },
+        %end;
+      %end;
+    %end;
+  %end;
+%end;
+
+<body onload="initCarto( '%bvar.var_cartol;' );">
+
+<div class="container-fluid">
+%include;home
+<h1>%apply;title()</h1>
+
+<p>%apply;togen(evar.v).</p>
+
+<div><b>Légende :</b> nombre d'événement(s)
+<img src="%bvar.var_cartol;/icone_0.png" />1
+<span id="bloc_leg1"><img src="%bvar.var_cartol;/icone_1.png" /><span id="leg1"></span></span>
+<span id="bloc_leg2"><img src="%bvar.var_cartol;/icone_2.png" /><span id="leg2"></span></span>
+<span id="bloc_leg3"><img src="%bvar.var_cartol;/icone_3.png" /><span id="leg3"></span></span>
+<span id="bloc_leg4"><img src="%bvar.var_cartol;/icone_4.png" /><span id="leg4"></span></span>
+
+<span id="nbr"></span>
+<a class="right" href="#" onclick="resetZoom();"><img src="%bvar.var_cartol;/reset.png"/></a>
+</div>
+</div>
+
+<div id="EmplacementDeMaCarte"></div>
+
+<div class="container-fluid">
+%include;trl
+%include;copyr
+</div>
+
+<script>
+// tableau constuit par GeneWeb
+var tableauLieux = %[
+%foreach;ancestor_level(evar.v)
+  %if;(evar.only != "on" or level = evar.v)
+    %foreach;ancestor;
+      %if;(ancestor.same = "")
+        %apply;somebody_long_info("ancestor")
+        %if;(ancestor.index != self.index)
+          %apply;long_display_ancestor_families()
+        %end;
+      %end;
+    %end;
+  %end;
+%end;
+{}
+];
+
+var prefix="%bvar.var_cartol;";
+</script>
+%include;js
+<script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"
+    integrity="sha512-QVftwZFqvtRNi0ZyCtsznlKSWOStnDORoefr1enyq5mVL4tmKB3S/EnC3rRJcxCPavG10IcrVGSmPh6Qw5lwrg=="
+    crossorigin=""></script>
+<script src="%bvar.var_cartol;/geoloc2.js"></script>
+<script src="%bvar.var_cartol;/check2.js"></script>
+</body>
+</html>
