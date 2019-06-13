@@ -358,6 +358,9 @@ en: to the author
 fr: avec l'auteur
 ]</a>
               %end
+              %if;(user.key != "")
+                <a class="dropdown-item" href="%prefix;em=R;e%access;&m=NG&select=input&n=%user.key;&t=PN&et=M&image=on" %laR;><span class="fa fa-map-signs fa-fw"></span>... [with] %user.ident;</a>
+              %end
               <div class="dropdown-divider"></div>
               <a class="dropdown-item" href="%prefix;%access;;m=C;v1=2;v2=2" %laR;><span class="fa fa-users-cog fa-fw"></span> [*relationship computing] [with] [close family]</a>
               <div class="dropdown-divider"></div>

@@ -13676,6 +13676,10 @@ sk: manžel/manželka
 sl: mož/žena
 sv: maken/makan
 
+    the user
+en: the user
+fr: l'utilisateur
+
     the whole list
 af: die hele lys
 bg: целият списък

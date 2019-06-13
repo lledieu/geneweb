@@ -105,6 +105,7 @@ type auth_report =
     ar_scheme : auth_scheme_kind;
     ar_user : string;
     ar_name : string;
+    ar_key : string;
     ar_wizard : bool;
     ar_friend : bool;
     ar_uauth : string;
@@ -462,29 +463,50 @@ let unauth_server conf ar =
   Hutil.trailer conf
 
 let gen_match_auth_file test_user_and_password auth_file =
-  if auth_file = "" then None
+  if auth_file = "" then (None, None)
   else
     let aul = read_gen_auth_file auth_file in
     let rec loop =
       function
         au :: aul ->
           if test_user_and_password au then
-            let s =
+            let s1 =
               try
                 let i = String.index au.au_info ':' in
                 String.sub au.au_info 0 i
               with Not_found -> ""
             in
+            let s2 =
+              try
+                let i = String.index au.au_info ':' in
+                let s = String.sub au.au_info (i + 1) (String.length au.au_info -i -1) in
+                let i = String.index s ':' in
+                String.sub s 0 i
+              with Not_found -> ""
+            in
             let username =
               try
-                let i = String.index s '/' in
-                let len = String.length s in
-                String.sub s 0 i ^ String.sub s (i + 1) (len - i - 1)
-              with Not_found -> s
+                let i = String.index s1 '/' in
+                let len = String.length s1 in
+                String.sub s1 0 i ^ String.sub s1 (i + 1) (len - i - 1)
+              with Not_found -> s1
             in
-            Some username
+            let userkey =
+              try
+                let i = String.index s2 '/' in
+                let len = String.length s2 in
+                let fn = Name.lower (String.trim (String.sub s2 0 i)) in
+                let s2 = String.sub s2 (i + 1) (len - i - 1) in
+                let i = String.index s2 '/' in
+                let len = String.length s2 in
+                let sn = Name.lower (String.trim (String.sub s2 0 i)) in
+                let occ = String.trim (String.sub s2 (i + 1) (len - i - 1)) in
+                fn ^ "." ^ occ ^ "+" ^ sn
+              with Not_found -> ""
+            in
+            (Some username, Some userkey)
           else loop aul
-      | [] -> None
+      | [] -> (None, None)
     in
     loop aul
 
@@ -505,7 +527,7 @@ let match_simple_passwd sauth uauth =
       | None -> sauth = uauth
 
 let basic_match_auth passwd auth_file uauth =
-  if passwd <> "" && match_simple_passwd passwd uauth then Some ""
+  if passwd <> "" && match_simple_passwd passwd uauth then (Some "", Some "")
   else basic_match_auth_file uauth auth_file
 
 type access_type =
@@ -861,35 +883,39 @@ let basic_authorization from_addr request base_env passwd access_type utm
   let uauth = if passwd = "w" || passwd = "f" then passwd1 else passwd in
   let auto = Wserver.extract_param "gw-connection-type: " '\r' request in
   let uauth = if auto = "auto" then passwd1 else uauth in
-  let (ok, wizard, friend, username) =
+  let (ok, wizard, friend, (username, userkey)) =
     if not !(Wserver.cgi) && (passwd = "w" || passwd = "f") then
       if passwd = "w" then
         if wizard_passwd = "" && wizard_passwd_file = "" then
-          true, true, friend_passwd = "", ""
+          true, true, friend_passwd = "", ("", "")
         else
           match basic_match_auth wizard_passwd wizard_passwd_file uauth with
-            Some username -> true, true, false, username
-          | None -> false, false, false, ""
+            Some username, Some userkey -> true, true, false, (username, userkey)
+          | Some _, _
+          | None, _ -> false, false, false, ("", "")
       else if passwd = "f" then
         if friend_passwd = "" && friend_passwd_file = "" then
-          true, false, true, ""
+          true, false, true, ("", "")
         else
           match basic_match_auth friend_passwd friend_passwd_file uauth with
-            Some username -> true, false, true, username
-          | None -> false, false, false, ""
+            Some username, Some userkey -> true, false, true, (username, userkey)
+          | Some _, _
+          | None, _ -> false, false, false, ("", "")
       else assert false
     else if wizard_passwd = "" && wizard_passwd_file = "" then
-      true, true, friend_passwd = "", ""
+      true, true, friend_passwd = "", ("", "")
     else
       match basic_match_auth wizard_passwd wizard_passwd_file uauth with
-        Some username -> true, true, false, username
+        Some username, Some userkey -> true, true, false, (username, userkey)
+      | Some _, _ -> false, false, false, ("", "")
       | _ ->
           if friend_passwd = "" && friend_passwd_file = "" then
-            true, false, true, ""
+            true, false, true, ("", "")
           else
             match basic_match_auth friend_passwd friend_passwd_file uauth with
-              Some username -> true, false, true, username
-            | None -> true, false, false, ""
+              Some username, Some userkey -> true, false, true, (username, userkey)
+            | Some _, _
+            | None, _ -> true, false, false, ("", "")
   in
   let user =
     match String.index_opt uauth ':' with
@@ -937,13 +963,13 @@ let basic_authorization from_addr request base_env passwd access_type utm
       HttpAuth (Basic {bs_realm = realm; bs_user = u; bs_pass = p})
   in
   {ar_ok = ok; ar_command = command; ar_passwd = passwd;
-   ar_scheme = auth_scheme; ar_user = user; ar_name = username;
+   ar_scheme = auth_scheme; ar_user = user; ar_name = username; ar_key = userkey;
    ar_wizard = wizard; ar_friend = friend; ar_uauth = uauth;
    ar_can_stale = false}
 
 let bad_nonce_report command passwd_char =
   {ar_ok = false; ar_command = command; ar_passwd = passwd_char;
-   ar_scheme = NoAuth; ar_user = ""; ar_name = ""; ar_wizard = false;
+   ar_scheme = NoAuth; ar_user = ""; ar_name = ""; ar_key = ""; ar_wizard = false;
    ar_friend = false; ar_uauth = ""; ar_can_stale = true}
 
 let test_passwd ds nonce command wf_passwd wf_passwd_file passwd_char wiz =
@@ -955,20 +981,20 @@ let test_passwd ds nonce command wf_passwd wf_passwd_file passwd_char wiz =
     else
       {ar_ok = true; ar_command = command ^ "_" ^ passwd_char;
        ar_passwd = passwd_char; ar_scheme = asch; ar_user = ds.ds_username;
-       ar_name = ""; ar_wizard = wiz; ar_friend = not wiz; ar_uauth = "";
+       ar_name = ""; ar_key = ""; ar_wizard = wiz; ar_friend = not wiz; ar_uauth = "";
        ar_can_stale = false}
   else
     match digest_match_auth_file asch wf_passwd_file with
-      Some username ->
+      Some username, Some userkey ->
         if ds.ds_nonce <> nonce then bad_nonce_report command passwd_char
         else
           {ar_ok = true; ar_command = command ^ "_" ^ passwd_char;
            ar_passwd = passwd_char; ar_scheme = asch;
-           ar_user = ds.ds_username; ar_name = username; ar_wizard = wiz;
+           ar_user = ds.ds_username; ar_name = username; ar_key = userkey; ar_wizard = wiz;
            ar_friend = not wiz; ar_uauth = ""; ar_can_stale = false}
-    | None ->
+    | Some _, None | None, _ ->
         {ar_ok = false; ar_command = command; ar_passwd = passwd_char;
-         ar_scheme = asch; ar_user = ds.ds_username; ar_name = "";
+         ar_scheme = asch; ar_user = ds.ds_username; ar_name = ""; ar_key = "";
          ar_wizard = false; ar_friend = false; ar_uauth = "";
          ar_can_stale = false}
 
@@ -988,7 +1014,7 @@ let digest_authorization request base_env passwd utm base_file command =
   let command = if !(Wserver.cgi) then command else base_file in
   if wizard_passwd = "" && wizard_passwd_file = "" then
     {ar_ok = true; ar_command = command; ar_passwd = ""; ar_scheme = NoAuth;
-     ar_user = ""; ar_name = ""; ar_wizard = true;
+     ar_user = ""; ar_name = ""; ar_key = ""; ar_wizard = true;
      ar_friend = friend_passwd = ""; ar_uauth = ""; ar_can_stale = false}
   else if passwd = "w" || passwd = "f" then
     let auth = Wserver.extract_param "authorization: " '\r' request in
@@ -1029,12 +1055,12 @@ let digest_authorization request base_env passwd utm base_file command =
       else failwith (Printf.sprintf "not impl (2) %s %s" auth meth)
     else
       {ar_ok = false; ar_command = command; ar_passwd = passwd;
-       ar_scheme = NoAuth; ar_user = ""; ar_name = ""; ar_wizard = false;
+       ar_scheme = NoAuth; ar_user = ""; ar_name = ""; ar_key = ""; ar_wizard = false;
        ar_friend = false; ar_uauth = ""; ar_can_stale = false}
   else
     let friend = friend_passwd = "" && friend_passwd_file = "" in
     {ar_ok = true; ar_command = command; ar_passwd = ""; ar_scheme = NoAuth;
-     ar_user = ""; ar_name = ""; ar_wizard = false; ar_friend = friend;
+     ar_user = ""; ar_name = ""; ar_key = ""; ar_wizard = false; ar_friend = friend;
      ar_uauth = ""; ar_can_stale = false}
 
 let authorization from_addr request base_env passwd access_type utm base_file
@@ -1046,9 +1072,15 @@ let authorization from_addr request base_env passwd access_type utm base_file
         else if passwd = "" then base_file, ""
         else base_file ^ "_" ^ passwd, passwd
       in
+      let (username, userkey) =
+        let auth_file = try List.assoc "wizard_passwd_file" base_env with Not_found -> "" in
+        match gen_match_auth_file (fun au -> au.au_user = user) auth_file with
+          Some username, Some userref -> username, userref
+        | _ -> "", ""
+      in
       let auth_scheme = TokenAuth {ts_user = user; ts_pass = passwd} in
       {ar_ok = true; ar_command = command; ar_passwd = passwd;
-       ar_scheme = auth_scheme; ar_user = user; ar_name = "";
+       ar_scheme = auth_scheme; ar_user = user; ar_name = username; ar_key = userkey;
        ar_wizard = true; ar_friend = false; ar_uauth = "";
        ar_can_stale = false}
   | ATfriend user ->
@@ -1057,9 +1089,15 @@ let authorization from_addr request base_env passwd access_type utm base_file
         else if passwd = "" then base_file, ""
         else base_file ^ "_" ^ passwd, passwd
       in
+      let (username, userkey) =
+        let auth_file = try List.assoc "friend_passwd_file" base_env with Not_found -> "" in
+        match gen_match_auth_file (fun au -> au.au_user = user) auth_file with
+          Some username, Some userref -> username, userref
+        | _ -> "", ""
+      in
       let auth_scheme = TokenAuth {ts_user = user; ts_pass = passwd} in
       {ar_ok = true; ar_command = command; ar_passwd = passwd;
-       ar_scheme = auth_scheme; ar_user = user; ar_name = "";
+       ar_scheme = auth_scheme; ar_user = user; ar_name = username; ar_key = userkey;
        ar_wizard = false; ar_friend = true; ar_uauth = "";
        ar_can_stale = false}
   | ATnormal ->
@@ -1067,7 +1105,7 @@ let authorization from_addr request base_env passwd access_type utm base_file
         if !(Wserver.cgi) then command, "" else base_file, ""
       in
       {ar_ok = true; ar_command = command; ar_passwd = passwd;
-       ar_scheme = NoAuth; ar_user = ""; ar_name = ""; ar_wizard = false;
+       ar_scheme = NoAuth; ar_user = ""; ar_name = ""; ar_key = ""; ar_wizard = false;
        ar_friend = false; ar_uauth = ""; ar_can_stale = false}
   | ATnone | ATset ->
       if !use_auth_digest_scheme then
@@ -1211,7 +1249,7 @@ let make_conf from_addr request script_name env =
      is_printed_by_template = true;
      friend = ar.ar_friend || wizard_just_friend && ar.ar_wizard;
      just_friend_wizard = ar.ar_wizard && wizard_just_friend;
-     user = ar.ar_user; username = ar.ar_name; auth_scheme = ar.ar_scheme;
+     user = ar.ar_user; username = ar.ar_name; userkey = ar.ar_key; auth_scheme = ar.ar_scheme;
      command = ar.ar_command;
      indep_command =
        (if !(Wserver.cgi) then ar.ar_command else "geneweb") ^ "?";

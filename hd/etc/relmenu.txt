@@ -65,6 +65,15 @@
             <input type="hidden" name="m" value="NG"%/>
             <span>[*relationship shortcut]</span>
             <div class="mt-1 ml-2">
+              %if;(user.key != "")
+                <div class="form-check">
+                  <label class="form-check-label">
+                  <input type="hidden" name="n" value="%user.key;"%/>
+                  <input type="radio" class="form-check-input" name="select" value="input" checked onclick="main()"%/>
+                  [*the user] <b>%user.ident;</b>
+                  </label>
+                </div>
+              %end;
               %if;(browsing_with_sosa_ref and self.index!=sosa_ref.index)
                 <div class="form-check">
                   <label class="form-check-label">
