@@ -43,25 +43,14 @@ fr: Accès réservé aux amis et magiciens de la base de donnée !
       <div class="d-inline-flex flex-xs-row flex-md-column">
         %if;(bvar.wizard_passwd != "" or bvar.wizard_passwd_file != ""
           or bvar.friend_passwd != "" or bvar.friend_passwd_file != "")
-          %if;(cgi and (not wizard and not friend))
-            <form class="form-inline" method="post" action="%action;">
-              %hidden;
-              <div class="input-group mt-1">
-                %(<label for="w" class="sr-only">[user/password/cancel]0:[user/password/cancel]1</label>%)
-                <input type="text" class="form-control" name="w" title="[wizard/wizards/friend/friends/exterior]2/[wizard/wizards/friend/friends/exterior]0"
-                placeholder="[user/password/cancel]0:[user/password/cancel]1" aria-label="password input" aria-describedby="username:password" autofocus>
-                <div class="input-group-append">
-                  <button type="submit" class="btn btn-primary">OK</button>
-                </div>
-              </div>
-            </form>
-          %end;
           %if;(bvar.auth_file = "")
             <div class="btn-group btn-group-xs mt-1" role="group">
             %if;(bvar.friend_passwd != "" or bvar.friend_passwd_file != "")
               %if;(not friend)
                 %if;(not cgi)
                   <a href="%prefix;w=f" class="btn btn-outline-primary" role="button"><i class="fas fa-user-friends mr-1" aria-hidden="true"></i>[*wizard/wizards/friend/friends/exterior]2</a>
+                %else;
+                  <a href="%if(wizard)../%end;f/%prefix;" class="btn btn-outline-primary" role="button"><i class="fas fa-user-friends mr-1" aria-hidden="true"></i>[*wizard/wizards/friend/friends/exterior]2</a>
                 %end;
               %else;
                 <a href="#" class="btn btn-primary disabled" role="button"><i class="fas fa-user-friends mr-1" aria-hidden="true"></i>[*wizard/wizards/friend/friends/exterior]2%sq;
@@ -72,6 +61,8 @@ fr: Accès réservé aux amis et magiciens de la base de donnée !
               %if;(not wizard)
                 %if;(not cgi)
                   <a href="%prefix;w=w" class="btn btn-outline-success" role="button"><i class="fas fa-hat-wizard mr-1" aria-hidden="true"></i>[*wizard/wizards/friend/friends/exterior]0</a>
+                %else;
+                  <a href="%if;friend;../%end;w/%prefix;" class="btn btn-outline-success" role="button"><i class="fas fa-hat-wizard mr-1" aria-hidden="true"></i>[*wizard/wizards/friend/friends/exterior]0</a>
                 %end;
               %else;
                   <a href="#" class="btn btn-success disabled" role="button"><i class="fas fa-hat-wizard mr-1" aria-hidden="true"></i>[*wizard/wizards/friend/friends/exterior]0%sq;
@@ -81,7 +72,11 @@ fr: Accès réservé aux amis et magiciens de la base de donnée !
             </div>
           %end;
           %if;((wizard and (bvar.wizard_passwd != "" or bvar.wizard_passwd_file != "")) or (friend and (bvar.friend_passwd != "" or bvar.friend_passwd_file != "")))
-            <a class="btn btn-outline-danger mt-1 ml-auto" href="%prefix;w=" role="button"><i class="fas fa-sign-out-alt mr-1" aria-hidden="true"></i>[*disconnect]</a>
+            %if(not cgi)
+              <a class="btn btn-outline-danger mt-1 ml-auto" href="%prefix;w=" role="button"><i class="fas fa-sign-out-alt mr-1" aria-hidden="true"></i>[*disconnect]</a>
+            %else;
+              <a class="btn btn-outline-danger mt-1 ml-auto" href="../%prefix;" role="button"><i class="fas fa-sign-out-alt mr-1" aria-hidden="true"></i>[*disconnect]</a>
+            %end;
           %end;
         %end;
       </div>
