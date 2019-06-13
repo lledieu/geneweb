@@ -70,3 +70,7 @@
    %end;
   <script>autosize(document.querySelectorAll('textarea'));</script>
 %end;
+<script type="text/javascript" src="%if;(cgi)%bvar.static_path;%end;js/includeHTML.js"></script>
+<script>
+includeHTML();
+</script>
