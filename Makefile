@@ -64,6 +64,7 @@ ALL_EXE = \
 EVERYTHING_EXE = \
 	$(ALL_EXE) \
 	bin/contrib/check_base/check_base \
+	bin/contrib/check-src/checksrc \
 	bin/contrib/dag2html/main \
 	bin/contrib/gwbase/etc/chkimg \
 	bin/contrib/gwbase/etc/clavier \

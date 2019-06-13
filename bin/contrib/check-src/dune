@@ -1,0 +1,4 @@
+(executables
+  (names checksrc)
+  (libraries geneweb)
+)
