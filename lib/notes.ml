@@ -252,11 +252,12 @@ let notes_links_db conf base eliminate_unlinked =
     db2
 
 let print_linked_list conf base pgl =
+  let typ = p_getenv conf.env "type" in
   Wserver.printf "<ul>\n";
   List.iter
     (fun pg ->
-       begin match pg with
-         NotesLinks.PgInd ip ->
+       begin match pg, typ with
+         NotesLinks.PgInd ip, None ->
            Wserver.printf "<li>";
            Wserver.printf "<tt>";
            if conf.wizard then
@@ -276,7 +277,7 @@ let print_linked_list conf base pgl =
            end;
            Wserver.printf "</tt>\n";
            Wserver.printf "</li>\n"
-       | NotesLinks.PgFam ifam ->
+       | NotesLinks.PgFam ifam, None ->
            let fam = foi base ifam in
            let fath = pget conf base (get_father fam) in
            let moth = pget conf base (get_mother fam) in
@@ -300,7 +301,7 @@ let print_linked_list conf base pgl =
            Wserver.printf "</span>";
            Wserver.printf "</tt>\n";
            Wserver.printf "</li>\n"
-       | NotesLinks.PgNotes ->
+       | NotesLinks.PgNotes, None ->
            Wserver.printf "<li>";
            Wserver.printf "<tt>";
            if conf.wizard then
@@ -316,11 +317,17 @@ let print_linked_list conf base pgl =
            Wserver.printf "</a>\n";
            Wserver.printf "</tt>\n";
            Wserver.printf "</li>\n"
-       | NotesLinks.PgMisc fnotes ->
+       | NotesLinks.PgMisc fnotes, typ ->
            if (not conf.wizard && not conf.friend && String.sub fnotes 0 2 = "p:") ||
               (not conf.wizard && String.sub fnotes 0 3 = "pw:") then ()
            else begin
            let (nenv, _) = read_notes base fnotes in
+           if match typ with
+             | Some t ->
+                 let n_type = try List.assoc "TYPE" nenv with Not_found -> "" in
+                 t = n_type
+             | None -> true
+           then begin
            let title = try List.assoc "TITLE" nenv with Not_found -> "" in
            let title = Util.safe_html title in
            Wserver.printf "<li>";
@@ -341,7 +348,8 @@ let print_linked_list conf base pgl =
            Wserver.printf "</tt>\n";
            Wserver.printf "</li>\n"
            end
-       | NotesLinks.PgWizard wizname ->
+           end
+       | NotesLinks.PgWizard wizname, None ->
            Wserver.printf "<li>";
            Wserver.printf "<tt>";
            if conf.wizard then
@@ -362,8 +370,8 @@ let print_linked_list conf base pgl =
            Wserver.printf "</i>";
            Wserver.printf "</tt>\n";
            Wserver.printf "</li>\n"
-       end;
-       Wserver.printf "</li>\n")
+       | _ -> ()
+       end)
     pgl;
   Wserver.printf "</ul>\n"
 
@@ -393,6 +401,39 @@ let print_what_links conf base fnotes =
   end;
   Hutil.trailer conf
 
+let safe_gallery conf s =
+  let html s = safe_html (string_with_macros conf [] s) in
+  let safe_map e =
+    match e with
+    | `Assoc l -> `Assoc (List.map (function
+        | key, `String s when key = "alt"
+          -> key, `String (html s)
+        | e -> e
+      ) l)
+    | _ -> `Assoc []
+  in
+  let safe_json l =
+    List.map (function
+      | key, `String s when key = "title"
+        -> key, `String (html s)
+      | key, `String s when key = "desc"
+        -> key, `String (html s)
+      | "map", `List lmap
+        -> "map", `List (List.map safe_map lmap)
+      | e -> e
+    ) l
+  in
+  let json =
+    try Yojson.Basic.from_string s
+    with _ -> `Assoc []
+  in
+  let json =
+    match json with
+    | `Assoc l -> `Assoc (safe_json l)
+    | _ -> `Assoc []
+  in
+  Yojson.Basic.to_string json
+
 let print conf base =
   let fnotes =
     match p_getenv conf.env "f" with
@@ -412,11 +453,31 @@ let print conf base =
     Some "on" -> print_what_links conf base fnotes
   | _ ->
       let (nenv, s) = read_notes base fnotes in
-      let title = try List.assoc "TITLE" nenv with Not_found -> "" in
-      let title = Util.safe_html title in
-      match p_getint conf.env "v" with
-        Some cnt0 -> print_notes_part conf base fnotes title s cnt0
-      | None -> print_whole_notes conf base fnotes title s None
+      let (templ, typ) =
+        try
+          let typ = List.assoc "TYPE" nenv in
+          let fname = "notes_" ^ typ in
+          Util.open_templ conf fname, fname
+        with Not_found -> None, ""
+      in
+      match templ with
+      | Some ic ->
+         begin match p_getenv conf.env "ajax" with
+         | Some "on" ->
+            let charset = if conf.charset = "" then "utf-8" else conf.charset in
+            Wserver.header "Content-type: application/json; charset=%s" charset ;
+            Wserver.printf "%s" (match typ with
+              | "gallery" -> safe_gallery conf s
+              | _ -> s 
+            )
+         | _ -> Templ.copy_from_templ conf [] ic
+         end
+      | None ->
+         let title = try List.assoc "TITLE" nenv with Not_found -> "" in
+         let title = Util.safe_html title in
+         match p_getint conf.env "v" with
+         | Some cnt0 -> print_notes_part conf base fnotes title s cnt0
+         | None -> print_whole_notes conf base fnotes title s None
 
 let print_mod conf base =
   let fnotes =
@@ -424,12 +485,33 @@ let print_mod conf base =
       Some f -> if NotesLinks.check_file_name f <> None then f else ""
     | None -> ""
   in
+  let (env, s) = read_notes base fnotes in
+  let typ = try List.assoc "TYPE" env with Not_found -> "" in
+  let templ =
+    let fname = "notes_upd_" ^ typ in
+    Util.open_templ conf fname
+  in
   let title _ =
     Wserver.printf "%s - %s%s" (capitale (transl conf "base notes"))
       conf.bname (if fnotes = "" then "" else " (" ^ fnotes ^ ")")
   in
-  let (env, s) = read_notes base fnotes in
-  Wiki.print_mod_view_page conf true "NOTES" fnotes title env s
+  match templ, p_getenv conf.env "notmpl" with
+  | Some _, Some "on" ->
+     Wiki.print_mod_view_page conf true "NOTES" fnotes title env s
+  | Some ic, _ ->
+      begin match p_getenv conf.env "ajax" with
+      | Some "on" ->
+         let s_digest =
+           List.fold_left (fun s (k, v) -> s ^ k ^ "=" ^ v ^ "\n") "" env ^ s
+         in
+         let digest = Iovalue.digest s_digest in
+         let charset = if conf.charset = "" then "utf-8" else conf.charset in
+         Wserver.header "Content-type: application/json; charset=%s" charset ;
+         Wserver.printf "{\"digest\":\"%s\",\"r\":%s}" digest s
+      | _ -> Templ.copy_from_templ conf [] ic
+      end
+  | _ ->
+     Wiki.print_mod_view_page conf true "NOTES" fnotes title env s
 
 let update_notes_links_db conf fnotes s =
   let slen = String.length s in
@@ -470,7 +552,9 @@ let commit_notes conf base fnotes s =
   in
   Mutil.mkdir_p (Filename.dirname fpath);
   begin try Gwdb.commit_notes base fname s with
-    Sys_error _ -> Hutil.incorrect_request conf; raise Update.ModErr
+    Sys_error m ->
+      Printf.eprintf "Sys_error: %s\n" m;
+      Hutil.incorrect_request conf; raise Update.ModErr
   end;
   History.record conf base (Def.U_Notes (p_getint conf.env "v", fnotes)) "mn";
   update_notes_links_db conf pg s
