@@ -324,6 +324,12 @@ fr: Sélectionnez les modules en cliquant sur le bouton correspondant (max 15).
             <a class="nav-link dropdown-toggle %if;(evar.m="R" or evar.m="F" or (evar.m="C" and evar.t="AN"))active%end;" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false" title="[*relationship]"><span class="fa fa-user-friends"></span></a>
             <div class="dropdown-menu">
               <a class="dropdown-item" href="%prefix;m=R;%access;" %laR;><span class="fa fa-cog fa-fw"></span> [*relationship computing]</a>
+              %if;(cvar_var_author != "")
+                <a class="dropdown-item" href="%prefix;em=R;e%access;;m=NG;select=input;n=%cvar_var_author;;t=PN;et=M;image=on" %laR;><span class="fa fa-map-signs fa-fw"></span>... [
+en: to the author
+fr: avec l'auteur
+]</a>
+              %end
               <div class="dropdown-divider"></div>
               <a class="dropdown-item" href="%prefix;%access;;m=C;v1=2;v2=2" %laR;><span class="fa fa-users-cog fa-fw"></span> [*relationship computing] [with] [close family]</a>
               <div class="dropdown-divider"></div>
