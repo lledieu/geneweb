@@ -2522,16 +2522,27 @@ let person_exists conf base (fn, sn, oc) =
       | None -> false
 
 let default_sosa_ref conf base =
-  match p_getenv conf.base_env "default_sosa_ref" with
-    Some n ->
-      if n = "" then None
-      else
-        begin match Gutil.person_ht_find_all base n with
-          [ip] ->
-            let p = pget conf base ip in if is_hidden p then None else Some p
-        | _ -> None
-        end
-  | None -> None
+  let sosa_ref =
+    if conf.userkey = "" then None
+    else
+      match Gutil.person_ht_find_all base conf.userkey with
+        [ip] ->
+          let p = pget conf base ip in
+          Some p
+      | _ -> None
+  in
+  if sosa_ref = None then
+    match p_getenv conf.base_env "default_sosa_ref" with
+      Some n ->
+        if n = "" then None
+        else
+          begin match Gutil.person_ht_find_all base n with
+            [ip] ->
+              let p = pget conf base ip in if is_hidden p then None else Some p
+          | _ -> None
+          end
+    | None -> None
+  else sosa_ref
 
 let find_sosa_ref conf base =
   match find_person_in_env conf base "z" with
