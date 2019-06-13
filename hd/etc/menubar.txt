@@ -207,6 +207,14 @@ fr: Sélectionnez les modules en cliquant sur le bouton correspondant (max 15).
               </div>
             </li>
           %end;
+          <li class="nav-item">
+            <a class="nav-link" href="%url_no_index;" title="[
+en: Permanent link
+fr: Lien permanent
+]">
+              <span class="fa fa-link fa-fw" aria-hidden="true"></span>
+            </a>
+          </li>
           %if;(not (bvar.wizard_just_friend="yes") and wizard)
             %if;(nb_families = 0)
               <li class="nav-item">

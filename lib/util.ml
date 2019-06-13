@@ -1444,12 +1444,24 @@ let url_no_index conf base =
         else None
     with Failure _ -> None
   in
+  let i_present =
+    let rec loop =
+      function
+      | [] -> false
+      | ("i", _) :: _ -> true
+      | _ :: l -> loop l
+    in
+    loop conf.env
+  in
   let env =
     let rec loop =
       function
         [] -> []
-      | ("opt", "no_index") :: l -> loop l
-      | (("dsrc" | "escache" | "oc" | "templ"), _) :: l -> loop l
+      | (("iz" | "pz" | "nz" | "ocz"), _) :: l
+      | ("pure_xhtml", _) :: l
+      | ("opt", "no_index") :: l
+      | (("dsrc" | "escache" | "templ" | "wide"), _) :: l -> loop l
+      | ("oc", _) :: l when i_present -> loop l
       | ("i", v) :: l -> new_env "i" v (fun x -> x) l
       | ("ei", v) :: l -> new_env "ei" v (fun x -> "e" ^ x) l
       | (k, v) :: l when String.length k = 2 && k.[0] = 'i' ->
@@ -1474,23 +1486,14 @@ let url_no_index conf base =
     in
     loop conf.env
   in
-  let addr =
-    let pref =
-      let s = get_request_string conf.request in
-      match String.rindex_opt s '?' with
-        Some i -> String.sub s 0 i
-      | None -> s
-    in
-    get_server_string conf.request ^ pref
-  in
+  let addr = "https://lledieu.org/" in
   let suff =
     List.fold_right
       (fun (x, v) s ->
          let sep = if s = "" then "" else "&" in x ^ "=" ^ v ^ sep ^ s)
-      (("lang", conf.lang) :: env) ""
+      env ""
   in
-  if conf.b_arg_for_basename then addr ^ "?b=" ^ conf.bname ^ "&" ^ suff
-  else addr ^ "?" ^ suff
+  addr ^ "?" ^ suff
 
 let message_to_wizard conf =
   if conf.wizard || conf.just_friend_wizard then
