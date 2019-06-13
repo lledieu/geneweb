@@ -18,6 +18,7 @@
   <h1 class="my-2">[*advanced request]0</h1>
   %include;home
 
+
 <div>
 %if;(evar.search_type = "OR")
 <a href="%prefix;m=H&v=advanced">[search_type AND/search type OR]0</a>.
@@ -25,7 +26,6 @@
 <a href="%prefix;m=H&v=advanced&search_type=OR">[search_type AND/search type OR]1</a>.
 %end;
 </div>
-
 
 %define;date(xx,zz)
   %if;([ !dates order]0 = "ddmmyy" or [ !dates order]0 = "ddmmyyyy" or [ !dates order]0 = "dmyyyy")
@@ -52,10 +52,10 @@
 %define;event(xx,yy)
   <div class="col-auto m-2">
     <div class="row">
+      <h4>[*yy]0</h4>
       <div class="col-auto">
-        <h4>[*yy]0</h4>
         %if;("xx"="death_")
-          <div class="col-auto">
+          <div class="form-inline col justify-content-end">
             <select class="form-control" name="death">
               <option value="Dead">[*died]2</option>
               <option value="NotDead">[*alive]2</option>
@@ -65,10 +65,9 @@
           </div>
         %end;
         %if;("xx"="marriage_")
-          <div class="col-auto justify-content-end">
-          <div class="form-inline">
-            <span class="form-label">[*married][:]</span>
-            <div class="form-check-inline">
+          <div class="form-inline col justify-content-end">
+            <span class="form-control-label mr-2 text-align-right">[*married][:] </span>
+            <div class="form-check form-check-inline">
               <input type="radio" class="form-check-input" name="married" id="mY" value="Y">
               <label class="form-check-label" for="mY" >[Y/N]0</label>
             </div>
@@ -80,7 +79,6 @@
               <input type="radio" class="form-check-input" name="married" id="mA" value="A" checked>
               <label class="form-check-label" for="mA" >-</label>
             </div>
-          </div>
           </div>
         %end;
         %if;("xx"="")
@@ -199,6 +197,7 @@ Unchecked -> not match"></label>
           <select class="form-control" name="death">
             <option value="Dead">[*died]2</option>
             <option value="NotDead">[*alive]2</option>
+            <option value="DontKnowIfDead">[*don't know]</option>
             <option value="" selected="selected">-</option>
           </select>
         </div>

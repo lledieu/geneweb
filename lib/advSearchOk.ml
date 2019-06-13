@@ -372,7 +372,7 @@ let advanced_search conf base max_answers =
   in
   let match_person p search_type =
     if search_type <> "OR" then
-      (if match_civil_status p &&
+      (if authorized_age conf base p && know base p && match_civil_status p &&
           match_birth_date p true && match_birth_place p true && match_birth_src p true &&
           match_baptism_date p true && match_baptism_place p true && match_baptism_src p true &&
           match_burial_date p true && match_burial_place p true && match_death_src p true &&
@@ -381,7 +381,7 @@ let advanced_search conf base max_answers =
        then
          begin list := p :: !list; incr len end)
     else if
-      match_civil_status p &&
+      authorized_age conf base p && know base p && match_civil_status p &&
       (gets "place" = "" && gets "date2_yyyy" = "" && gets "date1_yyyy" = "" && gets "src" = "" ||
        (match_baptism_date p false || match_baptism_place p false || match_baptism_src p false) &&
        match_baptism_date p true && match_baptism_place p true && match_baptism_src p true ||
@@ -420,27 +420,6 @@ let advanced_search conf base max_answers =
       else match_person (pget conf base (Adef.iper_of_int i)) search_type
     done;
   List.rev !list, !len
-
-let print_result conf base max_answers (list, len) =
-  let list =
-    if len > max_answers then Util.reduce_list max_answers list else list
-  in
-  if len = 0 then Wserver.printf "%s\n" (capitale (transl conf "no match"))
-  else
-    let () = Perso.build_sosa_ht conf base in
-    Wserver.printf "<ul>\n";
-    List.iter
-      (fun p ->
-         html_li conf;
-         Perso.print_sosa conf base p true;
-         Wserver.printf "\n%s" (referenced_person_text conf base p);
-         Wserver.printf "%s" (Date.short_dates_text conf base p);
-         Wserver.printf "<em>";
-         specify_homonymous conf base p false;
-         Wserver.printf "</em>")
-      list;
-    if len > max_answers then begin html_li conf; Wserver.printf "...\n" end;
-    Wserver.printf "</ul>\n"
 
 let searching_fields conf =
   let test_string x =
@@ -621,22 +600,40 @@ let searching_fields conf =
       else search
     else search
   in
-  let sep = if search <> "" then "," else "" in
-  string_field "occu" (search ^ sep)
+  if test_string "occu" then
+    let sep = if search <> "" then "," else "" in
+    search ^ sep ^ " " ^ gets "occu"
+  else search
+
+let print_result_json conf base list truncated =
+  let request_text =
+    (Printf.sprintf "%s %s." (capitale (transl conf "searching all"))
+         (searching_fields conf))
+  in
+  let charset = if conf.charset = "" then "utf-8" else conf.charset in
+  Wserver.header "Content-type: application/json; charset=%s" charset ;
+  Wserver.printf "%s"
+    (Json.print_results conf base truncated request_text list)
 
 let print conf base =
-  let title _ =
-    Wserver.printf "%s" (capitale (transl_nth conf "advanced request" 0))
-  in
-  let max_answers =
-    match p_getint conf.env "max" with
-      Some n -> n
-    | None -> 100
-  in
-  Hutil.header conf title;
-  Wserver.printf "<p>\n";
-  Wserver.printf "%s %s." (capitale (transl conf "searching all"))
-    (searching_fields conf);
-  Wserver.printf "</p>\n";
-  let list = advanced_search conf base max_answers in
-  print_result conf base max_answers list; Hutil.trailer conf
+  match p_getenv conf.env "json" with
+  | Some "on" ->
+    let max_answers =
+      match p_getint conf.env "max" with
+        Some n ->
+          let threshold = 5000 in
+          let threshold =
+            match p_getint conf.base_env "threshold_max_results" with
+            | Some i -> i
+            | None -> threshold
+          in
+          if n > threshold then threshold else n
+      | None -> 100
+    in
+    let (list, len) = advanced_search conf base max_answers in
+    let (list, truncated) =
+      if len > max_answers then Util.reduce_list max_answers list, true
+      else list, false
+    in
+    print_result_json conf base list truncated
+  | _ -> Srcfile.print conf base "result"

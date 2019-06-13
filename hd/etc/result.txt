@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>[*advanced request]0</title>
+  <meta name="robots" content="none">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="shortcut icon" href="%image_prefix;/favicon_gwd.png">
+  <link rel="apple-touch-icon" href="%image_prefix;/favicon_gwd.png">
+  %include;css
+<link rel="stylesheet" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css">
+<style>
+#result_filter {
+margin-right: 2em;
+}
+</style>
+  %include;hed
+</head>
+<body%body_prop;>
+<div class="container-fluid">
+%include;home
+<h1>[*advanced request]0</h1>
+<p><span id="request_text"></span><span id="too_much" style="display: none"><br>[
+en: Too much results, be more specific&hellip;
+fr: Trop de résultats, affinez votre recherche&hellip;
+]</span></p>
+
+<table id="result" class="display compact" style="width=100%">
+ <thead><tr>
+  %if(evar.first_name = "")<th>[*first name/first names]0</th>%end;
+  %if(evar.surname = "")<th>[*surname/surnames]0</th>%end;
+  <th>[*birth]</th>
+  <th>[*death]</th>
+  <th>[*father/mother]0</th>
+  <th>[*father/mother]1</th><th></th>
+  <th>[*marriage/marriages]1</th>
+ </tr></thead>
+</table>
+
+</div>
+%include;trl
+%include;copyr
+
+</div>
+%include;js
+<script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/plug-ins/1.10.19/sorting/intl.js"></script>
+<script src="%if;(cgi)%bvar.static_path;%end;js/accent-neutralise.js"></script>
+<script>
+// FIXME: Add a specific lang parameter into gwf file ? It is not linked to visitor language...
+$.fn.dataTable.ext.order.intl( %["%lang;"%], {
+  "sensitivity": "base"
+} );
+
+$(document).ready(function() {
+  var table = $('#result').DataTable( {
+     "ajax": "%url;json=on",
+     "deferRender": true,
+     "columns": %[
+        %if(evar.first_name = ""){ "data": "fn", "type" : "string", "defaultContent": "" },%end;
+        %if(evar.surname = ""){ "data": "sn", "type" : "string", "defaultContent": "" },%end;
+        { "data": { "_": "bid.d", "sort": "bid.jd" }, "defaultContent": "" },
+        { "data": { "_": "ded.d", "sort": "ded.jd" }, "defaultContent": "" },
+        { "data": "fa.fn", "type" : "string", "defaultContent": "" },
+        { "data": "mo.fn", "type" : "string", "defaultContent": "" },
+        { "data": "mo.sn", "type" : "string", "defaultContent": "" },
+        { "data": { "_": "sp.d", "sort": "sp.jd" }, "defaultContent": "" }
+     %],
+     "scrollY": "65vh",
+     "scrollCollapse": true,
+     "paging": false,
+     "language": {
+       "url": "//cdn.datatables.net/plug-ins/9dcbecd42ad/i18n/[
+af: Afrikaans
+bg: Bulgarian
+br: FIXME
+ca: Catalan
+co: FIXME
+cs: Czech
+da: Danish
+de: German
+en: English
+eo: FIXME
+es: Spaicsh
+et: Estonian
+fi: Finnish
+fr: French
+he: Hebrew
+is: Icelandic
+it: Italian
+lv: Latvian
+nl: Dutch
+no: Norwegian-Nynorsk
+oc: FIXME
+pl: Polish
+pt: Portuguese
+pt-br: Portuguese-Brasil
+ro: Romanian
+ru: Russian
+sk: Slovak
+sl: Slovenian
+sv: Swedish
+zh: Chinese
+].json"
+     },
+     "initComplete": function( settings, json) {
+       $("#request_text").text( json.request_text );
+       // Too much results ?
+       if( typeof json === "undefined" || !json.truncated ) {
+         $("#too_much").hide();
+       } else {
+         $("#too_much").show();
+       }
+       // Remove accented character from search input
+       $('#result_filter input').keyup( function () {
+         table
+           .search(
+              jQuery.fn.DataTable.ext.type.search.string( this.value )
+           )
+           .draw()
+       } );
+     }
+  } );
+  $('#result tbody').on('click', 'tr', function () {
+    var data = table.row(this).data();
+    window.open( "%prefix;i="+data.id, "_blank");
+  } );
+} );
+</script>
+</body>
+</html>
