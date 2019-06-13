@@ -1488,3 +1488,18 @@ let print_mod conf base =
        Templ.get_vother = get_vother; Templ.set_vother = set_vother;
        Templ.print_foreach = fun _ -> raise Not_found}
       [] ()
+
+let print_datalist conf base =
+  let charset = if conf.charset = "" then "utf-8" else conf.charset in
+  Wserver.header "Content-type: plain/text; charset=%s" charset ;
+  let max_age = 60 * 60 * 24 in
+  let max_age =
+    match p_getenv conf.base_env "cache_max_age" with
+      None -> max_age
+    | Some s -> try int_of_string s with Failure _ -> max_age
+  in
+  Wserver.header "Cache-Control: private, max-age=%d" max_age ;
+  let list = build_list conf base in
+  let r = Str.regexp "\"" in
+  List.iter (fun (s, _) -> Wserver.printf "<option value=\"%s\">" (Str.global_replace r "&quot;" s)) list
+

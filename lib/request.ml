@@ -100,6 +100,7 @@ let family_m conf base =
       | "CONN_WIZ" -> handler.conn_wiz
       | "D" -> handler.d
       | "DAG" -> handler.dag
+      | "DATALIST" -> handler.datalist
       | "DEL_FAM" -> handler.del_fam
       | "DEL_FAM_OK" -> handler.del_fam_ok
       | "DEL_IMAGE" -> handler.del_image

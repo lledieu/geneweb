@@ -306,6 +306,7 @@ and handler =
   ; conn_wiz : handler_base
   ; d : handler_base
   ; dag : handler_base
+  ; datalist : handler_base
   ; del_fam : handler_base
   ; del_fam_ok : handler_base
   ; del_image : handler_base
@@ -485,6 +486,7 @@ let dummyHandler =
   ; conn_wiz = dummy_base
   ; d = dummy_base
   ; dag = dummy_base
+  ; datalist = dummy_base
   ; del_fam = dummy_base
   ; del_fam_ok = dummy_base
   ; del_image = dummy_base
@@ -807,6 +809,11 @@ let defaultHandler : handler =
 
   ; dag = begin fun _self conf base ->
       Dag.print conf base
+    end
+
+  ; datalist = begin fun self conf base ->
+      if conf.wizard then UpdateData.print_datalist conf base
+      else self.incorrect_request self conf base
     end
 
   ; del_fam = begin fun self conf base ->
