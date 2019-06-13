@@ -51,6 +51,7 @@ ALL_EXE = \
 	bin/contrib/gwpublic/gwpublic1 \
 	bin/contrib/gwpublic/gwpublic2 \
 	bin/contrib/gwpublic/gwpublic2priv \
+	bin/contrib/gwpublic/publicAction \
 	bin/contrib/history/convert_hist \
 	bin/contrib/history/fix_hist \
 	bin/contrib/history/is_gw_plus \
