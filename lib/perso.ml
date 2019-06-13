@@ -2434,6 +2434,7 @@ and eval_simple_str_var conf base env (_, p_auth) =
         Vstring s -> s
       | _ -> raise Not_found
       end
+  | "url_no_index" -> Util.url_no_index conf base
   | s ->
       let rec loop =
         function

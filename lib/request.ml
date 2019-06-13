@@ -372,7 +372,7 @@ let print_no_index conf base =
   Hutil.header conf title;
   Wserver.printf "<ul>\n";
   html_li conf;
-  Wserver.printf "<a href=\"http://%s\">\n" link;
+  Wserver.printf "<a href=\"%s\">\n" link;
   Wserver.printf "%s" link;
   Wserver.printf "</a>\n";
   Wserver.printf "</ul>\n";
