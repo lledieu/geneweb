@@ -15,6 +15,10 @@ OS_TYPE=
 API=
 API_DEP=
 
+STATIC="(-ccopt -static -ccopt -Wl,--no-export-dynamic)"
+STATIC="()"
+echo "$STATIC" > link_flags.conf
+
 while [[ $# -ne 0 ]]; do
   case $1 in
     --api)

@@ -4,6 +4,7 @@
   (public_names connex gwc1 gwc2 gwd gwu mk_consang setup update_nldb)
   (modules connex gwc1 gwc2 gwd gwu mk_consang setup update_nldb)
   (libraries geneweb geneweb.wserver)
+  (link_flags (:include ../../link_flags.conf))
 )
 
 (executables
