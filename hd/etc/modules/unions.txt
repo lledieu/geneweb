@@ -172,7 +172,7 @@
     %foreach;family;
       %incr_count;
       %apply;li_SD("spouse")
-        %apply;long_married("self")%sp;
+        %apply;long_married_check("self")%sp;
         %apply;short_display_person("spouse")
         %let;prev_count;%count;%in;
         %if;(has_witnesses)

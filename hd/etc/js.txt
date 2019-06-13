@@ -70,3 +70,6 @@
    %end;
   <script>autosize(document.querySelectorAll('textarea'));</script>
 %end;
+%if;(bvar.var_cartol != "")
+  <script type="text/javascript" src="%bvar.var_cartol;/check2.js"></script>
+%end;
