@@ -678,7 +678,9 @@ let print_population_pyramid conf base =
           (* On multiplie par 3 parce que c'est *)
           (* la largeur de l'image : 3 x 14     *)
           Wserver.printf
-            "<img src=\"images/pyr_male.png\" width=%d height=%d />" (n * 3)
+            "<img src=\"%s/pyr_male.png\" width=%d height=%d />"
+            (Util.image_prefix conf)
+            (n * 3)
             14
         end;
       Wserver.printf "</td>\n";
@@ -699,7 +701,9 @@ let print_population_pyramid conf base =
           (* On multiplie par 3 parce que c'est *)
           (* la largeur de l'image : 3 x 14     *)
           Wserver.printf
-            "<img src=\"images/pyr_female.png\" width=%d height=%d />" (n * 3)
+            "<img src=\"%s/pyr_female.png\" width=%d height=%d />"
+            (Util.image_prefix conf)
+            (n * 3)
             14
         end;
       Wserver.printf "</td>\n";

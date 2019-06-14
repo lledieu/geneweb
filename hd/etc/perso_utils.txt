@@ -897,3 +897,11 @@
   %end;
 %end;
 %let;timeline;%if;(count>0)yes%else;no%end;%in;
+
+%define;link_pages()
+  %if;(not cancel_links and has_linked_pages)
+    <div id ="link_pages" class="ml-auto d-flex align-items-center">
+      (<a href="%prefix;m=LINKED;%access;">[linked pages]</a>)
+    </div>
+  %end;
+%end;

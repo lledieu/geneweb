@@ -1,0 +1,82 @@
+html body { 
+ background-color: #fcfffa;
+ font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";
+}
+
+.container {
+ max-width: 100%;
+}
+
+h1, h2, h4, .h2 {
+ color: #2f6400;
+}
+
+hr {
+ color: #844404;
+}
+
+a {
+ color: inherit;
+ text-decoration-line: underline;
+ text-decoration-style: dotted;
+}
+a:link {
+ text-decoration-color: #0000EE;
+}
+a:visited {
+ text-decoration-color: #551A8B;
+}
+a:active {
+ text-decoration-color: #EE0000;
+}
+
+h1>a, a.place {
+ text-decoration-line: none;
+}
+
+.sources {
+ font-size: smaller;
+}
+
+.sosa {
+ background-color: #82af0b;
+ color: white;
+ padding: 1px 5px 1px 18px;
+ background-image: url(https://lledieu.org/gw/images/sosa_symbol.png);
+ background-repeat: no-repeat;
+ background-position: 0 0;
+ font-size: 12px;
+}
+nav a, .sosa>a {
+ text-decoration-line: none;
+}
+
+.btn-link {
+ color: #844404 !important;
+}
+
+.new7 {
+ border-style: groove;
+ border-width: 1px;
+ border-color: red;
+}
+
+.mark {
+ padding: 0;
+ background-color: #e4a160;
+}
+
+#surname_by_branch ul.posterity {
+    display: inline;
+    padding: 0;
+}
+#surname_by_branch ul.posterity li {
+    display: inline;
+}
+
+/* Expérience pour Sosa */
+.is_sosa::before {
+  font-family: "Font Awesome 5 Free";
+  content: "\f192 ";
+  color: #7baa00;
+}

@@ -76,6 +76,12 @@
 
 %define;etat_civil()
   <ul>
+    %if;has_occupation;
+      <li>%apply;capitalize(occupation)</li>%nl;
+    %end;
+    %if;(has_linked_page.OCCU and linked_page.OCCU!="")
+      <li>%apply;capitalize(linked_page.OCCU)</li>%nl;
+    %end;
     %if;has_birth_date;
       <li>%apply;capitalize(nth([born],sex)) %on_birth_date;
       %if;birthday; ([happy birthday to you!])%end;
@@ -109,12 +115,6 @@
       %if;has_cremation_date; %on_cremation_date;%end;
       %if;has_cremation_place; - %apply;place_check(cremation_place)%end;</li>%nl;
     %end;
-    %if;has_occupation;
-      <li>%apply;capitalize(occupation)</li>%nl;
-    %end;
-    %if;(has_linked_page.OCCU and linked_page.OCCU!="")
-      <li>%apply;capitalize(linked_page.OCCU)</li>%nl;
-    %end;
     %if;(has_consanguinity and bvar.show_consang!="no")
       %if;(cancel_links)
         <li>[*consanguinity][:] %consanguinity;</li>%nl;
@@ -147,10 +147,8 @@
   %if;(has_sosa and not cancel_links)
     <div class="%if;(op_m=2 or op_m=3)text-center%end;">
       <i class="fa fa-dot-circle-o text-success mr-1"></i>%nn;
-      [*Sosa]
-      %if;(sosa=1)%sosa;
-      %else;<a href="%prefix;%sosa_link;">%sosa;</a> %apply;a_of_b%with;%and;
-        %if;(sosa_ref.is_restricted)%sosa_ref;%else;<a href="%prefix;%sosa_ref.access;">%sosa_ref;</a>%end;%end;
+      %if;(sosa=1)<span class="sosa">[*Sosa] %sosa;</span>
+      %else;<a href="%prefix;%sosa_link;"><span class="sosa">[*Sosa] %sosa;</span></a>
       %end;
     </div>
   %end;
@@ -163,8 +161,12 @@
 %let;evm;%if;(evar.m="F")m=F;%end;%in;
 %let;prefx;%if;(evar.m="F")%prefix_no_pmod;%else;%prefix;%end;%in;
 %if;(evar.m!="MOD_IND")
+  %if;(bvar.show_invisible = "on" and wizard and is_invisible)
+    <img src="%image_prefix;/restricted.png"%wid_hei;restricted.png; alt=" (x)"%/>%nn;
+  %end;
+  %apply;link_pages()
   <div class="col-12">
-  <h1 class="%if;(op_m=2)text-center%else;text-xs-center text-md-left%end;">
+  <h1 class="%if;(op_m=2 or op_m=3)text-center%else;text-xs-center text-md-left%end;">
     %if;has_public_name;
       %if;has_qualifiers;%public_name; <em>%qualifier;</em>
       %else;%public_name; %surname;%end;
@@ -178,7 +180,7 @@
         %end;
       %end;
     %end;
-    <span class="font-weight-light small">%dates;</span>
+    <span class="text-muted font-weight-light small">%dates;</span>
   </h1>
   </div> %( closing div just before h1 %)
 
@@ -205,13 +207,15 @@
     %apply;etat_civil()
   
   %elseif;(op_m=3)
-    <div class="d-flex">
-      %apply;portrait()
-      <div>
-        <div class="text-center mb-2 mx-2">
-          %apply;detailed_names()
-          %apply;sosa()
-        </div>
+    <div class="text-center col-12">
+      %apply;sosa()
+      %apply;detailed_names()
+    </div>
+    <div class="row">
+      <div class="text-center mx-5">
+        %apply;portrait()
+      </div>
+      <div class="text-left my-auto">
         %apply;etat_civil()
       </div>
     </div>

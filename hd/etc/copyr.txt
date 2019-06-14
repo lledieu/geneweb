@@ -21,7 +21,6 @@
 %end;
 %if;(not cancel_links)
   <div class="d-flex justify-content-end mx-2 my-2" id="copyr">     
-    %if;(connections!="")<div class="mr-auto align-self-center">%connections;</div>%end;
     <div class="d-flex">
       %if;(evar.templ="")
         <div class="btn-group dropup align-self-center">
@@ -87,11 +86,13 @@
           <a href="https://geneweb.tuxfamily.org/wiki/GeneWeb%if;(lang!="en")/%lang;%end;" class="ml-1"
             target="_blank" rel="noreferrer" rel="noopener" title="Documentation GeneWeb">%nn;
             <i class="fab fa-wikipedia-w"></i></a>%nn;
-          <a href="https://github.com/geneweb/geneweb" class="ml-1"
+          <a href="https://github.com/geneweb/geneweb/compare/master...lledieu:lledieu7" class="ml-1"
             target="_blank" rel="noreferrer" rel="noopener" title="GeneWeb on Github">%nn;
             <i class="fab fa-github"></i></a>
         </div>
+        %if;(connections!="")<div class="mr-auto align-self-center">%connections;</div>%end;
       </div>
+      <a href="%prefix;"><img src="%image_prefix;/gwlogo-orig.png" alt="Nostalgie" style="display: inline-block; height: 72px;"></a>
     </div>
   </div>
 %end;

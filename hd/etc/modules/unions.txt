@@ -11,14 +11,10 @@
     href="%prefix;spouse=on;m=RLM;image=%evar.image;;%nn;
       %foreach;witness;
         %incr_count;i%count;=%witness.index;;%nn;
-        t%count;=[marriage event];%nn;
-        %incr_count;i%count;=z1;%nn;
+        t%count;=[witness/witnesses]0;%nn;
       %end;
       %incr_count;i%count;=%index;;%nn;
       t%count;=%if;(sex=0)[him/her]0%elseif;(sex=1)[him/her]1%else;0%end;%nn;
-      %if;browsing_with_sosa_ref;
-        %incr_count;i%count;=%sosa_ref.index;;t%count;=sosa_1;%nn;
-      %end;
     " title="[*relations tree]"
 %end;
 
@@ -167,38 +163,10 @@
 
 %if;(op_m=1 and has_families)
   <ul class="marriage_perso">
-    %( On remet les compteurs à zéro et on commence à compter à 1 - synchro with notes.txt %)
-    %reset_count;
     %foreach;family;
-      %incr_count;
       %apply;li_SD("spouse")
         %apply;long_married_check("self")%sp;
         %apply;short_display_person("spouse")
-        %let;prev_count;%count;%in;
-        %if;(has_witnesses)
-          %sp;([witness/witnesses]w[:]
-          %foreach;witness;%(attention witness_kind ne marche pas dans ce contexte !! fwitness non plus %)
-            %if;not is_first;, %end;
-            %apply;short_display_person("witness")
-          %end;
-          %if;(not cancel_links)
-            <a %apply;relations_tree(index)>%nn;
-              <img class="ml-1 mb-1" src="%image_prefix;/gui_create.png" height="16" alt="tree"/>%nn;
-            </a>%nn;
-          %else;
-            <img class="ml-1 mb-1" src="%image_prefix;/gui_create.png" height="16" alt="tree"/>%nn;
-          %end;
-        %end;%nn;
-        %apply;init_count(prev_count)
-        %if;((wizard or friend or bvar.no_note_for_visitor="" or bvar.no_note_for_visitor="no") and has_comment)
-          %if;(not cancel_links)
-            <a href="#note-wed-%count;" id="wed-callnote-%count;" title="[*see] [note/notes]0 %count">%nn;
-              <sup>%count;</sup>%nn;
-            </a>%nn;
-          %else;
-            <sup>%count;</sup>
-          %end;
-        %end;
         %if;are_divorced;, [divorced]0%divorce_date;%end;
         %if;are_separated;, [separated]0
           %foreach;event;
@@ -206,8 +174,6 @@
           %end;
         %end;%nn;
         %if;has_children;, [having as children]0[:]
-          %( On sauvegarde l'ancienne valeur de count %)
-          %let;prev_count;%count;%in;
           <ul>
             %foreach;child;
               %apply;li_SDC("child")
@@ -216,13 +182,32 @@
                 %else;
                   %apply;short_display_person_noname("child","","","","MF")
                 %end;
+                %if;child.has_sosa;&nbsp;<img src="%bvar.static_path;/images/sosa.png">%end;
               </li>
             %end;
           </ul>
-          %( On rétablie l'ancienne valeur de count %)
-          %apply;init_count(prev_count)
         %end;
-        %if;(evar.opt = "from" and wizard)<em>(%origin_file;)</em><br%/>%nl;%end;
+        %if;(has_witnesses)
+           %if;(not has_children)<br%/>%end;
+          [*witness/witnesses]w[:]
+          %if;(not cancel_links)
+            <a %apply;relations_tree(index)>%nn;
+              <img class="ml-1 mb-1" src="%image_prefix;/gui_create.png" height="16" alt="tree"/>%nn;
+            </a>%nn;
+          %end;
+          %foreach;witness;%(attention witness_kind ne marche pas dans ce contexte !! fwitness non plus %)
+            %if;not is_first;, %end;
+            %apply;short_display_person("witness")
+          %end;
+        %end;%nn;
+        %if;((wizard or friend or bvar.no_note_for_visitor="" or bvar.no_note_for_visitor="no") and has_comment)
+           %if;(has_witnesses or not has_children)<br%/>%end;
+           %comment;
+        %end;
+        %if;(evar.opt = "from" and wizard)
+           %if;(has_comment or has_witnesses or not has_children)<br%/>%end;
+           <em>(%origin_file;)</em>
+        %end;
       </li>
     %end;
   </ul>

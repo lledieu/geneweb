@@ -219,13 +219,13 @@ $(document).ready(function(){
   <div class="row">
     <label for="xvar_src" class="col-sm-1 col-form-label">[*source/sources]0</label>
     <div class="col-sm-11">
-      <textarea class="form-control" name="xvar_src" id="xvar_src" rows="1">%xx_src;</textarea>
+      <input type="text" class="form-control" name="xvar_src" id="xvar_src" value="%xx_src;">
     </div>
   </div>
 %end;
 
 %define;note(xvar,xx)
-  <div class="row">
+  <div class="row new7">
     <label for="xvar_note" class="col-sm-1 col-form-label">[*note/notes]0</label>
     <div class="col-sm-11">
       <textarea class="form-control" name="xvar_note" id="xvar_note" rows="1">%xx_note;</textarea>
@@ -353,7 +353,7 @@ $(document).ready(function(){
 %end;
 
 %define;insert_fevent(xcnt)
-  <div class="row mt-2">
+  <div class="row mt-2 new7">
     <label for="ins_eventxcnt_n" class="col-form-label col-2">[*insert]</label>
     <div class="form-inline col-10 ml-auto">
       <div class="input-group">
@@ -372,7 +372,7 @@ $(document).ready(function(){
 %end;
 
 %define;insert_witness(xcnt, wcnt)
-  <div class="row mt-3 mb-1">
+  <div class="row mt-3 mb-1 new7">
     <label for="excnt_ins_witnwcnt_n" class="col-form-label col-2">[*insert]</label>
     <div class="form-inline col-10 ml-auto">
       <div class="input-group">
@@ -445,7 +445,7 @@ $(document).ready(function(){
 %define;one_fevent(xcnt, has_fevents)
   <div class="row">
     <h5 class="col-form-label col-sm-2 mb-1 text-uppercase"><label for="e_namexcnt" class="mb-0">[*event/events]0 xcnt</label></h5>
-    <div class="col-sm-3">
+    <div class="col-sm-3 new7">
       %apply;selector_fevent(xcnt)
     </div>
     <div class="col-sm-7">
@@ -461,7 +461,7 @@ $(document).ready(function(){
     </div>
   </div>
   %apply;date([*date/dates]0, "e_datexcnt", "event_date")
-  <div class="row">
+  <div class="row new7">
     <label for="e_notexcnt" class="col-sm-2 col-form-label">[*note/notes]1</label>
     <div class="col-sm-10">
       <textarea class="form-control" name="e_notexcnt" rows="1" id="e_notexcnt" placeholder="[*note/notes]1">%event.e_note;</textarea>
@@ -470,11 +470,7 @@ $(document).ready(function(){
   <div class="row">
     <label for="e_srcxcnt" class="col-sm-2 col-form-label">[*source/sources]0</label>
     <div class="col-sm-10">
-      %if;(event.e_src!="")
-        <textarea class="form-control" name="e_srcxcnt" rows="1" id="e_srcxcnt" placeholder="[*source/sources]0" %l_on1s;>%event.e_src;</textarea>
-      %else;
-        <input class="form-control" name="e_srcxcnt" maxlength="1000" id="e_srcxcnt" placeholder="[*source/sources]0" value="%event.e_src;"%/>
-      %end;
+      <input class="form-control" name="e_srcxcnt" id="e_srcxcnt" placeholder="[*source/sources]0" value="%event.e_src;"%/>
     </div>
   </div>
   <div class="row">
@@ -819,11 +815,7 @@ $(document).ready(function(){
       <div class="row">
         <label for="src" class="col-sm-2 col-form-label">[*family/families]0</label>
         <div class="col-sm-9">
-          %if;(fsources!="")
-            <textarea class="form-control" name="src" rows="1" id="src" placeholder="[*source/sources]1 [family/families]0" %l_on1s;>%fsources;</textarea>
-          %else;
-            <input class="form-control" name="src" maxlength="1000" id="src" placeholder="[*source/sources]1 [family/families]0" value="%fsources;"%/>
-          %end;
+          <input class="form-control" name="src" id="src" placeholder="[*source/sources]1 [family/families]0" value="%fsources;"%/>
         </div>
         <div class="col-sm-1">
           <label class="form-check-label">

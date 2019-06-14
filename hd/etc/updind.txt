@@ -194,7 +194,7 @@
 %end;
 
 %define;note(xx)
-  <div class="row">
+  <div class="row new7">
     <label for="xx_note" class="col-2 col-form-label">[*note/notes]1</label>
     <div class="col-10">
        <textarea class="form-control" name="xx_note" id="xx_note" rows="1" %l_on1s;>%xx_note;</textarea>
@@ -206,7 +206,7 @@
   <div class="row">
     <label for="xx_src" class="col-2 col-form-label">[*source/sources]0</label>
     <div class="col-10">
-      <textarea class="form-control" name="xx_src" id="xx_src" rows="1" placeholder="[*source/sources]0" %l_on1s;>%xx_src;</textarea>
+      <input type="text" class="form-control" name="xx_src" id="xx_src" placeholder="[*source/sources]0" value="%xx_src;" %l_on1s;>
     </div>
   </div>
 %end;
@@ -265,7 +265,7 @@
 %end;
 
 %define;insert_pevent(xcnt)
-  <div class="row my-1">
+  <div class="row my-1 new7">
     <label for="ins_eventxcnt_n" class="col-2 col-form-label">[*insert]</label>
     <div class="input-group col-10">
       <select class="custom-select col-1 border border-dark" id="ins_eventxcnt_n" name="ins_eventxcnt_n">
@@ -282,7 +282,7 @@
 %end;
 
 %define;insert_witness(xcnt, wcnt, evt_name)
-  <div class="row my-2">
+  <div class="row my-2 new7">
     <label for="excnt_ins_witnwcnt_n" class="col-2 col-form-label">[*insert]</label>
     <div class="input-group col-10">
       <select class="custom-select border border-dark col-1" id="excnt_ins_witnwcnt_n" name="excnt_ins_witnwcnt_n">
@@ -446,7 +446,7 @@
       </div>
     </div>
     %apply;date([*date/dates]0, "e_datexcnt", "event_date", "")
-    <div class="row">
+    <div class="row new7">
       <label for="e_notexcnt" class="col-2 col-form-label">[*note/notes]1</label>
       <div class="col-10">
          <textarea class="form-control" name="e_notexcnt" id="e_notexcnt" rows="1" placeholder="[*note/notes]1" %l_on1s;>%event.e_note;</textarea>
@@ -455,11 +455,7 @@
     <div class="row">
       <label for="e_srcxcnt" class="col-2 col-form-label">[*source/sources]0</label>
       <div class="col-10">
-        %if;(event.e_src!="")
-          <textarea class="form-control" name="e_srcxcnt" id="e_srcxcnt" rows="1" placeholder="[*source/sources]0" %l_on1s;>%event.e_src;</textarea>
-        %else;
-          <input class="form-control" name="e_srcxcnt" id="e_srcxcnt" maxlength="1000" placeholder="[*source/sources]0" value="%event.e_src;"/>
-        %end;
+        <input class="form-control" name="e_srcxcnt" id="e_srcxcnt" placeholder="[*source/sources]0" value="%event.e_src;"/>
       </div>
     </div>
     %if;has_witness;
@@ -580,7 +576,7 @@
       </div>
     </div>
     %apply;date%with;[*date/dates]0%and;e_datexcnt%and;event_date%and;%if;("evt_name" = "#deat")onfocus='set_death_focus(xcnt)'%end;%end;
-    <div class="row">
+    <div class="row new7">
       <label for="e_notexcnt" class="col-sm-2 col-form-label">[*note/notes]1</label>
       <div class="col-sm-10">
          <textarea class="form-control" name="e_notexcnt" id="e_notexcnt" rows="1" placeholder="[*note/notes]1" %l_on1s;>%event.e_note;</textarea>
@@ -589,11 +585,7 @@
     <div class="row">
       <label for="e_srcxcnt" class="col-sm-2 col-form-label">[*source/sources]0</label>
       <div class="col-sm-10">
-        %if;(event.e_src!="")
-          <textarea class="form-control" name="e_srcxcnt" id="e_srcxcnt" rows="1" placeholder="[*source/sources]0" %l_on1s;>%event.e_src;</textarea>
-        %else;
-          <input class="form-control" name="e_srcxcnt" id="e_srcxcnt" maxlength="1000" placeholder="[*source/sources]0" value="%event.e_src;"/>
-        %end;
+        <input class="form-control" name="e_srcxcnt" id="e_srcxcnt" placeholder="[*source/sources]0" value="%event.e_src;"/>
       </div>
     </div>
     %if;(has_witness)
@@ -680,7 +672,7 @@
   %else;
     %apply;date([*date/dates]0, "e_datexcnt", "event_date", "")
   %end;
-  <div class="row">
+  <div class="row new7">
     <label for="e_notexcnt" class="col-sm-2 col-form-label">[*note/notes]1</label>
     <div class="col-sm-10">
        <textarea class="form-control" name="e_notexcnt" id="e_notexcnt" rows="1" placeholder="[*note/notes]1" %l_on1s; %if;("evt_name" = "buri_or_crem")onfocus='set_buri(xcnt)'%end;></textarea>
@@ -917,21 +909,13 @@
   <div class="form-group row">
     <label for="occu" class="col-sm-2 col-form-label">[*occupation/occupations]1</label>
     <div class="col-sm-8">
-      %if;(occupation!="")
-        <textarea class="form-control" name="occu" rows="1" id="occu" placeholder="[*occupation/occupations]1" %l_on1s;>%occupation;</textarea>
-      %else;
-        <input class="form-control" name="occu" id="occu" placeholder="[*occupation/occupations]1" value="%occupation;"/>
-      %end;
+      <input class="form-control" name="occu" id="occu" placeholder="[*occupation/occupations]1" value="%occupation;"/>
     </div>
   </div>
   <div class="row">
     <label for="src" class="col-sm-2 col-form-label">[*source/sources]0</label>
     <div class="col-sm-8">
-      %if;(sources!="")
-        <textarea class="form-control" name="src" rows="1" id="src" placeholder="[*source/sources]0" %l_on1s;>%sources;</textarea>
-      %else;
-        <input class="form-control" name="src" id="src" placeholder="[*source/sources]0" value="%sources;"/>
-      %end;
+      <input class="form-control" name="src" id="src" placeholder="[*source/sources]0" value="%sources;"/>
     </div>
     <button type="submit" class="btn btn-outline-success btn-sm col-2" title="[*validate/delete]0"><i class="fa fa-share fa-rotate-180 mx-1" aria-hidden="true"></i><span class="sr-only font-weight-bold">[*validate/delete]0</span></button>
   </div>

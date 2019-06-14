@@ -3,7 +3,7 @@
 %( op_m=2 Relations complete (events) %)
 %let;op_m;%if;(op_m!="")%op_m;%else;1%end;%in;
 
-%define;relations_tree(z1)
+%define;relations_tree()
   %( relations, related, witness at his event %)
   %reset_count;
   href="%prefix;spouse=on;m=RLM;image=%evar.image;;%nn;
@@ -11,38 +11,23 @@
       %if;(has_relation_him)
         %incr_count;i%count;=%relation_him.index;;%nn;
         t%count;=%relation_him.type;;%nn;
-        %incr_count;i%count;=z1;%nn;
       %end;
       %if;(has_relation_her)
         %incr_count;i%count;=%relation_her.index;;%nn;
         t%count;=%relation_her.type;;%nn;
-        %incr_count;i%count;=z1;%nn;
       %end;
     %end;
     %foreach;related;
       %incr_count;i%count;=%related.index;;%nn;
       t%count;=%related_type;;%nn;
-      %incr_count;i%count;=z1;%nn;
     %end;
     %foreach;event_witness_relation;
       %incr_count;i%count;=%event_witness_relation.person.index;;%nn;
       t%count;=%event_witness_relation.event.name;;%nn;
-      %incr_count;i%count;=z1;%nn;
-    %end;
-    %foreach;event;
-      %foreach;event_witness;%nn;
-        %incr_count;i%count;=%event_witness.index;;%nn;
-        t%count;=%event.name;;%nn;
-        %incr_count;i%count;=z1;%nn;
-      %end;%nn;
     %end;
     %incr_count;i%count;=%index;;%nn;
     t%count;=%if;(sex=0)[him/her]0%elseif;(sex=1)[him/her]1%else;0%end;;%nn;
-    %if;browsing_with_sosa_ref;
-      %incr_count;i%count;=%sosa_ref.index;;%nn;
-      t%count;=sosa_1;%nn;
-    %end;
-  " title="[*relations tree] (and witness at his event)"
+  " title="[*relations tree]"
   %reset_count;
 %end;
 
@@ -76,11 +61,10 @@
   %foreach;related;%incr_count;%end;
   %foreach;event_witness_relation;%incr_count;%end;
   %let;cnt;%count;%in;
-  %let;l_ref;%if;browsing_with_sosa_ref;%sosa_ref.index;%else;%index;%end;%in;
   <h2>[*relation/relations]1%nn;
     %if;(cnt>0)
       %if;(not cancel_links)
-        <a %apply;relations_tree(l_ref)>%nn;
+        <a %apply;relations_tree()>%nn;
           <img class="ml-2 mb-1" src="%image_prefix;/gui_create.png" height="18" alt="Tree"%/>%nn;
         </a>%nn;
       %end;
@@ -114,7 +98,19 @@
       %apply;very_short_display_person_no_sex("related")
     </li>
   %end;
-  </ul>
+  %foreach;event_witness_relation;
+    %apply;li_SDC("event_witness_relation.person")
+      %apply;capitalize(event_witness_relation_kind)%sp;
+      %if;(event_witness_relation.event.date.year != "")
+        <em>(%event_witness_relation.event.date.year;)</em>%end;
+      [:]%sp;%event_witness_relation.event.name;,%sp;
+      %apply;short_display_person("event_witness_relation.person")
+      %if;(event_witness_relation.event.spouse != "")
+        %sp;[and]
+        %apply;short_display_person("event_witness_relation.event.spouse")
+      %end;
+    </li>
+  %end;</ul>
 
 %( relation_complete includes witness of his events and witness at other's events %)
 %elseif;(op_m=2 and rel_nbr>0)

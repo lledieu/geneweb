@@ -717,7 +717,7 @@ and eval_simple_variable conf =
       begin match conf.n_connect with
         Some (c, cw, cf, _) ->
           if c > 0 then
-            " - " ^ Printf.sprintf "%s %d" (Util.transl conf "connections") c ^
+            Printf.sprintf "%s %d" (Util.transl conf "connections") c ^
             (if cw > 0 then
                Printf.sprintf ", %s %s"
                  (Util.transl_nth conf
