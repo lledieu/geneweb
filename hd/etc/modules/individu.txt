@@ -164,7 +164,6 @@
   %if;(bvar.show_invisible = "on" and wizard and is_invisible)
     <img src="%image_prefix;/restricted.png"%wid_hei;restricted.png; alt=" (x)"%/>%nn;
   %end;
-  %apply;link_pages()
   <div class="col-12">
   <h1 class="%if;(op_m=2 or op_m=3)text-center%else;text-xs-center text-md-left%end;">
     %if;has_public_name;

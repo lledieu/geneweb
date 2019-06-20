@@ -279,14 +279,14 @@ let print_mod_merge_ok conf base wl p pgl1 ofn1 osn1 oocc1 pgl2 ofn2 osn2 oocc2 
         (capitale (transl conf "old name")) (transl conf ":") ofn1 osn1 soocc1;
       Wserver.printf "<span>%s%s</span>"
         (capitale (transl conf "linked pages")) (transl conf ":");
-      Notes.print_linked_list conf base pgl1;
+      Notes.print_linked_list conf base pgl1 "";
       let soocc2 = if oocc2 <> 0 then Printf.sprintf "/%d" oocc2 else "" in
       Wserver.printf "<span class=\"unselectable float-left\">%s 2%s</span>\n\
                       <span class=\"float-left ml-1\">%s/%s%s</span>\n<br>"
         (capitale (transl conf "old name")) (transl conf ":") ofn2 osn2 soocc2;
       Wserver.printf "<span>%s%s</span>"
         (capitale (transl conf "linked pages")) (transl conf ":");
-      Notes.print_linked_list conf base pgl2
+      Notes.print_linked_list conf base pgl2 ""
     end;
 
   Merge.print_possible_continue_merging conf base;
@@ -472,10 +472,10 @@ let effective_mod_merge o_conf base o_p1 o_p2 sp =
       let db = NotesLinks.read_db_from_file fname in
       let (ofn1, osn1, oocc1) = (o_p1.first_name, o_p1.surname, o_p1.occ) in
       let key1 = Name.lower ofn1, Name.lower osn1, oocc1 in
-      let pgl1 = Perso.links_to_ind conf base db key1 in
+      let pgl1 = Perso.links_to_ind conf base db key1 None in
       let (ofn2, osn2, oocc2) = (o_p2.first_name, o_p2.surname, o_p2.occ) in
       let key2 = Name.lower ofn2, Name.lower osn2, oocc2 in
-      let pgl2 = Perso.links_to_ind conf base db key2 in
+      let pgl2 = Perso.links_to_ind conf base db key2 None in
       let ip2 = Adef.iper_of_int i2 in
       let p2 = poi base ip2 in
       let rel_chil = get_related p2 in

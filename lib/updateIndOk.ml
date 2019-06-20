@@ -1188,7 +1188,7 @@ let print_mod_ok conf base wl pgl p ofn osn oocc =
         (capitale (transl conf "new name")) (transl conf ":") nfn nsn snocc;
       Wserver.printf "<span>%s%s</span>"
         (capitale (transl conf "linked pages")) (transl conf ":");
-      Notes.print_linked_list conf base pgl
+      Notes.print_linked_list conf base pgl ""
     end;
   Hutil.trailer conf
 
@@ -1387,7 +1387,7 @@ let print_mod o_conf base =
     let fname = Filename.concat bdir "notes_links" in
     let db = NotesLinks.read_db_from_file fname in
     let db = Notes.merge_possible_aliases conf db in
-    Perso.links_to_ind conf base db key
+    Perso.links_to_ind conf base db key None
   in
   let callback sp =
     let p = effective_mod conf base sp in

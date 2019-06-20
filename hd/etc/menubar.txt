@@ -144,22 +144,26 @@ fr: Sélectionnez les modules en cliquant sur le bouton correspondant (max 15).
               <span class="sr-only">%first_name;%if;(occ!=0).%occ%end; %surname;</span>
             </a>
           </li>
-          %if;(cvar_var_doc != "")
-            <li class="nav-item">
-              <a class="nav-link" href="%cvar_var_doc;%image_txt;&amp;Prefix=%prefix;" title="Lister les documents liés">
-                <span class="fa fa-book fa-fw" aria-hidden="true"></span>
-                <span class="small align-top"><sup w3-include-html="%cvar_var_doc_nbr;%image_txt;"></sup></span>
-              </a>
-            </li>
-          %end;
-          %if;(cvar_var_img != "" and (friend or wizard))
-            <li class="nav-item">
-              <a class="nav-link" href="%cvar_var_img;%image_txt;&amp;Prefix=%prefix;" title="Lister les photos liées">
-                <span class="fa fa-images fa-fw" aria-hidden="true"></span>
-                <span class="small align-top"><sup w3-include-html="%cvar_var_img_nbr;%image_txt;"></sup></span>
-              </a>
-            </li>
-          %end;
+          <li class="nav-item">
+            <a class="nav-link" href="%prefix;m=LINKED;%access;&type=" title="Lister les documents liés">
+              <span class="fa fa-book fa-fw" aria-hidden="true"></span>
+              <span class="small align-top"><sup>%nb_linked_pages_type.;%if(cvar_var_doc_nbr != "")+<span w3-include-html="%cvar_var_doc_nbr;%image_txt;"></span>%end;</sup></span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="%prefix;m=LINKED;%access;&type=gallery" title="Lister les photos liées">
+              <span class="fa fa-images fa-fw" aria-hidden="true"></span>
+              <span class="small align-top"><sup>%nb_linked_pages_type.gallery;</sup></span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="%url_no_index;" title="[
+en: Permanent link
+fr: Lien permanent
+]">
+              <span class="fa fa-link fa-fw" aria-hidden="true"></span>
+            </a>
+          </li>
           %if;(not (bvar.wizard_just_friend="yes") and wizard)
             <li class="nav-item">
               <a class="nav-link %if;(evar.m="MOD_IND" or evar.m="MOD_IND_OK")active%end;" id="mod_ind" href="%prefix;m=MOD_IND;i=%index;" %laP;>%nn;
@@ -227,14 +231,6 @@ fr: Rechercher sur Geneanet
               </div>
             </li>
           %end;
-          <li class="nav-item">
-            <a class="nav-link" href="%url_no_index;" title="[
-en: Permanent link
-fr: Lien permanent
-]">
-              <span class="fa fa-link fa-fw" aria-hidden="true"></span>
-            </a>
-          </li>
           %if;(not (bvar.wizard_just_friend="yes") and wizard)
             %if;(nb_families = 0)
               <li class="nav-item">

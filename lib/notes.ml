@@ -251,7 +251,64 @@ let notes_links_db conf base eliminate_unlinked =
     (fun (s1, _) (s2, _) -> Gutil.alphabetic_order (Name.lower s1) (Name.lower s2))
     db2
 
-let print_linked_list conf base pgl =
+let json_extract_img conf s =
+  let extract l =
+    List.fold_left (fun state e ->
+      match state, e with
+      | (None, img), ("path", `String s) -> (Some s, img)
+      | (path, None), ("img", `String s) -> (path, Some s)
+      | state, _ -> state
+    ) (None, None) l
+  in
+  let json =
+    try Yojson.Basic.from_string s
+    with _ -> `Null
+  in
+  let path, img =
+    match json with
+    | `Assoc l -> extract l
+    | _ -> (None, None)
+  in
+  match path, img with
+  | Some path, Some img ->
+     begin match path with
+     | "doc" -> (Util.commd conf) ^ "m=DOC&s=" ^ img
+     | "private" ->
+        begin match Util.p_getenv conf.base_env "gallery_path_private" with
+        | Some s -> s ^ img
+        | None -> ""
+        end
+     | "public" ->
+        begin match Util.p_getenv conf.base_env "gallery_path" with
+        | Some s -> s ^ img
+        | None -> ""
+        end
+     | path -> path ^ img
+     end
+  | _ -> ""
+
+let print_linked_list_gallery conf base pgl =
+  Wserver.printf "<div class=\"flex_gallery\">\n";
+  List.iter
+    (fun pg ->
+       match pg with
+       | NotesLinks.PgMisc fnotes ->
+           if (not conf.wizard && not conf.friend && String.sub fnotes 0 2 = "p:") ||
+              (not conf.wizard && String.sub fnotes 0 3 = "pw:") then ()
+           else
+             let (nenv, s) = read_notes base fnotes in
+             if (try List.assoc "TYPE" nenv with Not_found -> "") = "gallery" then
+               Wserver.printf "<div class=\"item_gallery\">\
+                               <a href=\"%sm=NOTES&f=%s&\">\
+                               <img src=\"%s\">\
+                               </a>\
+                               </div>\n"
+                 (commd conf) fnotes (json_extract_img conf s)
+       | _ -> ()
+    ) pgl;
+  Wserver.printf "</div>\n"
+
+let print_linked_list_standard conf base pgl hack_php =
   let typ = p_getenv conf.env "type" in
   Wserver.printf "<ul>\n";
   List.iter
@@ -259,7 +316,6 @@ let print_linked_list conf base pgl =
        begin match pg, typ with
          NotesLinks.PgInd ip, None ->
            Wserver.printf "<li>";
-           Wserver.printf "<tt>";
            if conf.wizard then
              begin
                Wserver.printf "<a class=\"mx-2\" href=\"%s&i=%d&\">"
@@ -275,14 +331,12 @@ let print_linked_list conf base pgl =
                (Date.short_dates_text conf base p);
              Wserver.printf "</span>"
            end;
-           Wserver.printf "</tt>\n";
            Wserver.printf "</li>\n"
        | NotesLinks.PgFam ifam, None ->
            let fam = foi base ifam in
            let fath = pget conf base (get_father fam) in
            let moth = pget conf base (get_mother fam) in
            Wserver.printf "<li>";
-           Wserver.printf "<tt>";
            if conf.wizard then
              begin
                Wserver.printf
@@ -299,11 +353,9 @@ let print_linked_list conf base pgl =
              (Util.referenced_person_title_text conf base moth)
              (Date.short_dates_text conf base moth);
            Wserver.printf "</span>";
-           Wserver.printf "</tt>\n";
            Wserver.printf "</li>\n"
        | NotesLinks.PgNotes, None ->
            Wserver.printf "<li>";
-           Wserver.printf "<tt>";
            if conf.wizard then
              begin
                Wserver.printf "<a class=\"mx-2\" href=\"%sm=MOD_NOTES&\">"
@@ -315,7 +367,6 @@ let print_linked_list conf base pgl =
              (commd conf);
            Wserver.printf "%s" (transl_nth conf "note/notes" 1);
            Wserver.printf "</a>\n";
-           Wserver.printf "</tt>\n";
            Wserver.printf "</li>\n"
        | NotesLinks.PgMisc fnotes, typ ->
            if (not conf.wizard && not conf.friend && String.sub fnotes 0 2 = "p:") ||
@@ -331,27 +382,20 @@ let print_linked_list conf base pgl =
            let title = try List.assoc "TITLE" nenv with Not_found -> "" in
            let title = Util.safe_html title in
            Wserver.printf "<li>";
-           Wserver.printf "<tt>";
            if conf.wizard then
-             begin
-               Wserver.printf
-                 "<a class=\"mx-2\" href=\"%sm=MOD_NOTES&f=%s&\">"
-                 (commd conf) fnotes;
-               Wserver.printf "</sup><i class=\"fa fa-cog\"></i></sup>";
-               Wserver.printf "</a>"
-             end;
-           Wserver.printf "<a class=\"mx-2\" href=\"%sm=NOTES&f=%s&\">"
-             (commd conf) fnotes;
-           Wserver.printf "%s" fnotes;
-           Wserver.printf "</a>";
+             Wserver.printf
+               "<a class=\"mx-2\" href=\"%sm=MOD_NOTES&f=%s&\">\
+                </sup><i class=\"fa fa-cog\"></i></sup>\
+                </a>"
+               (commd conf) fnotes;
+           Wserver.printf "<a class=\"mx-2\" href=\"%sm=NOTES&f=%s&\">%s</a>"
+             (commd conf) fnotes fnotes;
            if title <> "" then Wserver.printf "(%s)" title;
-           Wserver.printf "</tt>\n";
            Wserver.printf "</li>\n"
            end
            end
        | NotesLinks.PgWizard wizname, None ->
            Wserver.printf "<li>";
-           Wserver.printf "<tt>";
            if conf.wizard then
              begin
                Wserver.printf
@@ -368,12 +412,17 @@ let print_linked_list conf base pgl =
            Wserver.printf "(%s)"
              (transl_nth conf "wizard/wizards/friend/friends/exterior" 0);
            Wserver.printf "</i>";
-           Wserver.printf "</tt>\n";
            Wserver.printf "</li>\n"
        | _ -> ()
        end)
     pgl;
+  if hack_php != "" then Wserver.printf "%s" hack_php;
   Wserver.printf "</ul>\n"
+
+let print_linked_list conf base pgl hack_php =
+  match p_getenv conf.env "type" with
+  | Some "gallery" -> print_linked_list_gallery conf base pgl
+  | _ -> print_linked_list_standard conf base pgl hack_php
 
 let print_what_links conf base fnotes =
   let title h =
@@ -396,7 +445,7 @@ let print_what_links conf base fnotes =
   Hutil.header conf title;
   Hutil.print_link_to_welcome conf true;
   begin match (try Some (List.assoc fnotes db) with Not_found -> None) with
-    Some pgl -> print_linked_list conf base pgl
+    Some pgl -> print_linked_list conf base pgl ""
   | None -> ()
   end;
   Hutil.trailer conf

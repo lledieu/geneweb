@@ -14,6 +14,6 @@ val print_mod_ok : config -> base -> unit
 
 val print_misc_notes : config -> base -> unit
 val print_misc_notes_search : config -> base -> unit
-val print_linked_list : config -> base -> page list -> unit
+val print_linked_list : config -> base -> page list -> string -> unit
 
 val merge_possible_aliases : config -> notes_links_db -> notes_links_db

@@ -1629,19 +1629,19 @@ let linked_page_text conf base p s key str (pg, (_, il)) =
         list str
   | _ -> str
 
-let links_to_ind conf base db key =
+let links_to_ind conf base db key typ =
   let list =
     List.fold_left
       (fun pgl (pg, (_, il)) ->
          let record_it =
-           match pg with
-             NotesLinks.PgInd ip ->
+           match pg, typ  with
+           | NotesLinks.PgInd ip, None ->
                authorized_age conf base (pget conf base ip)
-           | NotesLinks.PgFam ifam ->
+           | NotesLinks.PgFam ifam, None ->
                let fam = foi base ifam in
                if is_deleted_family fam then false
                else authorized_age conf base (pget conf base (get_father fam))
-           | NotesLinks.PgMisc n  ->
+           | NotesLinks.PgMisc n, typ  ->
                let p =
                  try String.sub n 0 2 = "p:"
                  with Invalid_argument _ -> false
@@ -1650,10 +1650,18 @@ let links_to_ind conf base db key =
                  try String.sub n 0 3 = "pw:"
                  with Invalid_argument _ -> false
                in
-               conf.wizard || (conf.friend && not pw) || (not p && not pw)
-           | NotesLinks.PgNotes
-           | NotesLinks.PgWizard _ ->
+               if conf.wizard || (conf.friend && not pw) || (not p && not pw) then
+                 match typ with
+                 | None -> true
+                 | Some t ->
+                    let (nenv, _) = Notes.read_notes base n in
+                    let n_type = try List.assoc "TYPE" nenv with Not_found -> "" in
+                    t = n_type
+               else false
+           | NotesLinks.PgNotes, None
+           | NotesLinks.PgWizard _, None ->
                true
+           | _ -> false
          in
          if record_it then
            List.fold_left
@@ -3211,10 +3219,26 @@ and eval_person_field_var conf base env (p, p_auth as ep) loc =
                 let sn = Name.lower (sou base (get_surname p)) in
                 fn, sn, get_occ p
               in
-              links_to_ind conf base db key <> []
+              links_to_ind conf base db key None <> []
             else false
           in
           VVbool r
+      | _ -> raise Not_found
+      end
+  | ["nb_linked_pages_type"; s] ->
+      begin match get_env "nldb" env with
+        Vnldb db ->
+          let n =
+            if p_auth then
+              let key =
+                let fn = Name.lower (sou base (get_first_name p)) in
+                let sn = Name.lower (sou base (get_surname p)) in
+                fn, sn, get_occ p
+              in
+              List.length (links_to_ind conf base db key (Some s))
+            else 0
+          in
+          VVstring (string_of_int n)
       | _ -> raise Not_found
       end
   | ["has_sosa"] ->
@@ -6218,7 +6242,7 @@ let print_what_links conf base p =
     let fname = Filename.concat bdir "notes_links" in
     let db = NotesLinks.read_db_from_file fname in
     let db = Notes.merge_possible_aliases conf db in
-    let pgl = links_to_ind conf base db key in
+    let pgl = links_to_ind conf base db key None in
     let title h =
       Wserver.printf "%s%s " (capitale (transl conf "linked pages"))
         (Util.transl conf ":");
@@ -6227,8 +6251,18 @@ let print_what_links conf base p =
         Wserver.printf "<a href=\"%s%s\">%s</a>" (commd conf)
           (acces conf base p) (simple_person_text conf base p true)
     in
+    let hack_php =
+      let var_doc = p_getenv conf.base_env "var_doc" in
+      match var_doc with
+      | None | Some "" -> ""
+      | Some var_doc ->
+         Printf.sprintf "<div w3-include-html=\"%s%s&amp;Prefix=%s\"></div>\n"
+           var_doc
+           (Util.default_image_name base p)
+           (Util.commd conf)
+    in
     Hutil.header conf title;
     Hutil.print_link_to_welcome conf true;
-    Notes.print_linked_list conf base pgl;
+    Notes.print_linked_list conf base pgl hack_php;
     Hutil.trailer conf
   else Hutil.incorrect_request conf

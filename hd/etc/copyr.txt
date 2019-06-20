@@ -90,7 +90,7 @@
             target="_blank" rel="noreferrer" rel="noopener" title="GeneWeb on Github">%nn;
             <i class="fab fa-github"></i></a>
         </div>
-        %if;(connections!="")<div class="mr-auto align-self-center">%connections;</div>%end;
+        %if;(connections!="")<div class="ml-auto align-self-center">%connections;</div>%end;
       </div>
       <a href="%prefix;"><img src="%image_prefix;/gwlogo-orig.png" alt="Nostalgie" style="display: inline-block; height: 72px;"></a>
     </div>
