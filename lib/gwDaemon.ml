@@ -1589,6 +1589,7 @@ let content_misc len misc_fname =
   Wserver.header "Content-disposition: inline; filename=%s"
     (Filename.basename fname);
   Wserver.header "Cache-control: private, max-age=%d" (60 * 60 * 24 * 365);
+  Wserver.header "Last-Modified: %s" (Util.string_of_time (Unix.stat fname).Unix.st_mtime);
   Wserver.wflush ()
 
 let print_misc_file misc_fname =

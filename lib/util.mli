@@ -27,11 +27,13 @@ val no_html_tags : string -> string
 val clean_html_tags : string -> string list -> string
 
 val nl : unit -> unit
+val header_json : config -> unit
 val html : ?content_type:string -> config -> unit
 val html_br : config -> unit
 val html_p : config -> unit
 val html_li : config -> unit
 val unauthorized : config -> string -> unit
+val string_of_time : float -> string
 val string_of_ctime : config -> string
 
 val commd : config -> string

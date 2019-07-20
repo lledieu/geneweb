@@ -261,8 +261,8 @@
     %else;<a %apply;ext_link("xx") href="%xx.bname_prefix;%xx.access;" title="uu%if;("uu"!=""). %end;%xx;">%if;(bvar.always_surname!="yes" and xx.surname=father.surname)%if;(xx.public_name!="")%xx.public_name;%else;%xx.first_name;%end;%else;%xx;%end;</a>%nn;
     %end;
   %end;
-  %if;("yy"="br")<br>%end;%if;(wizard and not cancel_links)
-  <a href="%prefix;m=MOD_IND;i=%xx.index;" title="[*modify::] %xx.first_name;%if;(xx.occ!="0").%xx.occ;%end; %xx.surname;">%end;<span class="text-nowrap font-italic">%xx.dates;</span>%if;(wizard and not cancel_links)</a>%end;%nn;
+  %if;("yy"="br")<br>%end;
+  <span class="text-nowrap font-italic">%xx.dates;</span>%nn;
   %if;("zz"="age")<br> <span class="text-nowrap">%xx.age;%xx.death_age;</span>%nn;%end;
 %end;
 

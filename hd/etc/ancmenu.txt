@@ -265,6 +265,15 @@ fr: Cartographie
       </label><br%/><br%/>
       %end;
       <label>
+        <input type="radio" name="t" value="FC" onclick="no_options()"%/> <span class="fa fa-pizza-slice fa-fw"></span> [
+en: Fan chart
+fr: Arbre en éventail
+]
+        %if(max_anc_level >= 10)
+          ([maximum] 10 [generation/generations]1)
+        %end;
+      </label><br%/><br%/>
+      <label>
         <input type="radio" name="t" value="P" onclick="book_of_ascendants_options()"%/> <span class="fa fa-newspaper-o fa-fw"></span> [*book of ascendants]
       </label>
       <div class="ml-4">

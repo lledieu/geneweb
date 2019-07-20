@@ -3,6 +3,7 @@
 %let;birth_symbol;%if;(bvar.birth_symbol != "")%bvar.birth_symbol;%else;&deg;%end;%in;
 %let;lurl;%prefix;m=A;t=F;fam7=on;tf1=fam73;cousins=%evar.cousins;;spouse=%evar.spouse;;maxv=%evar.maxv;;v=%evar.v;;%in;
 %define;fam7_somebody1(xx,yy,lexa,lexb,sss)
+ %if(not xx.is_restricted)
   %let;lxr;
     %if;("lexb" != "")
       %apply;a_of_b%with;
@@ -107,6 +108,7 @@
   %and;
     %if;("lexa" = "him/her")<div style="width:%lw1;px;"> </div>%end;
   %end;
+ %end;
 %end;
 %define;fam7_somebody(xx,lexa,lexb,sss)
   %apply;fam7_somebody1("xx","birth","lexa","lexb","sss")

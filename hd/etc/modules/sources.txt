@@ -31,7 +31,11 @@
           event.name!="special" and
           event.name!="special1" and
           event.name!="special2")
-          <br>- %event.name;[:] %event.src;
+          <br>- %event.name;[:] %nn;
+          %if(event.name = "FS")<a href="https://www.familysearch.org/tree/person/details/%event.src;" target="_blank">%end;
+          %if(event.name = "FSc")<a href="https://www.familysearch.org/tree/relationship/couple/%event.src;" target="_blank">%end;
+          %event.src;
+          %if(event.name = "FS" or event.name = "FSc")</a>%end;
         %end;
         %if;((event.name="special" or
              event.name="special1" or

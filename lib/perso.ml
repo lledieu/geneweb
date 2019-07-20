@@ -1635,8 +1635,10 @@ let links_to_ind conf base db key typ =
       (fun pgl (pg, (_, il)) ->
          let record_it =
            match pg, typ  with
+           | NotesLinks.PgInd ip, Some ""
            | NotesLinks.PgInd ip, None ->
                authorized_age conf base (pget conf base ip)
+           | NotesLinks.PgFam ifam, Some ""
            | NotesLinks.PgFam ifam, None ->
                let fam = foi base ifam in
                if is_deleted_family fam then false
@@ -1659,6 +1661,8 @@ let links_to_ind conf base db key typ =
                     t = n_type
                else false
            | NotesLinks.PgNotes, None
+           | NotesLinks.PgNotes, Some ""
+           | NotesLinks.PgWizard _, Some ""
            | NotesLinks.PgWizard _, None ->
                true
            | _ -> false
@@ -3853,7 +3857,7 @@ and eval_bool_person_field conf base env (p, p_auth) =
       end
   | "has_consanguinity" ->
       p_auth && get_consang p != Adef.fix (-1) &&
-      get_consang p >= Adef.fix_of_float 0.0001
+      get_consang p >= Adef.fix_of_float 0.00001
   | "has_cremation_date" ->
       if p_auth then
         match get_burial p with
@@ -6228,6 +6232,7 @@ let print_ascend conf base p =
         | Some ("D" | "G" | "M" | "N" | "P" | "X" | "Y" | "Z") -> "ancsosa"
         | Some ("A" | "C" | "T") -> "anctree"
         | Some "CARTO" -> "anccarto"
+        | Some "FC" -> "fanchart"
         | _ -> "ancmenu"
       in
       interp_templ templ conf base p

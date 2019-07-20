@@ -12,7 +12,25 @@
            %end;%nn;
 %in;
 %if;((op_m=1 or op_m=3 or op_m=4 or (op_m=5 and op_ph=0)) and has_parents)
-  <h2>[*parents]</h2>
+  <h2>[*parents]
+    %reset_count;
+    %foreach;father.child;
+      %if;is_sibling_before;
+	%incr_count;
+        <a class="ml-2 btn-link"
+          href="%prefix;%child.access;" title="%apply;capitalize(nth([previous sibling],sex))">%nn;
+        <i class="fa fa-caret-left fa-sm"></i>%nn;
+        </a>%nn;
+      %end;
+      %if;is_sibling_after;
+	%if;(count=0)<a class="ml-2 btn-link"><i class="fa fa-caret-left fa-sm invisible"></i></a>%end;
+        <a class="ml-2 btn-link"
+          href="%prefix;%child.access;" title="%apply;capitalize(nth([next sibling],sex))">%nn;
+        <i class="fa fa-caret-right fa-sm"></i>%nn;
+        </a>%nn;
+      %end;
+    %end;
+  </h2>
   <ul>
   %apply;li_SD("father")
   %if;(op_m=1 or op_m=3)

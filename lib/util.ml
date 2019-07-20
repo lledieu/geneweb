@@ -345,11 +345,13 @@ let string_exists str sub =
   let re = Str.regexp_string sub in
   try ignore (Str.search_forward re str 0); true with Not_found -> false
 
-let string_of_ctime conf =
-  let lt = Unix.gmtime conf.ctime in
+let string_of_time t =
+  let lt = Unix.gmtime t in
   Printf.sprintf "%s, %d %s %d %02d:%02d:%02d GMT" (week_day_txt lt.Unix.tm_wday)
     lt.Unix.tm_mday (month_txt lt.Unix.tm_mon) (1900 + lt.Unix.tm_year)
     lt.Unix.tm_hour lt.Unix.tm_min lt.Unix.tm_sec
+
+let string_of_ctime conf = string_of_time conf.ctime
 
 let html ?content_type conf =
   let content_type =
@@ -362,6 +364,8 @@ let html ?content_type conf =
   Wserver.header "Date: %s" (string_of_ctime conf);
   Wserver.header "Connection: close";
   Wserver.header "Content-type: %s; charset=%s" content_type charset
+
+let header_json = html ~content_type:"application/json"
 
 let unauthorized conf auth_type =
   Wserver.http HttpStatus.Unauthorized;

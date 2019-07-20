@@ -51,9 +51,9 @@
     %if;(has_linked_page.HEAD and linked_page.HEAD!="")%linked_page.HEAD;<br>%end;
     %if;has_first_names_aliases;
       %apply;lazy_print("")
-      %apply;link(first_name,"P")/%sq;
+      %apply;link(first_name,"P") / %sq;
       %foreach;first_name_alias;
-        %if;(lazy_printed)/%end;
+        %if;(lazy_printed) / %end;
         %lazy_force;
         %apply;link(first_name_alias,"P")
       %end;
@@ -61,9 +61,9 @@
     %end;
     %if;has_surnames_aliases;
       %apply;lazy_print("")
-      %apply;link(surname,"N")/%sq;
+      %apply;link(surname,"N") / %sq;
       %foreach;surname_alias;
-        %if;(lazy_printed)/%end;
+        %if;(lazy_printed) / %end;
         %lazy_force;
         %apply;link(surname_alias,"N")
       %end;

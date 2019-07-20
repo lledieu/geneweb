@@ -314,7 +314,8 @@ let print_linked_list_standard conf base pgl hack_php =
   List.iter
     (fun pg ->
        begin match pg, typ with
-         NotesLinks.PgInd ip, None ->
+       | NotesLinks.PgInd ip, Some ""
+       | NotesLinks.PgInd ip, None ->
            Wserver.printf "<li>";
            if conf.wizard then
              begin
@@ -332,6 +333,7 @@ let print_linked_list_standard conf base pgl hack_php =
              Wserver.printf "</span>"
            end;
            Wserver.printf "</li>\n"
+       | NotesLinks.PgFam ifam, Some ""
        | NotesLinks.PgFam ifam, None ->
            let fam = foi base ifam in
            let fath = pget conf base (get_father fam) in
@@ -354,6 +356,7 @@ let print_linked_list_standard conf base pgl hack_php =
              (Date.short_dates_text conf base moth);
            Wserver.printf "</span>";
            Wserver.printf "</li>\n"
+       | NotesLinks.PgNotes, Some ""
        | NotesLinks.PgNotes, None ->
            Wserver.printf "<li>";
            if conf.wizard then
@@ -394,6 +397,7 @@ let print_linked_list_standard conf base pgl hack_php =
            Wserver.printf "</li>\n"
            end
            end
+       | NotesLinks.PgWizard wizname, Some ""
        | NotesLinks.PgWizard wizname, None ->
            Wserver.printf "<li>";
            if conf.wizard then
@@ -511,19 +515,16 @@ let print conf base =
       in
       match templ with
       | Some ic ->
-         begin match p_getenv conf.env "ajax" with
-         | Some "on" ->
-            let charset = if conf.charset = "" then "utf-8" else conf.charset in
-            Wserver.header "Content-type: application/json; charset=%s" charset ;
-            Wserver.printf "%s" (match typ with
-              | "gallery" -> safe_gallery conf s
-              | _ -> s 
-            )
-         | _ -> Templ.copy_from_templ conf [] ic
-         end
+         if p_getenv conf.env "output" = Some "json"
+         then begin
+           Util.header_json conf;
+           Wserver.printf "%s" (match typ with
+            | "gallery" -> safe_gallery conf s
+            | _ -> s
+           )
+         end else Templ.copy_from_templ conf [] ic
       | None ->
-         let title = try List.assoc "TITLE" nenv with Not_found -> "" in
-         let title = Util.safe_html title in
+         let title = try Util.safe_html (List.assoc "TITLE" nenv) with Not_found -> "" in
          match p_getint conf.env "v" with
          | Some cnt0 -> print_notes_part conf base fnotes title s cnt0
          | None -> print_whole_notes conf base fnotes title s None
@@ -548,8 +549,8 @@ let print_mod conf base =
   | Some _, Some "on" ->
      Wiki.print_mod_view_page conf true "NOTES" fnotes title env s
   | Some ic, _ ->
-      begin match p_getenv conf.env "ajax" with
-      | Some "on" ->
+      begin match p_getenv conf.env "output" with
+      | Some "json" ->
          let s_digest =
            List.fold_left (fun s (k, v) -> s ^ k ^ "=" ^ v ^ "\n") "" env ^ s
          in
