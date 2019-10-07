@@ -199,7 +199,7 @@ value print_exc exc =
     } ]
 ;
 
-value print_err_exc exc = do { print_exc exc; flush stderr };
+value print_err_exc exc = do { Printexc.print_backtrace stdout; flush stderr };
 
 value case_unsensitive_eq s1 s2 = String.lowercase s1 = String.lowercase s2;
 
