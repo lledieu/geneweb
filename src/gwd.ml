@@ -2225,4 +2225,4 @@ GeneWeb with another port number (option -p)
       } ]
 ;
 
-try main () with exc -> Printexc.print_backtrace stdout;
+try main () with exc -> print_exc exc;
