@@ -385,11 +385,12 @@ value string_of_ondate_aux conf =
       in
       let d1 = Calendar.julian_of_gregorian d in
       let year_prec =
-        if d1.month > 0 && d1.month < 3 ||
-           d1.month = 3 && d1.day > 0 && d1.day < 25
+        if d1.year < 1564 &&
+          (d1.month > 0 && d1.month < 3 ||
+           d1.month = 3 && d1.day > 0 && d1.day < 25)
         then
           Printf.sprintf " (%d %s)"
-            (d1.year - 1) (transl_nth conf "gregorian/julian/french/hebrew" 1)
+            (d1.year + 1) (transl_nth conf "gregorian/julian/french/hebrew" 0)
         else ""
       in
       let s =
@@ -960,12 +961,12 @@ value print_year conf date cal var =
     end;
     stagn "td" begin
       xtag "input" "name=\"y%s\" size=\"6\" maxlength=\"6\" value=\"%s\"" var
-        (if cal = Djulian &&
+        (if cal = Djulian && date.year < 1564 &&
             (date.month > 0 && date.month < 3 ||
-             date.month = 3 && date.day > 0 && date.day < 25) then
-           sprintf "%d %s" (date.year - 1)
-            (transl_nth conf "gregorian/julian/french/hebrew" 1)
-         else sprintf "%d" date.year);
+             date.month = 3 && date.day > 0 && date.day < 25)
+         then (string_of_int (date.year + 1)) ^ " " ^
+           (transl_nth conf "gregorian/julian/french/hebrew" 0)
+         else (string_of_int (date.year)));
     end;
     stagn "td" begin
       xtag "input" "type=\"submit\" name=\"y%s2\" value=\" &gt; \"" var;
