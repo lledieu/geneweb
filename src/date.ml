@@ -384,19 +384,10 @@ value string_of_ondate_aux conf =
         if d.year < 1582 then "" else " (" ^ gregorian_precision conf d ^ ")"
       in
       let d1 = Calendar.julian_of_gregorian d in
-      let year_prec =
-        if d1.year < 1564 &&
-          (d1.month > 0 && d1.month < 3 ||
-           d1.month = 3 && d1.day > 0 && d1.day < 25)
-        then
-          Printf.sprintf " (%d %s)"
-            (d1.year + 1) (transl_nth conf "gregorian/julian/french/hebrew" 0)
-        else ""
+      let year_prec = " (" ^ 
+        (transl_nth conf "gregorian/julian/french/hebrew" 1) ^ ")"
       in
-      let s =
-        Printf.sprintf "%s%s%s"
-        (string_of_on_dmy conf d1) year_prec cal_prec
-      in
+      let s = (string_of_on_dmy conf d1) ^ year_prec ^ cal_prec in
       if d1.day > 0 && not conf.cancel_links then
         Printf.sprintf
           "<a href=\"%sm=CAL&yj=%d&mj=%d&dj=%d&tj=1\" class=\"date\">%s</a>"
