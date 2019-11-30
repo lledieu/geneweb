@@ -2295,7 +2295,7 @@ and eval_person_field_var conf base env ((p, p_auth) as ep) loc =
       [ Vsosa r -> VVbool (get_sosa conf base env r p <> None)
       | _ -> VVbool False ]
   | ["linked_page"; s] ->
-      if not (is_hide_names conf p) then
+      if not (Util.is_hide_names conf p) || (Util.fast_auth_age conf p) then
       match get_env "nldb" env with
       [ Vnldb db ->
           let key =
