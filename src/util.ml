@@ -587,6 +587,14 @@ value strictly_after_private_years conf lim a =
   else a.month > 0 || a.day > 0
 ;
 
+(* pour avoir le délai de décence de 1 mois!! *)
+value strictly_after_private_years_1m conf lim a =
+  if a.year > lim then True
+  else if a.year < lim then False
+  else if a.month > 0 then True
+  else False
+;
+
 value is_old_person conf p =
   match p.death
     with
@@ -612,7 +620,7 @@ value is_old_person conf p =
     with
     [ Some (Dgreg d _) ->
       let a = CheckItem.time_elapsed d conf.today in
-      strictly_after_private_years conf conf.private_years_death a
+      strictly_after_private_years_1m conf conf.private_years_death a
     | _ -> False ]
   (*
   match
@@ -628,7 +636,7 @@ value is_old_person conf p =
       strictly_after_private_years conf conf.private_years a
   | (_, _, _, Some (Dgreg d _)) ->
       let a = CheckItem.time_elapsed d conf.today in
-      strictly_after_private_years conf conf.private_years_death a
+      strictly_after_private_years_1m conf conf.private_years_death a
   | (None, None, DontKnowIfDead, None) ->
       p.access <> Private && conf.public_if_no_date
   | _ -> False ]
@@ -762,7 +770,7 @@ value authorized_age conf base p =
         with
         [ Some (Dgreg d _) ->
           let a = CheckItem.time_elapsed d conf.today in
-          strictly_after_private_years conf conf.private_years_death a
+          strictly_after_private_years_1m conf conf.private_years_death a
         | _ -> False ]
       ||
       let rec loop i =
