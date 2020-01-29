@@ -17,6 +17,11 @@ BEGIN
 	  and concat_ws('-', inEffetY,inEffetM,inEffetD) < DateFin
 	order by DateFin asc
 	limit 1;
+
+	IF res is null THEN
+		set res = "";
+	END IF;
+
 	return( res );
 END//
 delimiter ;
