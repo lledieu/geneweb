@@ -11,7 +11,7 @@ mysql -u root -p
 (renseigner le mot de passe puis Entrée)
 mysql> create database insee;
 mysql> create user 'insee'@'localhost' identified by '<mot_de_passe>';
-mysql> grant all privileges on insee.* to 'insee'@'localhost";
+mysql> grant all privileges on insee.* to 'insee'@'localhost';
 mysql> grant file on *.* to 'insee'@'localhost';
 mysql> exit
 
