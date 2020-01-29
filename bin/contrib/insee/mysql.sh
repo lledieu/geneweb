@@ -1,3 +1,6 @@
 #!/bin/bash
 
-mysql -uinsee -p<mot_de_passe> insee $@
+# To store login / password outside :
+# mysql_config_editor set --login-path=client --user=insee --password
+
+mysql insee $@

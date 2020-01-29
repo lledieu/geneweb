@@ -15,6 +15,9 @@ mysql> grant all privileges on insee.* to 'insee'@'localhost';
 mysql> grant file on *.* to 'insee'@'localhost';
 mysql> exit
 
+Pour mémoriser le mot de passe de la connexion :
+mysql_config_editor set --login-path=client --user=insee --password
+
 Composants de la moulinette :
  - insee.ml => insee.exe : Outil pour extraire les données d'une base GeneWeb à confronter au fichier INSEE
  - mysql.sh : Permet de se connecter à la base de donnée (à ajuster)
