@@ -4,6 +4,18 @@ open Geneweb
 open Def
 open Gwdb
 
+let my_uppercase2 s =
+  let s = String.split_on_char '\'' s in
+  String.concat
+    (String.make 1 '\'')
+    (List.map (fun e -> String.uppercase_ascii (Name.lower e)) s)
+
+let my_uppercase s =
+  let s = String.split_on_char '-' s in
+  String.concat
+    (String.make 1 '-')
+    (List.map (fun e -> my_uppercase2 e) s)
+
 let check_insee base =
   (* pour chaque personne *)
   for i = 0 to nb_of_persons base - 1 do
@@ -18,7 +30,7 @@ let check_insee base =
         Some (Dgreg (d, _)) -> Some d
       | _ -> None
     in
-    let sn = String.uppercase_ascii (Name.lower (p_surname base p)) in
+    let sn = my_uppercase (p_surname base p) in
     let fn =
       let fn = p_first_name base p in
       begin match get_first_names_aliases p with
@@ -31,7 +43,7 @@ let check_insee base =
           end
       end
     in
-    let fn = String.uppercase_ascii (Name.lower fn) in
+    let fn = my_uppercase fn in
     let s =
       match get_sex p with
         Male -> 1
@@ -59,18 +71,18 @@ let check_insee base =
             Printf.printf "%s|%s|%d|%02d|%02d|%04d|%s|%02d|%02d|%04d|%s|%s\n" sn fn s
               (if bd.prec = Sure then bd.day else 0)
               (if bd.prec = Sure then bd.month else 0)
-              (if bd.prec = Sure then bd.year else 0)
+              (if bd.prec = Sure || bd.prec = About then bd.year else 0)
               b_place
               (if dd.prec = Sure then dd.day else 0)
               (if dd.prec = Sure then dd.month else 0)
-              (if dd.prec = Sure then dd.year else 0)
+              (if dd.prec = Sure || dd.prec = About then dd.year else 0)
               d_place
               key
 	| None ->
             Printf.printf "%s|%s|%d|%02d|%02d|%04d|%s|00|00|0000|%s|%s\n" sn fn s
               (if bd.prec = Sure then bd.day else 0)
               (if bd.prec = Sure then bd.month else 0)
-              (if bd.prec = Sure then bd.year else 0)
+              (if bd.prec = Sure || bd.prec = About then bd.year else 0)
               b_place
               d_place
               key
@@ -83,7 +95,7 @@ let check_insee base =
               b_place
               (if dd.prec = Sure then dd.day else 0)
               (if dd.prec = Sure then dd.month else 0)
-              (if dd.prec = Sure then dd.year else 0)
+              (if dd.prec = Sure || dd.prec = About then dd.year else 0)
               d_place
               key
 	| _ -> ()

@@ -28,7 +28,7 @@ BEGIN
 	  and t1.DecesM = t2.DecesM
 	  and t1.DecesD = t2.DecesD
 	  and t1.DecesCode = t2.DecesCode
-	  and t1.NumeroActe = t2.NumeroActe
+	  -- and t1.NumeroActe = t2.NumeroActe
 	  and t1.Id in (
 		/* Exact Match TODO -> INSEE */
 		select i.Id
@@ -45,9 +45,9 @@ BEGIN
 		  and t.DecesM = i.DecesM
 		  and t.DecesD = i.DecesD
 		  and t.DecesPlace = getPlaceLib(i.DecesCode, i.DecesY, i.DecesM, i.DecesD)
-	);
+	) limit 1;
 	delete from INSEE where Id = IdDel;
-	select 'WARNING', 'Removed duplicated entry in INSEE', IdDel;
+	select 'WARNING', 'Removed duplicate entry in INSEE', IdDel;
 END//
 
 create procedure insee.compare(
@@ -84,20 +84,31 @@ create procedure insee.compare(
 )
 BEGIN
 	DECLARE scoreTmp INTEGER;
+	DECLARE iNom2, iPrenom2 VARCHAR(80);
 
 	set score = 0;
 	set msg = '';
 
 	/* Nom */
 	IF tNom != iNom THEN
-		set score = score - 1;
-		set msg = concat ( msg, '\n Nom : ', tNom, ' != ', iNom );
+		set iNom2 = replace( iNom, '-', ' ');
+		set iNom2 = replace( iNom2, "'", ' ');
+		IF tNom = iNom2 THEN
+			set msg = concat ( msg, '\n Nom : ', tNom, ' =~ ', iNom );
+		ELSE
+			set score = score - 1;
+			set msg = concat ( msg, '\n Nom : ', tNom, ' != ', iNom );
+		END IF;
 	END IF;
 
 	/* Prénom */
+	set iPrenom2 = replace( iPrenom, '-', ' ');
+	set iPrenom2 = replace( iPrenom2, "'", ' ');
 	IF tPrenom = iPrenom THEN
 		set score = score + 1;
-	ELSEIF locate( tPrenom, iPrenom )  != 0 THEN
+	ELSEIF locate( tPrenom, iPrenom ) != 0 THEN
+		set msg = concat ( msg, '\n Prénom : ', tPrenom, ' -> ', iPrenom );
+	ELSEIF tPrenom = iPrenom2 THEN
 		set msg = concat ( msg, '\n Prénom : ', tPrenom, ' =~ ', iPrenom );
 	ELSE
 		set score = score - 1;
@@ -215,7 +226,7 @@ END//
 create procedure insee.processTodo()
 BEGIN
 	DECLARE tId, iId, bestId INTEGER UNSIGNED;
-	DECLARE tNom, tPrenom, tNom2, tPrenom2, iNom, iPrenom VARCHAR(80);
+	DECLARE tNom, tPrenom, tPrenom2, iNom, iPrenom VARCHAR(80);
 	DECLARE tSexe, iSexe CHAR(1);
 	DECLARE tNaissanceY, tDecesY, iNaissanceY, iDecesY, cNaisY CHAR(4);
 	DECLARE tNaissanceM, tNaissanceD, tDecesM, tDecesD, iNaissanceM, iNaissanceD, iDecesM, iDecesD, cNaisD, cNaisM, cDesD, cDesM CHAR(2);
@@ -247,22 +258,8 @@ BEGIN
 		 DecesD, DecesM, DecesY,
 		 getPlaceLib( DecesCode, DecesY, DecesM, DecesD ), DecesCode
 		from INSEE
-		where Nom = tNom2
-		  and Prenom like concat(tPrenom2, '%')
-	;
-	DECLARE cursorNPB CURSOR FOR
-		select
-		 Id,
-		 Nom, Prenom, Sexe,
-		 NaissanceD, NaissanceM, NaissanceY,
-		 getPlaceLib( NaissanceCode, NaissanceY, NaissanceM, NaissanceD ), NaissanceCode,
-		 NaissanceLocalite, NaissancePays,
-		 DecesD, DecesM, DecesY,
-		 getPlaceLib( DecesCode, DecesY, DecesM, DecesD ), DecesCode
-		from INSEE
-		where Nom = tNom2
-		  and Prenom like concat(tPrenom2, '%')
-		  and NaissanceY = tNaissanceY
+		where Nom = tNom
+		  and Prenom like concat('%', tPrenom2, '%')
 	;
 	DECLARE cursorD CURSOR FOR
 		select
@@ -320,15 +317,11 @@ BEGIN
 			update TODO set Etat=1, IdInsee = iId where Id = tId;
 		ELSE
 
-			/* Look for Nom / Prenom / NaissanceY */
+			/* Look for Nom / Prenom */
 
-			set tNom2 = replace( tNom, '-', '.' );
-			set tNom2 = replace( tNom2, "'", '.' );
-			set tNom2 = replace( tNom2, ' ', '.' );
-
-			set tPrenom2 = replace( tPrenom, '-', '.' );
-			set tPrenom2 = replace( tPrenom2, "'", '.' );
-			set tPrenom2 = replace( tPrenom2, ' ', '.' );
+			set tPrenom2 = replace( tPrenom, '-', '_' );
+			set tPrenom2 = replace( tPrenom2, "'", '_' );
+			set tPrenom2 = replace( tPrenom2, ' ', '_' );
 
 			set bestScore = -10;
 			set nbMatch = 0;
@@ -337,84 +330,42 @@ BEGIN
 			set bestId = 0;
 			set nbRows = 0;
 
-			IF tNaissanceY = '0000' THEN
+			OPEN cursorNP;
+			b2: LOOP
+				set theEnd = false;
+				FETCH cursorNP INTO iId,
+				 iNom, iPrenom, iSexe,
+				 iNaissanceD, iNaissanceM, iNaissanceY, iNaissancePlace, iNaissanceCode,
+				 iNaissanceLocalite, iNaissancePays,
+				 iDecesD, iDecesM, iDecesY, iDecesPlace, iDecesCode;
 
-				/* Criteria : Nom, Prenom */
-				OPEN cursorNP;
-				b2: LOOP
-					set theEnd = false;
-					FETCH cursorNP INTO iId,
-					 iNom, iPrenom, iSexe,
-					 iNaissanceD, iNaissanceM, iNaissanceY, iNaissancePlace, iNaissanceCode,
-					 iNaissanceLocalite, iNaissancePays,
-					 iDecesD, iDecesM, iDecesY, iDecesPlace, iDecesCode;
+				IF theEnd THEN
+					LEAVE b2;
+				END IF;
 
-					IF theEnd THEN
-						LEAVE b2;
-					END IF;
+				set nbRows = nbRows + 1;
 
-					set nbRows = nbRows + 1;
+				call insee.compare(
+					tNom, tPrenom, tSexe,
+					tNaissanceY, tNaissanceM, tNaissanceD, tNaissancePlace,
+					tDecesY, tDecesM, tDecesD, tDecesPlace,
+					iId, iNom, iPrenom, iSexe,
+					iNaissanceY, iNaissanceM, iNaissanceD, iNaissancePlace, iNaissanceCode,
+					iNaissanceLocalite, iNaissancePays,
+					iDecesY, iDecesM, iDecesD, iDecesPlace, iDecesCode,
+					score, record, msg);
 
-					call insee.compare(
-						tNom, tPrenom, tSexe,
-						tNaissanceY, tNaissanceM, tNaissanceD, tNaissancePlace,
-						tDecesY, tDecesM, tDecesD, tDecesPlace,
-						iId, iNom, iPrenom, iSexe,
-						iNaissanceY, iNaissanceM, iNaissanceD, iNaissancePlace, iNaissanceCode,
-						iNaissanceLocalite, iNaissancePays,
-						iDecesY, iDecesM, iDecesD, iDecesPlace, iDecesCode,
-						score, record, msg);
-
-					IF score > bestScore THEN
-						set bestScore = score;
-						set bestRecord = record;
-						set bestMsg = msg;
-						set bestId = iId;
-						set nbMatch = 1;
-					ELSEIF score = bestScore THEN
-						set nbMatch = nbMatch + 1;
-					END IF;
-				END LOOP;
-				CLOSE cursorNP;
-			ELSE
-				/* Criteria : Nom, Prenom, NaissanceY */
-				OPEN cursorNPB;
-				b3: LOOP
-					set theEnd = false;
-					FETCH cursorNPB INTO iId,
-					 iNom, iPrenom, iSexe,
-					 iNaissanceD, iNaissanceM, iNaissanceY, iNaissancePlace, iNaissanceCode,
-					 iNaissanceLocalite, iNaissancePays,
-					 iDecesD, iDecesM, iDecesY, iDecesPlace, iDecesCode;
-
-					IF theEnd THEN
-						LEAVE b3;
-					END IF;
-
-					set nbRows = nbRows + 1;
-
-					call insee.compare(
-						tNom, tPrenom, tSexe,
-						tNaissanceY, tNaissanceM, tNaissanceD, tNaissancePlace,
-						tDecesY, tDecesM, tDecesD, tDecesPlace,
-						iId, iNom, iPrenom, iSexe,
-						iNaissanceY, iNaissanceM, iNaissanceD, iNaissancePlace, iNaissanceCode,
-						iNaissanceLocalite, iNaissancePays,
-						iDecesY, iDecesM, iDecesD, iDecesPlace, iDecesCode,
-						score, record, msg);
-
-					IF score > bestScore THEN
-						set bestScore = score;
-						set bestRecord = record;
-						set bestMsg = msg;
-						set bestId = iId;
-						set nbMatch = 1;
-					ELSEIF score = bestScore THEN
-						set nbMatch = nbMatch + 1;
-					END IF;
-				END LOOP;
-				CLOSE cursorNPB;
-			END IF;
+				IF score > bestScore THEN
+					set bestScore = score;
+					set bestRecord = record;
+					set bestMsg = msg;
+					set bestId = iId;
+					set nbMatch = 1;
+				ELSEIF score = bestScore THEN
+					set nbMatch = nbMatch + 1;
+				END IF;
+			END LOOP;
+			CLOSE cursorNP;
 
 			/* Bilan */
 			IF bestScore > 1 THEN

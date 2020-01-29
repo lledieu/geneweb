@@ -1,17 +1,26 @@
 #!/bin/bash
 
-EXE=A_RENSEGNER/geneweb/_build/default/bin/contrib/insee/insee.exe
-BDIR=A_RENGEISGNER
+EXE=A_RENSEIGNER/geneweb/_build/default/bin/contrib/insee/insee.exe
+BDIR=A_RENSEIGNER
 BASE=A_RENSEIGNER
 
 MYSQL=./mysql.sh
 
-echo "Get date from GeneWeb..."
-cd $BDIR
-$EXE $BASE > $OLDPWD/TODO.lst
-cd -
+if [ -x "${EXE}" ]
+then
+	echo "Get date from GeneWeb..."
+	cd $BDIR
+	$EXE $BASE > $OLDPWD/TODO.lst
+	cd -
+elif [ ! -f "TODO.lst" ]
+then
+	echo "ERROR GeneWeb export is not configured and TOLO.lst is missing."
+	echo "N.B.: You can create TODO.lst yourself if you are not using GeneWeb."
+	exit
+fi
 
-echo "(Re)create table..."
+echo
+echo "(Re)create table TODO..."
 $MYSQL << EOF
 drop table if exists TODO;
 
@@ -34,9 +43,11 @@ create table TODO (
 	Score INTEGER,
 	IdInsee INTEGER UNSIGNED,
 	Msg VARCHAR(1000)
-);
+)
+DEFAULT CHARSET=utf8;
 EOF
 
+echo
 echo "Loading TODO..."
 $MYSQL << EOF
 load data
@@ -51,10 +62,14 @@ load data
 ;
 EOF
 
+echo
 echo "Comparing TODO -> INSEE..."
+echo BEGIN $(date '+%FT%T')
 $MYSQL -N << EOF
 call processTodo();
 EOF
+echo END $(date '+%FT%T')
 
+echo
 ./rapportFormate.sh > RESULT.txt
 echo "Bilan disponisble dans le fichier RESULT.txt"
