@@ -7,7 +7,7 @@ if [[ "$1" =~ $pattern ]]
 then
 	f=$1
 else
-	echo "Usage: $0 INSEE/deces-<annee>.txt"
+	echo "Usage: $0 INSEE/deces-<annee>.txt [charset]"
 	exit -1
 fi
 
@@ -17,7 +17,24 @@ then
 	exit -1
 fi
 
-echo "Remove old data (previous file load)..."
+if [ -z "$2" ]
+then
+	charset=utf8
+else
+	charset=$2
+fi
+echo " -> using $charset charset."
+
+grep -P "\t" $f > /dev/null 2>&1
+if [[ "$?" == "0" ]]
+then
+	echo "WARNING: invalid tabulation found in file $f"
+	mv $f $f-tab
+	sed -e "s/\t/ /g" $f-tab > $f
+	echo " character tabulation replaced by a space."
+fi
+
+echo "Remove old data (in case of reload)..."
 $MYSQL << EOF
 delete from INSEE where Fichier = '$f';
 EOF
@@ -28,6 +45,8 @@ load data
  local infile '$f'
  ignore
  into table INSEE
+ character set $charset
+ fields escaped by ''
  (@row)
  set
   Id                = null,
