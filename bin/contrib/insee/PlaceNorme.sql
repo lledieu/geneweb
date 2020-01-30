@@ -3,7 +3,7 @@ drop table if exists PlaceNorme;
 create table PlaceNorme (
 	Id INTEGER UNSIGNED auto_increment primary key,
 	Code CHAR(5) not null,
-	DateFin DATE not null,
+	DateFin CHAR(10) not null,
 	Libelle VARCHAR(500),
 	index I_Place_Code (Code)
 );
