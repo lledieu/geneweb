@@ -374,9 +374,7 @@ BEGIN
 				ELSE
 					update TODO set Etat = -2, NbMatch = nbMatch, Score = bestScore where Id = tId;
 				END IF;
-			END IF;
-
-			IF nbRows = 0 THEN
+			ELSEIF nbRows = 0 THEN
 				IF tDecesY > "1969" THEN
 
 					/* Look for dates */
@@ -458,15 +456,17 @@ BEGIN
 						ELSE
 							update TODO set Etat = -2, NbMatch = nbMatch, Score = bestScore where Id = tId;
 						END IF;
-					END IF;
-
-					IF nbRows = 0 THEN
+					ELSEIF nbRows = 0 THEN
 						update TODO set Etat = -3 where Id = tId;
+					ELSE
+						update TODO set Etat = -5, NbMatch = nbMatch, Score = bestScore where Id = tId;
 					END IF;
 
 				ELSE
 					update TODO set Etat = -1 where Id = tId;
 				END IF;
+			ELSE
+				update TODO set Etat = -4, NbMatch = nbMatch, Score = bestScore where Id = tId;
 			END IF;
 		END IF;
 	

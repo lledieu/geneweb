@@ -73,6 +73,8 @@ $MYSQL -t << EOF
 select
  Etat,
  case Etat
+	when -5 then 'Score faible D'
+	when -4 then 'Score faible NP'
 	when -3 then 'Non trouvé'
 	when -2 then 'Indécis'
 	when -1 then 'Vivant ?'
