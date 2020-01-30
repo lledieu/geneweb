@@ -8,8 +8,20 @@ create function insee.getPlaceLib(
  inEffetD CHAR(2)
 )
 RETURNS VARCHAR(500)
+DETERMINISTIC
+READS SQL DATA
 BEGIN
 	DECLARE res VARCHAR(500);
+
+	IF inEffetY = '0000' THEN
+		set inEffetY = '0001';
+	END IF;
+	IF inEffetM = '00' THEN
+		set inEffetM = '01';
+	END IF;
+	IF inEffetD = '00' THEN
+		set inEffetD = '01';
+	END IF;
 
 	select Libelle into res
 	from PlaceNorme

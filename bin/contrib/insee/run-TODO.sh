@@ -70,6 +70,22 @@ call processTodo();
 EOF
 echo END $(date '+%FT%T')
 
+$MYSQL -t << EOF
+select
+ Etat,
+ case Etat
+	when -3 then 'Non trouvé'
+	when -2 then 'Indécis'
+	when -1 then 'Vivant ?'
+	when 0 then 'À traiter'
+	when 1 then 'Identique'
+	when 2 then 'Voir RESULT.txt'
+ end as "Libellé",
+ count(*) as "Nbr"
+ from TODO
+group by 1;
+EOF
+
 echo
 ./rapportFormate.sh > RESULT.txt
 echo "Bilan disponisble dans le fichier RESULT.txt"

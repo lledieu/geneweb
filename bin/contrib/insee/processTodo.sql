@@ -472,8 +472,5 @@ BEGIN
 	
 	END LOOP;
 	CLOSE cursorTodo;
-
-	select Etat, count(*) as "Nbr" from TODO group by 1;
-
 END//
 delimiter ;
