@@ -29,6 +29,23 @@ Composants de la moulinette :
  - ./mysql.sh < load-COG.sql : Permet de charger le référenciel COG en base
  - ./mysql.sh < PlaceNorme.sql : Permet de synthétiser le référentiel COG en une seule table (avec ma convention utilisée dans GeneWeb)
  - ./mysql.sh < getPlaceLib.sql : Création d'une fonction pour convertir un code INSEE en libellé commune pour une date donnée
- - ./mysql.sh < processTodo.sh : Création de la procédure qui va confronter les données GeneWeb avec le fichier INSEE
- - rapport.sh et rapportFormate.sh : Permet de créer un rapport lisible pour piloter les mises à jour dans GeneWeb
- - run-TODO.sh : Lance l'extraction GeneWeb et la charge en base puis exécute la confrontation au fichier INSEE et génère un rapport
+ - ./mysql.sh < processTodo.sql : Création de la procédure qui va confronter les données GeneWeb avec le fichier INSEE
+ - run-TODO.sh : (à ajuster si besoin pour utilisation avec GeneWeb)
+   -> si le binaire insee.exe est trouvé, lance l'extraction GeneWeb (génère un fichier TODO.lst)
+   -> charge le fichier TODO.lst puis confronte chaque ligne au fichier INSEE
+   -> utilise rapport.sh et rapportFormate.sh pour créer un rapport lisible pour piloter les mises à jour dans GeneWeb
+
+Si vous n'avez pas GeneWeb, vous pouvez extraire les données de votre base dans un fichier TODO.lst avec séparateur | et colonnes :
+ - Nom (En majuscules sans accent)
+ -  Prenom (En majuscules sans accent)
+ -  Sexe (1 ou 2 comme dans le fichier INSEE)
+ -  Année de naissance YYYY (0000 si inconnu)
+ -  Mois de naissance MM (00 si inconnu)
+ -  Jour de naissance DD (00 si inconnu)
+ -  Lieu de naissance (ex.: Arras, Pas-de-Calais, France)
+ -  Année de décès YYYY (0000 si inconnu)
+ -  Mois de décès MM (00 si inconnu)
+ -  Jour de décès (00 si inconnu)
+ -  Cle : identifiant te permettant de retrouver facilement la personne dans ta base (en cas d'homonymie)
+
+Pour information, la moulinette calcule un score de cohérence entre la donnée TODO et le fichier INSEE. Ce score peut varier de -7 à 5. Un score de 5 correspond à des données identiques. Seules comparaisons ayant un score supérieur ou égal à 2 sont jugées exploitables.
