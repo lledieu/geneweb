@@ -43,8 +43,7 @@ create table TODO (
 	Score INTEGER,
 	IdInsee INTEGER UNSIGNED,
 	Msg VARCHAR(1000)
-)
-DEFAULT CHARSET=utf8;
+);
 EOF
 
 echo
