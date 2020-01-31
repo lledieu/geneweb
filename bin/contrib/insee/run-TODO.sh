@@ -8,7 +8,7 @@ MYSQL=./mysql.sh
 
 if [ -x "${EXE}" ]
 then
-	echo "Get date from GeneWeb..."
+	echo "Get data from GeneWeb..."
 	cd $BDIR
 	$EXE $BASE > $OLDPWD/TODO.lst
 	cd -
@@ -82,9 +82,10 @@ select
 	when 1 then 'Identique'
 	when 2 then 'Voir RESULT.txt'
  end as "Libellé",
+ score,
  count(*) as "Nbr"
  from TODO
-group by 1;
+group by 1,3;
 EOF
 
 echo

@@ -138,6 +138,11 @@ BEGIN
 	   tNaissanceM = iNaissanceM &&
 	   tNaissanceY = iNaissanceY THEN
 		set score = score + 1;
+	ELSEIF tNaissanceY <> "0000" && iNaissanceY <> "0000" && abs(tNaissanceY-iNaissanceY) > 5 THEN
+		set score = score - 1;
+		set msg = concat( msg, '\n Date naissance : ',
+			tNaissanceD, '/', tNaissanceM, '/', tNaissanceY, ' !=2 ',
+			iNaissanceD, '/', iNaissanceM, '/', iNaissanceY );
 	ELSE
 		set scoreTmp = 0;
 		IF tNaissanceD = "00" ||
@@ -184,6 +189,11 @@ BEGIN
 	   tDecesM = iDecesM &&
 	   tDecesY = iDecesY THEN
 		set score = score + 1;
+	ELSEIF tDecesY <> "0000" && iDecesY <> "0000" && abs(tDecesY-iDecesY) > 5 THEN
+		set score = score - 1;
+		set msg = concat( msg, '\n Date décès : ',
+			tNaissanceD, '/', tNaissanceM, '/', tNaissanceY, ' !=2 ',
+			iNaissanceD, '/', iNaissanceM, '/', iNaissanceY );
 	ELSE
 		set scoreTmp = 0;
 		IF tDecesD = "00" ||

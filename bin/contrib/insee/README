@@ -18,6 +18,10 @@ mysql> exit
 Pour mémoriser le mot de passe de la connexion :
 mysql_config_editor set --login-path=client --user=insee --password
 
+Pré-requis :
+ - wget
+ - jq
+
 Composants de la moulinette :
  - insee.ml => insee.exe : Outil pour extraire les données d'une base GeneWeb à confronter au fichier INSEE
  - mysql.sh : Permet de se connecter à la base de donnée (à ajuster)
@@ -37,15 +41,15 @@ Composants de la moulinette :
 
 Si vous n'avez pas GeneWeb, vous pouvez extraire les données de votre base dans un fichier TODO.lst avec séparateur | et colonnes :
  - Nom (En majuscules sans accent)
- -  Prenom (En majuscules sans accent)
- -  Sexe (1 ou 2 comme dans le fichier INSEE)
- -  Année de naissance YYYY (0000 si inconnu)
- -  Mois de naissance MM (00 si inconnu)
- -  Jour de naissance DD (00 si inconnu)
- -  Lieu de naissance (ex.: Arras, Pas-de-Calais, France)
- -  Année de décès YYYY (0000 si inconnu)
- -  Mois de décès MM (00 si inconnu)
- -  Jour de décès (00 si inconnu)
- -  Cle : identifiant te permettant de retrouver facilement la personne dans ta base (en cas d'homonymie)
+ - Prenom (En majuscules sans accent)
+ - Sexe (1 ou 2 comme dans le fichier INSEE)
+ - Année de naissance YYYY (0000 si inconnu)
+ - Mois de naissance MM (00 si inconnu)
+ - Jour de naissance DD (00 si inconnu)
+ - Lieu de naissance (ex.: Arras, Pas-de-Calais, France)
+ - Année de décès YYYY (0000 si inconnu)
+ - Mois de décès MM (00 si inconnu)
+ - Jour de décès (00 si inconnu)
+ - Cle : identifiant te permettant de retrouver facilement la personne dans ta base (en cas d'homonymie)
 
 Pour information, la moulinette calcule un score de cohérence entre la donnée TODO et le fichier INSEE. Ce score peut varier de -7 à 5. Un score de 5 correspond à des données identiques. Seules comparaisons ayant un score supérieur ou égal à 2 sont jugées exploitables.
