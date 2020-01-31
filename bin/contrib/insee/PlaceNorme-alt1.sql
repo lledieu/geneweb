@@ -1,4 +1,4 @@
--- Version : Arras, Pas-de-Calais, France
+-- Version : Arras (62)
 
 drop table if exists PlaceNorme;
 
@@ -14,7 +14,7 @@ insert into PlaceNorme
 select null, Code, '2050-01-01', Libelle from COG_pays;
 
 insert into PlaceNorme
-select null, c.Code, '2050-01-01', concat_ws(', ', c.Libelle, d.Libelle, if(length(d.Code)=3, null, 'France') )
+select null, c.Code, '2050-01-01', concat(', ', c.Libelle, '(', d.Code, ')' )
 from COG_commune c
 inner join COG_departement d on c.Departement = d.Code
 where c.TypeCom = "COM";
