@@ -32,6 +32,7 @@ Composants de la moulinette :
  - ./mysql.sh < load-SQL.sql : Permet le fichier des pays
  - ./mysql.sh < load-COG.sql : Permet de charger le référenciel COG en base
  - ./mysql.sh < PlaceNorme.sql : Permet de synthétiser le référentiel COG en une seule table (avec ma convention utilisée dans GeneWeb)
+   N.B.: 2 alternatives sont disponibles
  - ./mysql.sh < getPlaceLib.sql : Création d'une fonction pour convertir un code INSEE en libellé commune pour une date donnée
  - ./mysql.sh < processTodo.sql : Création de la procédure qui va confronter les données GeneWeb avec le fichier INSEE
  - run-TODO.sh : (à ajuster si besoin pour utilisation avec GeneWeb)
@@ -52,4 +53,4 @@ Si vous n'avez pas GeneWeb, vous pouvez extraire les données de votre base dans
  - Jour de décès (00 si inconnu)
  - Cle : identifiant te permettant de retrouver facilement la personne dans ta base (en cas d'homonymie)
 
-Pour information, la moulinette calcule un score de cohérence entre la donnée TODO et le fichier INSEE. Ce score peut varier de -7 à 5. Un score de 5 correspond à des données identiques. Seules comparaisons ayant un score supérieur ou égal à 2 sont jugées exploitables.
+Pour information, la moulinette calcule un score de cohérence entre la donnée TODO et le fichier INSEE. Un score de 6 correspond à des données identiques. Seules comparaisons ayant un score supérieur ou égal à 2 sont jugées exploitables.

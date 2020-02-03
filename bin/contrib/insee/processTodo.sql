@@ -86,11 +86,20 @@ BEGIN
 	DECLARE scoreTmp INTEGER;
 	DECLARE iNom2, iPrenom2 VARCHAR(80);
 
-	set score = 0;
+	IF tNaissanceY = '0000' and
+           tDecesY = '0000' and
+           tNaissancePlace = '' and
+           tDecesPlace = '' then
+		set score = -1;
+	ELSE
+		set score = 0;
+	END IF;
 	set msg = '';
 
 	/* Nom */
-	IF tNom != iNom THEN
+	IF tNom = iNom THEN
+		set score = score + 1;
+	ELSE
 		set iNom2 = replace( iNom, '-', ' ');
 		set iNom2 = replace( iNom2, "'", ' ');
 		IF tNom = iNom2 THEN
@@ -139,7 +148,7 @@ BEGIN
 	   tNaissanceY = iNaissanceY THEN
 		set score = score + 1;
 	ELSEIF tNaissanceY <> "0000" && iNaissanceY <> "0000" && abs(tNaissanceY-iNaissanceY) > 5 THEN
-		set score = score - 1;
+		set score = score - 2;
 		set msg = concat( msg, '\n Date naissance : ',
 			tNaissanceD, '/', tNaissanceM, '/', tNaissanceY, ' !=2 ',
 			iNaissanceD, '/', iNaissanceM, '/', iNaissanceY );
@@ -190,7 +199,7 @@ BEGIN
 	   tDecesY = iDecesY THEN
 		set score = score + 1;
 	ELSEIF tDecesY <> "0000" && iDecesY <> "0000" && abs(tDecesY-iDecesY) > 5 THEN
-		set score = score - 1;
+		set score = score - 2;
 		set msg = concat( msg, '\n Date décès : ',
 			tNaissanceD, '/', tNaissanceM, '/', tNaissanceY, ' !=2 ',
 			iNaissanceD, '/', iNaissanceM, '/', iNaissanceY );
