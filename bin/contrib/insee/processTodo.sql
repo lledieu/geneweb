@@ -78,6 +78,7 @@ create procedure insee.compare(
 	IN iDecesD CHAR(2),
 	IN iDecesPlace VARCHAR(500),
 	IN iDecesCode CHAR(5),
+	IN iNumActe CHAR(9),
 	OUT score INTEGER,
 	OUT record VARCHAR(1000),
 	OUT msg VARCHAR(1000)
@@ -237,7 +238,7 @@ BEGIN
 		iNom, iPrenom, iSexe,
 		concat( '°', iNaissanceD, '/', iNaissanceM, '/', iNaissanceY ), iNaissancePlace,
 		concat( '+', iDecesD, '/', iDecesM, '/', iDecesY ), iDecesPlace,
-		iNaissanceCode, iNaissanceLocalite, iNaissancePays, iDecesCode
+		iNaissanceCode, iNaissanceLocalite, iNaissancePays, iDecesCode, iNumActe
 	);
 END//
 
@@ -252,6 +253,7 @@ BEGIN
 	DECLARE tNaissancePlace, tDecesPlace, iNaissancePlace, iDecesPlace VARCHAR(500);
 	DECLARE iNaissanceCode, iDecesCode CHAR(5);
 	DECLARE iNaissanceLocalite, iNaissancePays VARCHAR(30);
+	DECLARE iNumActe CHAR(9);
 	DECLARE tCle VARCHAR(100);
 	DECLARE score, bestScore, nbMatch, nbRows INTEGER;
 	DECLARE msg, record, bestMsg, bestRecord VARCHAR(1000);
@@ -275,7 +277,8 @@ BEGIN
 		 getPlaceLib( NaissanceCode, NaissanceY, NaissanceM, NaissanceD ), NaissanceCode,
 		 NaissanceLocalite, NaissancePays,
 		 DecesD, DecesM, DecesY,
-		 getPlaceLib( DecesCode, DecesY, DecesM, DecesD ), DecesCode
+		 getPlaceLib( DecesCode, DecesY, DecesM, DecesD ), DecesCode,
+		 NumeroActe
 		from INSEE
 		where Nom = tNom
 		  and Prenom like concat('%', tPrenom2, '%')
@@ -288,7 +291,8 @@ BEGIN
 		 getPlaceLib( NaissanceCode, NaissanceY, NaissanceM, NaissanceD ), NaissanceCode,
 		 NaissanceLocalite, NaissancePays,
 		 DecesD, DecesM, DecesY,
-		 getPlaceLib( DecesCode, DecesY, DecesM, DecesD ), DecesCode
+		 getPlaceLib( DecesCode, DecesY, DecesM, DecesD ), DecesCode,
+		 NumeroActe
 		from INSEE
 		where NaissanceD like cNaisD
 		  and NaissanceM like cNaisM
@@ -356,7 +360,7 @@ BEGIN
 				 iNom, iPrenom, iSexe,
 				 iNaissanceD, iNaissanceM, iNaissanceY, iNaissancePlace, iNaissanceCode,
 				 iNaissanceLocalite, iNaissancePays,
-				 iDecesD, iDecesM, iDecesY, iDecesPlace, iDecesCode;
+				 iDecesD, iDecesM, iDecesY, iDecesPlace, iDecesCode, iNumActe;
 
 				IF theEnd THEN
 					LEAVE b2;
@@ -371,7 +375,7 @@ BEGIN
 					iId, iNom, iPrenom, iSexe,
 					iNaissanceY, iNaissanceM, iNaissanceD, iNaissancePlace, iNaissanceCode,
 					iNaissanceLocalite, iNaissancePays,
-					iDecesY, iDecesM, iDecesD, iDecesPlace, iDecesCode,
+					iDecesY, iDecesM, iDecesD, iDecesPlace, iDecesCode, iNumActe,
 					score, record, msg);
 
 				IF score > bestScore THEN
@@ -381,7 +385,13 @@ BEGIN
 					set bestId = iId;
 					set nbMatch = 1;
 				ELSEIF score = bestScore THEN
-					set nbMatch = nbMatch + 1;
+					IF record = bestRecord THEN
+						/* Un doublon ! */
+						delete from INSEE where Id = iId;
+						select 'WARNING', 'Removed duplicate entry in INSEE', iId;
+					ELSE
+						set nbMatch = nbMatch + 1;
+					END IF;
 				END IF;
 			END LOOP;
 			CLOSE cursorNP;
@@ -438,7 +448,7 @@ BEGIN
 						 iNom, iPrenom, iSexe,
 						 iNaissanceD, iNaissanceM, iNaissanceY, iNaissancePlace, iNaissanceCode,
 						 iNaissanceLocalite, iNaissancePays,
-						 iDecesD, iDecesM, iDecesY, iDecesPlace, iDecesCode;
+						 iDecesD, iDecesM, iDecesY, iDecesPlace, iDecesCode, iNumActe;
 
 						IF theEnd THEN
 							LEAVE b4;
@@ -453,7 +463,7 @@ BEGIN
 							iId, iNom, iPrenom, iSexe,
 							iNaissanceY, iNaissanceM, iNaissanceD, iNaissancePlace, iNaissanceCode,
 							iNaissanceLocalite, iNaissancePays,
-							iDecesY, iDecesM, iDecesD, iDecesPlace, iDecesCode,
+							iDecesY, iDecesM, iDecesD, iDecesPlace, iDecesCode, iNumActe,
 							score, record, msg);
 
 						IF score > bestScore THEN
@@ -463,7 +473,13 @@ BEGIN
 							set bestId = iId;
 							set nbMatch = 1;
 						ELSEIF score = bestScore THEN
-							set nbMatch = nbMatch + 1;
+							IF record = bestRecord THEN
+								/* Un doublon ! */
+								delete from INSEE where Id = iId;
+								select 'WARNING', 'Removed duplicate entry in INSEE', iId;
+							ELSE
+								set nbMatch = nbMatch + 1;
+							END IF;
 						END IF;
 					END LOOP;
 					CLOSE cursorD;
