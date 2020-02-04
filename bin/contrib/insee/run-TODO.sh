@@ -85,8 +85,9 @@ select
  score,
  count(*) as "Nbr"
  from TODO
-order by Etat
-group by 1,3;
+group by 1,3
+order by Etat asc
+;
 EOF
 
 echo
