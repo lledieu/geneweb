@@ -233,6 +233,9 @@ BEGIN
 		END IF;
 	END IF;
 
+	/* Source (exemple) */
+	-- set msg = concat( msg, '\nInsee (', InitCap(iPrenom), ', acte n<sup>o</sup> ', iNumActe, ')' );
+
 	/* Record */
 	set record = concat_ws( '|',
 		iNom, iPrenom, iSexe,
