@@ -1,20 +1,35 @@
 #!/bin/bash
 
-EXE=A_RENSEIGNER/geneweb/_build/default/bin/contrib/insee/insee.exe
-BDIR=A_RENSEIGNER
-BASE=A_RENSEIGNER
+EXE=$PWD/../../../_build/default/bin/contrib/insee/insee.exe
+CFG=.run-TODO.cfg
 
 MYSQL=./mysql.sh
 
 if [ -x "${EXE}" ]
 then
+	if [ ! -f $CFG ]
+	then
+		echo -n "Path to GeneWeb databases : "
+		read BDIR
+		if [ ! -d "$BDIR" ]
+		then
+			echo "ERROR $BDIR not found."
+			exit
+		fi
+		echo -n "GeneWeb database : "
+		read BASE
+		echo "BDIR=$BDIR" > $CFG
+		echo "BASE=$BASE" >> $CFG
+	else
+		. $CFG
+	fi
 	echo "Get data from GeneWeb..."
 	cd $BDIR
 	$EXE $BASE > $OLDPWD/TODO.lst
 	cd -
 elif [ ! -f "TODO.lst" ]
 then
-	echo "ERROR GeneWeb export is not configured and TOLO.lst is missing."
+	echo "ERROR GeneWeb exporter and TODO.lst are missing."
 	echo "N.B.: You can create TODO.lst yourself if you are not using GeneWeb."
 	exit
 fi

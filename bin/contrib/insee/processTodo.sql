@@ -202,8 +202,8 @@ BEGIN
 	ELSEIF tDecesY <> "0000" && iDecesY <> "0000" && abs(tDecesY-iDecesY) > 5 THEN
 		set score = score - 2;
 		set msg = concat( msg, '\n Date décès : ',
-			tNaissanceD, '/', tNaissanceM, '/', tNaissanceY, ' !=2 ',
-			iNaissanceD, '/', iNaissanceM, '/', iNaissanceY );
+			tDecesD, '/', tDecesM, '/', tDecesY, ' !=2 ',
+			iDecesD, '/', iDecesM, '/', iDecesY );
 	ELSE
 		set scoreTmp = 0;
 		IF tDecesD = "00" ||
@@ -233,15 +233,13 @@ BEGIN
 		END IF;
 	END IF;
 
-	/* Source (exemple) */
-	-- set msg = concat( msg, '\nInsee (', InitCap(iPrenom), ', acte n<sup>o</sup> ', iNumActe, ')' );
-
 	/* Record */
 	set record = concat_ws( '|',
 		iNom, iPrenom, iSexe,
 		concat( '°', iNaissanceD, '/', iNaissanceM, '/', iNaissanceY ), iNaissancePlace,
 		concat( '+', iDecesD, '/', iDecesM, '/', iDecesY ), iDecesPlace,
-		iNaissanceCode, iNaissanceLocalite, iNaissancePays, iDecesCode, iNumActe
+		iNaissanceCode, iNaissanceLocalite, iNaissancePays, iDecesCode,
+		concat( 'acte n°', iNumActe )
 	);
 END//
 
@@ -404,7 +402,7 @@ BEGIN
 				IF nbMatch = 1 THEN
 					update TODO set Etat = 2, NbMatch = nbMatch, Score = bestScore, IdInsee = bestId, Msg = concat( bestRecord, bestMsg ) where Id = tId;
 				ELSE
-					update TODO set Etat = -2, NbMatch = nbMatch, Score = bestScore where Id = tId;
+					update TODO set Etat = -2, NbMatch = nbMatch, Score = bestScore, IdInsee = bestId, Msg = concat( bestRecord, bestMsg ) where Id = tId;
 				END IF;
 			ELSEIF nbRows = 0 THEN
 				IF tDecesY > "1969" THEN
@@ -492,19 +490,19 @@ BEGIN
 						IF nbMatch = 1 THEN
 							update TODO set Etat = 2, NbMatch = nbMatch, Score = bestScore, IdInsee = bestId, Msg = concat( bestRecord, bestMsg ) where Id = tId;
 						ELSE
-							update TODO set Etat = -2, NbMatch = nbMatch, Score = bestScore where Id = tId;
+							update TODO set Etat = -2, NbMatch = nbMatch, Score = bestScore, IdInsee = bestId, Msg = concat( bestRecord, bestMsg ) where Id = tId;
 						END IF;
 					ELSEIF nbRows = 0 THEN
 						update TODO set Etat = -3 where Id = tId;
 					ELSE
-						update TODO set Etat = -5, NbMatch = nbMatch, Score = bestScore where Id = tId;
+						update TODO set Etat = -5, NbMatch = nbMatch, Score = bestScore, IdInsee = bestId, Msg = concat( bestRecord, bestMsg ) where Id = tId;
 					END IF;
 
 				ELSE
 					update TODO set Etat = -1 where Id = tId;
 				END IF;
 			ELSE
-				update TODO set Etat = -4, NbMatch = nbMatch, Score = bestScore where Id = tId;
+				update TODO set Etat = -4, NbMatch = nbMatch, Score = bestScore, IdInsee = bestId, Msg = concat( bestRecord, bestMsg ) where Id = tId;
 			END IF;
 		END IF;
 	
