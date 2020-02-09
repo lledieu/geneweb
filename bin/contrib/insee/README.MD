@@ -43,7 +43,7 @@ mysql_config_editor set --login-path=client --user=insee --password
 - `./mysql.sh < PlaceNorme.sql` : permet de synthétiser le référentiel COG en une seule table (trois alternatives de nommenclatures sont disponibles) ;
 - `./mysql.sh < getPlaceLib.sql` : création d’une fonction pour convertir un code INSEE en libellé commune pour une date donnée ;
 - `./mysql.sh < processTodo.sql` : création de la procédure qui va confronter les données GeneWeb avec le fichier INSEE ;
-- `./run-TODO.sh` : (à ajuster si besoin pour utilisation avec GeneWeb) si le binaire `insee.exe` est trouvé, lance l’extraction GeneWeb et génère un fichier `TODO.lst` qui est chargé ensuite dans la base MySQL et dont chaque ligne sera confronté aux données de l’INSEE ; enfin le script utilise `rapport.sh` et `rapportFormate.sh` pour créer un rapport lisible pour simplifier les mises à jour dans GeneWeb.
+- `./run-TODO.sh` : (à ajuster si besoin pour utilisation avec GeneWeb) si le binaire `insee.exe` est trouvé, lance l’extraction GeneWeb et génère un fichier `TODO.lst` qui est chargé ensuite dans la base MySQL et dont chaque ligne sera confrontée aux données de l’INSEE ; enfin le script utilise `rapport.sh` et `rapportFormate.sh` pour créer un rapport lisible pour simplifier les mises à jour dans GeneWeb.
 
 Si vous n’avez pas GeneWeb, vous pouvez extraire les données de votre base dans un fichier `TODO.lst` avec comme séparateur | et colonnes :
 
