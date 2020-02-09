@@ -1,7 +1,7 @@
 ## Moulinette pour exploiter le fichier des personnes décédées de l’INSEE
 
 * [Source primaire INSEE « fichier des personnes décédées »](https://www.data.gouv.fr/fr/datasets/fichier-des-personnes-decedees/)
-* [Article « fichier des personnes décédées » de la Wikpédia française](https://fr.wikipedia.org/wiki/Fichier_des_personnes_décédées)
+* [Article « fichier des personnes décédées » de la Wikipédia française](https://fr.wikipedia.org/wiki/Fichier_des_personnes_décédées)
 * [Code officiel géographique](https://www.insee.fr/fr/information/2560452) ([cog_ensemble_2019_csv.zip](https://www.insee.fr/fr/statistiques/fichier/3720946/cog_ensemble_2019_csv.zip))
 * Pré-requis : `wget` et `jq` (en option GeneWeb avec son environnement de [dev Ocaml et dépendances Opam](https://geneweb.tuxfamily.org/wiki/OCaml))
 
