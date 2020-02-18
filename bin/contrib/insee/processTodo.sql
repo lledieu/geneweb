@@ -1,8 +1,33 @@
 drop procedure if exists insee.processTodo;
 drop procedure if exists insee.removeDuplicate;
 drop procedure if exists insee.compare;
+drop function if exists insee.wordcount;
 
 delimiter //
+
+CREATE FUNCTION insee.wordcount(
+	str LONGTEXT
+)
+	RETURNS INTEGER
+	DETERMINISTIC
+	SQL SECURITY INVOKER
+	NO SQL
+BEGIN
+	DECLARE wordCnt, idx, maxIdx INT DEFAULT 0;
+	DECLARE currChar, prevChar BOOL DEFAULT 0;
+	SET maxIdx=char_length(str);
+	SET idx = 1;
+	WHILE idx <= maxIdx DO
+		SET currChar=SUBSTRING(str, idx, 1) RLIKE '[[:alnum:]]';
+		IF NOT prevChar AND currChar THEN
+			SET wordCnt=wordCnt+1;
+		END IF;
+		SET prevChar=currChar;
+		SET idx=idx+1;
+	END WHILE;
+	RETURN wordCnt;
+END
+//
 
 create procedure insee.removeDuplicate(
 	IN tId INTEGER UNSIGNED
@@ -84,42 +109,37 @@ create procedure insee.compare(
 	OUT msg VARCHAR(1000)
 )
 BEGIN
-	DECLARE scoreTmp INTEGER;
-	DECLARE iNom2, iPrenom2 VARCHAR(80);
+	DECLARE scoreTmp, wc INTEGER;
+	DECLARE iNom2, iPrenom2, tNom2, tPrenom2 VARCHAR(80);
 
-	IF tNaissanceY = '0000' and
-           tDecesY = '0000' and
-           tNaissancePlace = '' and
-           tDecesPlace = '' then
-		set score = -1;
-	ELSE
-		set score = 0;
-	END IF;
+	set score = 0;
 	set msg = '';
 
 	/* Nom */
-	IF tNom = iNom THEN
+	set iNom2 = replace( iNom, '-', ' ');
+	set iNom2 = replace( iNom2, "'", ' ');
+	set tNom2 = replace( tNom, '-', ' ');
+	set tNom2 = replace( tNom2, "'", ' ');
+	IF tNom2 = iNom2 THEN
 		set score = score + 1;
 	ELSE
-		set iNom2 = replace( iNom, '-', ' ');
-		set iNom2 = replace( iNom2, "'", ' ');
-		IF tNom = iNom2 THEN
-			set msg = concat ( msg, '\n Nom : ', tNom, ' =~ ', iNom );
-		ELSE
-			set score = score - 1;
-			set msg = concat ( msg, '\n Nom : ', tNom, ' != ', iNom );
-		END IF;
+		set score = score - 1;
+		set msg = concat ( msg, '\n Nom : ', tNom, ' != ', iNom );
 	END IF;
 
 	/* Prénom */
 	set iPrenom2 = replace( iPrenom, '-', ' ');
 	set iPrenom2 = replace( iPrenom2, "'", ' ');
-	IF tPrenom = iPrenom THEN
-		set score = score + 1;
-	ELSEIF locate( tPrenom, iPrenom ) != 0 THEN
+	set tPrenom2 = replace( tPrenom, '-', ' ');
+	set tPrenom2 = replace( tPrenom2, "'", ' ');
+	IF tPrenom2 = iPrenom2 THEN
+		IF insee.wordcount( tPrenom2 ) >= 3 THEN
+			set score = score + 2;
+		ELSE
+			set score = score + 1;
+		END IF;
+	ELSEIF locate( tPrenom2, iPrenom2 ) != 0 THEN
 		set msg = concat ( msg, '\n Prénom : ', tPrenom, ' -> ', iPrenom );
-	ELSEIF tPrenom = iPrenom2 THEN
-		set msg = concat ( msg, '\n Prénom : ', tPrenom, ' =~ ', iPrenom );
 	ELSE
 		set score = score - 1;
 		set msg = concat ( msg, '\n Prénom : ', tPrenom, ' != ', iPrenom );
@@ -132,7 +152,7 @@ BEGIN
 	END IF;
 
 	/* Lieu de naissance */
-	IF tNaissancePlace = iNaissancePlace THEN
+	IF tNaissancePlace = iNaissancePlace && tNaissancePlace != "" THEN
 		set score = score + 1;
 	ELSEIF locate( tNaissancePlace, iNaissancePlace ) != 0 THEN
 		set msg = concat( msg, '\n Lieu naissance : ', tNaissancePlace, ' -> ', iNaissancePlace );
@@ -183,7 +203,7 @@ BEGIN
 	END IF;
 
 	/* Lieu de décès */
-	IF tDecesPlace = iDecesPlace THEN
+	IF tDecesPlace = iDecesPlace && tDecesPlace != "" THEN
 		set score = score + 1;
 	ELSEIF locate( tDecesPlace, iDecesPlace ) != 0 THEN
 		set msg = concat( msg, '\n Lieu décès : ', tDecesPlace, ' -> ', iDecesPlace );

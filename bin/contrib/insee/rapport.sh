@@ -14,6 +14,7 @@ select concat( Cle, '\n', concat_ws( '|',
 	NaissancePlace,
 	concat( '+', DecesD, '/', DecesM, '/', DecesY),
 	DecesPlace ), '\n', Msg, '\nIdInsee(', IdInsee, ') Score ', Score, '\n')
-from TODO where Etat = 2
+from TODO where Etat in (-2, 2)
+order by score desc
 ;
 EOF
