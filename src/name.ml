@@ -44,8 +44,17 @@ value unaccent_utf_8 lower s i =
     let c = Char.code s.[i] in
     let s =
       match c with
-      (* il ne faut pas garder le cas 0xC2 parce qu'il casse le code UTF8 *)
-      [ 0xC2 -> f (String.make 1 s.[i+1])
+      [ 0xC2 ->
+         match Char.code s.[i+1] with
+         [ 0xA0 -> f " "
+         | 0xAA -> f "a"
+         | 0xB2 -> f "2"
+         | 0xB3 -> f "3"
+         | 0xB9 -> f "1"
+         | 0xBA -> f "o"
+         | 0xAD -> f ""
+         (* TODO que faut il faire dans les autres cas?? *)
+         | _ -> f "" ]
       | 0xC3 ->
           match Char.code s.[i+1] with
           [ 0x80 | 0x81 | 0x82 | 0x83 | 0x84 | 0x85 -> f "A"
