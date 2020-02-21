@@ -96,6 +96,7 @@ select
 	when 0 then 'À traiter'
 	when 1 then 'Identique'
 	when 2 then 'Voir RESULT.txt'
+	when 3 then 'Écarté'
  end as "Libellé",
  score,
  count(*) as "Nbr"
@@ -107,4 +108,4 @@ EOF
 
 echo
 ./rapportFormate.sh > RESULT.txt
-echo "Bilan disponisble dans le fichier RESULT.txt"
+echo "Bilan disponible dans le fichier RESULT.txt"

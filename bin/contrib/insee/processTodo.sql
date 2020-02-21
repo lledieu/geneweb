@@ -157,7 +157,9 @@ BEGIN
 	ELSEIF locate( tNaissancePlace, iNaissancePlace ) != 0 THEN
 		set msg = concat( msg, '\n Lieu naissance : ', tNaissancePlace, ' -> ', iNaissancePlace );
 	ELSEIF locate( iNaissancePlace, tNaissancePlace ) != 0 THEN
-		set msg = concat( msg, '\n Lieu naissance : ', tNaissancePlace, ' =~ ', iNaissancePlace );
+		IF substring(iNaissanceCode, 1, 2) != '99' THEN
+			set msg = concat( msg, '\n Lieu naissance : ', tNaissancePlace, ' =~ ', iNaissancePlace );
+		END IF;
 	ELSE
 		set score = score - 1;
 		set msg = concat( msg, '\n Lieu naissance : ', tNaissancePlace, ' != ', iNaissancePlace );
@@ -208,7 +210,9 @@ BEGIN
 	ELSEIF locate( tDecesPlace, iDecesPlace ) != 0 THEN
 		set msg = concat( msg, '\n Lieu décès : ', tDecesPlace, ' -> ', iDecesPlace );
 	ELSEIF locate( iDecesPlace, tDecesPlace ) != 0 THEN
-		set msg = concat( msg, '\n Lieu décès : ', tDecesPlace, ' =~ ', iDecesPlace );
+		IF substring(iDecesCode, 1, 2) != '99' THEN
+			set msg = concat( msg, '\n Lieu décès : ', tDecesPlace, ' =~ ', iDecesPlace );
+		END IF;
 	ELSE
 		set score = score - 1;
 		set msg = concat( msg, '\n Lieu décès : ', tDecesPlace, ' != ', iDecesPlace );
@@ -411,6 +415,12 @@ BEGIN
 						delete from INSEE where Id = iId;
 						select 'WARNING', 'Removed duplicate entry in INSEE', iId;
 					ELSE
+						IF score > 3 THEN
+							IF nbMatch = 1 THEN
+								set bestMsg = concat( bestMsg, '\n Doublons INSEE ? : ', bestId );
+							END IF;
+							set bestMsg = concat( bestMsg, ', ', iId );
+						END IF;
 						set nbMatch = nbMatch + 1;
 					END IF;
 				END IF;
@@ -420,7 +430,11 @@ BEGIN
 			/* Bilan */
 			IF bestScore > 1 THEN
 				IF nbMatch = 1 THEN
-					update TODO set Etat = 2, NbMatch = nbMatch, Score = bestScore, IdInsee = bestId, Msg = concat( bestRecord, bestMsg ) where Id = tId;
+					IF bestMsg = '' THEN
+						update TODO set Etat = 3, NbMatch = nbMatch, Score = bestScore, IdInsee = bestId, Msg = concat( bestRecord, bestMsg ) where Id = tId;
+					ELSE
+						update TODO set Etat = 2, NbMatch = nbMatch, Score = bestScore, IdInsee = bestId, Msg = concat( bestRecord, bestMsg ) where Id = tId;
+					END IF;
 				ELSE
 					update TODO set Etat = -2, NbMatch = nbMatch, Score = bestScore, IdInsee = bestId, Msg = concat( bestRecord, bestMsg ) where Id = tId;
 				END IF;
@@ -499,6 +513,12 @@ BEGIN
 								delete from INSEE where Id = iId;
 								select 'WARNING', 'Removed duplicate entry in INSEE', iId;
 							ELSE
+								IF score > 3 THEN
+									IF nbMatch = 1 THEN
+										set bestMsg = concat( bestMsg, '\n Doublons INSEE ? : ', bestId );
+									END IF;
+									set bestMsg = concat( bestMsg, ', ', iId );
+								END IF;
 								set nbMatch = nbMatch + 1;
 							END IF;
 						END IF;
@@ -508,7 +528,11 @@ BEGIN
 					/* Nouveau bilan */
 					IF bestScore > 1 THEN
 						IF nbMatch = 1 THEN
-							update TODO set Etat = 2, NbMatch = nbMatch, Score = bestScore, IdInsee = bestId, Msg = concat( bestRecord, bestMsg ) where Id = tId;
+							IF bestMsg = '' THEN
+								update TODO set Etat = 3, NbMatch = nbMatch, Score = bestScore, IdInsee = bestId, Msg = concat( bestRecord, bestMsg ) where Id = tId;
+							ELSE
+								update TODO set Etat = 2, NbMatch = nbMatch, Score = bestScore, IdInsee = bestId, Msg = concat( bestRecord, bestMsg ) where Id = tId;
+							END IF;
 						ELSE
 							update TODO set Etat = -2, NbMatch = nbMatch, Score = bestScore, IdInsee = bestId, Msg = concat( bestRecord, bestMsg ) where Id = tId;
 						END IF;
