@@ -1,4 +1,5 @@
 drop procedure if exists insee.processTodo;
+drop procedure if exists insee.processOne;
 drop procedure if exists insee.removeDuplicate;
 drop procedure if exists insee.compare;
 drop function if exists insee.wordcount;
@@ -30,12 +31,20 @@ END
 //
 
 create procedure insee.removeDuplicate(
-	IN tId INTEGER UNSIGNED
+	IN tNom VARCHAR(80),
+	IN tPrenom VARCHAR(80),
+	IN tSexe CHAR(1),
+	IN tNaissanceY CHAR(4),
+	IN tNaissanceM CHAR(2),
+	IN tNaissanceD CHAR(2),
+	IN tNaissancePlace VARCHAR(500),
+	IN tDecesY CHAR(4),
+	IN tDecesM CHAR(2),
+	IN tDecesD CHAR(2),
+	IN tDecesPlace VARCHAR(500)
 )
 BEGIN
 	DECLARE IdDel INTEGER UNSIGNED;
-
-	select 'DEBUG', 'Entrée dans removeDuplicate', tId;
 
 	select t1.Id INTO IdDel
 	from INSEE t1, INSEE t2
@@ -57,19 +66,18 @@ BEGIN
 	  and t1.Id in (
 		/* Exact Match TODO -> INSEE */
 		select i.Id
-		from TODO t, INSEE i
-		where t.Id = tId
-		  and t.Nom = i.Nom
-		  and t.Prenom = i.Prenom
-		  and t.Sexe = i.Sexe	
-		  and t.NaissanceY = i.NaissanceY
-		  and t.NaissanceM = i.NaissanceM
-		  and t.NaissanceD = i.NaissanceD
-		  and t.NaissancePlace = getPlaceLib(i.NaissanceCode, i.NaissanceY, i.NaissanceM, i.NaissanceD)
-		  and t.DecesY = i.DecesY
-		  and t.DecesM = i.DecesM
-		  and t.DecesD = i.DecesD
-		  and t.DecesPlace = getPlaceLib(i.DecesCode, i.DecesY, i.DecesM, i.DecesD)
+		from INSEE
+		where i.Nom = tNom
+		  and i.Prenom = tPrenom
+		  and i.Sexe = tSexe
+		  and i.NaissanceY = tNaissanceY
+		  and i.NaissanceM = tNaissanceM
+		  and i.NaissanceD = tNaissanceD
+		  and getPlaceLib(i.NaissanceCode, i.NaissanceY, i.NaissanceM, i.NaissanceD) = tNaissancePlace
+		  and i.DecesY = tDecesY
+		  and i.DecesM = tDecesM
+		  and i.DecesD = tDecesD
+		  and getPlaceLib(i.DecesCode, i.DecesY, i.DecesM, i.DecesD) = tDecesPlace
 	) limit 1;
 	delete from INSEE where Id = IdDel;
 	select 'WARNING', 'Removed duplicate entry in INSEE', IdDel;
@@ -267,33 +275,40 @@ BEGIN
 	);
 END//
 
-
-create procedure insee.processTodo()
+create procedure insee.processOne(
+	IN tNom VARCHAR(80),
+	IN tPrenom VARCHAR(80),
+	IN tSexe CHAR(1),
+	IN tNaissanceY CHAR(4),
+	IN tNaissanceM CHAR(2),
+	IN tNaissanceD CHAR(2),
+	IN tNaissancePlace VARCHAR(500),
+	IN tDecesY CHAR(4),
+	IN tDecesM CHAR(2),
+	IN tDecesD CHAR(2),
+	IN tDecesPlace VARCHAR(500),
+	IN tCle VARCHAR(100),
+	OUT etat INTEGER,
+	OUT nbMatch INTEGER,
+	OUT bestScore INTEGER,
+	OUT bestId INTEGER UNSIGNED,
+	OUT bestRecord VARCHAR(1000),
+	OUT bestMsg VARCHAR(1000)
+)
 BEGIN
-	DECLARE tId, iId, bestId INTEGER UNSIGNED;
-	DECLARE tNom, tPrenom, tPrenom2, iNom, iPrenom VARCHAR(80);
-	DECLARE tSexe, iSexe CHAR(1);
-	DECLARE tNaissanceY, tDecesY, iNaissanceY, iDecesY, cNaisY CHAR(4);
-	DECLARE tNaissanceM, tNaissanceD, tDecesM, tDecesD, iNaissanceM, iNaissanceD, iDecesM, iDecesD, cNaisD, cNaisM, cDesD, cDesM CHAR(2);
-	DECLARE tNaissancePlace, tDecesPlace, iNaissancePlace, iDecesPlace VARCHAR(500);
+	DECLARE iId INTEGER UNSIGNED;
+	DECLARE tPrenom2, iNom, iPrenom VARCHAR(80);
+	DECLARE iSexe CHAR(1);
+	DECLARE iNaissanceY, iDecesY, cNaisY CHAR(4);
+	DECLARE iNaissanceM, iNaissanceD, iDecesM, iDecesD, cNaisD, cNaisM, cDesD, cDesM CHAR(2);
 	DECLARE iNaissanceCode, iDecesCode CHAR(5);
 	DECLARE iNaissanceLocalite, iNaissancePays VARCHAR(30);
+	DECLARE iNaissancePlace, iDecesPlace VARCHAR(500);
 	DECLARE iNumActe CHAR(9);
-	DECLARE tCle VARCHAR(100);
-	DECLARE score, bestScore, nbMatch, nbRows INTEGER;
-	DECLARE msg, record, bestMsg, bestRecord VARCHAR(1000);
+	DECLARE score, nbRows INTEGER;
+	DECLARE record, msg VARCHAR(1000);
 
 	DECLARE theEnd INT;
-	DECLARE cursorTodo CURSOR FOR
-		select
-		 Id,
-		 Nom, Prenom, Sexe,
-		 NaissanceD, NaissanceM, NaissanceY, NaissancePlace,
-		 DecesD, DecesM, DecesY, DecesPlace,
-		 Cle
-		from TODO
-		where Etat = 0
-	;
 	DECLARE cursorNP CURSOR FOR
 		select
 		 Id,
@@ -328,13 +343,251 @@ BEGIN
 	;
 	DECLARE CONTINUE HANDLER FOR NOT FOUND SET theEnd = TRUE;
 	DECLARE CONTINUE HANDLER FOR 1172 BEGIN
-		call insee.removeDuplicate( tId );
+		call insee.removeDuplicate( tNom, tPrenom, tSexe,
+			tNaissanceY, tNaissanceM, tNaissanceD, tNaissancePlace,
+			tDecesY, tDecesM, tDecesD, tDecesPlace );
 	END;
 
+	/* Look for extact match */
+	set iId = 0;
+	select Id INTO iId
+	from INSEE
+	where Nom = tNom
+	  and Prenom = tPrenom
+	  and Sexe = tSexe
+	  and NaissanceY = tNaissanceY
+	  and NaissanceM = tNaissanceM
+	  and NaissanceD = tNaissanceD
+	  and getPlaceLib(NaissanceCode,NaissanceY,NaissanceM,NaissanceD) = tNaissancePlace
+	  and DecesY = tDecesY
+	  and DecesM = tDecesM
+	  and DecesD = tDecesD
+	  and getPlaceLib(DecesCode,DecesY,DecesM,DecesD) = tDecesPlace
+	;
+
+	IF ! theEnd THEN
+		set etat = 1;
+		set nbMatch = 1;
+		set bestScore = null;
+		set bestId = iId;
+		set bestRecord = "";
+		set bestMsg = "";
+	ELSE
+
+		/* Look for Nom / Prenom */
+
+		set tPrenom2 = replace( tPrenom, '-', '_' );
+		set tPrenom2 = replace( tPrenom2, "'", '_' );
+		set tPrenom2 = replace( tPrenom2, ' ', '_' );
+
+		set bestScore = -10;
+		set nbMatch = 0;
+		set bestRecord = "";
+		set bestMsg = "";
+		set bestId = 0;
+		set nbRows = 0;
+
+		OPEN cursorNP;
+		b2: LOOP
+			set theEnd = false;
+			FETCH cursorNP INTO iId,
+			 iNom, iPrenom, iSexe,
+			 iNaissanceD, iNaissanceM, iNaissanceY, iNaissancePlace, iNaissanceCode,
+			 iNaissanceLocalite, iNaissancePays,
+			 iDecesD, iDecesM, iDecesY, iDecesPlace, iDecesCode, iNumActe;
+
+			IF theEnd THEN
+				LEAVE b2;
+			END IF;
+
+			set nbRows = nbRows + 1;
+
+			call insee.compare(
+				tNom, tPrenom, tSexe,
+				tNaissanceY, tNaissanceM, tNaissanceD, tNaissancePlace,
+				tDecesY, tDecesM, tDecesD, tDecesPlace,
+				iId, iNom, iPrenom, iSexe,
+				iNaissanceY, iNaissanceM, iNaissanceD, iNaissancePlace, iNaissanceCode,
+				iNaissanceLocalite, iNaissancePays,
+				iDecesY, iDecesM, iDecesD, iDecesPlace, iDecesCode, iNumActe,
+				score, record, msg);
+
+			IF score > bestScore THEN
+				set bestScore = score;
+				set bestRecord = record;
+				set bestMsg = msg;
+				set bestId = iId;
+				set nbMatch = 1;
+			ELSEIF score = bestScore THEN
+				IF record = bestRecord THEN
+					/* Un doublon ! */
+					delete from INSEE where Id = iId;
+					select 'WARNING', 'Removed duplicate entry in INSEE', iId;
+				ELSE
+					IF score > 3 THEN
+						IF nbMatch = 1 THEN
+							set bestMsg = concat( bestMsg, '\n Doublons INSEE ? : ', bestId );
+						END IF;
+						set bestMsg = concat( bestMsg, ', ', iId );
+					END IF;
+					set nbMatch = nbMatch + 1;
+				END IF;
+			END IF;
+		END LOOP;
+		CLOSE cursorNP;
+
+		/* Bilan */
+		IF bestScore > 1 THEN
+			IF nbMatch = 1 THEN
+				IF bestMsg = '' THEN
+					set etat = 3;
+				ELSE
+					set etat = 2;
+				END IF;
+			ELSE
+				set etat = -2;
+			END IF;
+		ELSEIF nbRows = 0 THEN
+			IF tDecesY > "1969" THEN
+
+				/* Look for dates */
+
+				IF tNaissanceD = "00" THEN
+					set cNaisD = "__";
+				ELSE
+					set cNaisD = tNaissanceD;
+				END IF;
+				IF tNaissanceM = "00" THEN
+					set cNaisM = "__";
+				ELSE
+					set cNaisM = tNaissanceM;
+				END IF;
+				IF tNaissanceY = "0000" THEN
+					set cNaisY = "__";
+				ELSE
+					set cNaisY = tNaissanceY;
+				END IF;
+				IF tDecesD = "00" THEN
+					set cDesD = "__";
+				ELSE
+					set cDesD = tDecesD;
+				END IF;
+				IF tDecesM = "00" THEN
+					set cDesM = "__";
+				ELSE
+					set cDesM = tDecesM;
+				END IF;
+
+				set bestScore = -10;
+				set nbMatch = 0;
+				set bestRecord = "";
+				set bestMsg = "";
+				set bestId = 0;
+				set nbRows = 0;
+
+				OPEN cursorD;
+				b4: LOOP
+					set theEnd = false;
+					FETCH cursorD INTO iId,
+					 iNom, iPrenom, iSexe,
+					 iNaissanceD, iNaissanceM, iNaissanceY, iNaissancePlace, iNaissanceCode,
+					 iNaissanceLocalite, iNaissancePays,
+					 iDecesD, iDecesM, iDecesY, iDecesPlace, iDecesCode, iNumActe;
+
+					IF theEnd THEN
+						LEAVE b4;
+					END IF;
+
+					set nbRows = nbRows + 1;
+
+					call insee.compare(
+						tNom, tPrenom, tSexe,
+						tNaissanceY, tNaissanceM, tNaissanceD, tNaissancePlace,
+						tDecesY, tDecesM, tDecesD, tDecesPlace,
+						iId, iNom, iPrenom, iSexe,
+						iNaissanceY, iNaissanceM, iNaissanceD, iNaissancePlace, iNaissanceCode,
+						iNaissanceLocalite, iNaissancePays,
+						iDecesY, iDecesM, iDecesD, iDecesPlace, iDecesCode, iNumActe,
+						score, record, msg);
+
+					IF score > bestScore THEN
+						set bestScore = score;
+						set bestRecord = record;
+						set bestMsg = msg;
+						set bestId = iId;
+						set nbMatch = 1;
+					ELSEIF score = bestScore THEN
+						IF record = bestRecord THEN
+							/* Un doublon ! */
+							delete from INSEE where Id = iId;
+							select 'WARNING', 'Removed duplicate entry in INSEE', iId;
+						ELSE
+							IF score > 3 THEN
+								IF nbMatch = 1 THEN
+									set bestMsg = concat( bestMsg, '\n Doublons INSEE ? : ', bestId );
+								END IF;
+								set bestMsg = concat( bestMsg, ', ', iId );
+							END IF;
+							set nbMatch = nbMatch + 1;
+						END IF;
+					END IF;
+				END LOOP;
+				CLOSE cursorD;
+
+				/* Nouveau bilan */
+				IF bestScore > 1 THEN
+					IF nbMatch = 1 THEN
+						IF bestMsg = '' THEN
+							set etat = 3;
+						ELSE
+							set etat = 2;
+						END IF;
+					ELSE
+						set etat = -2;
+					END IF;
+				ELSEIF nbRows = 0 THEN
+					set etat = -3;
+				ELSE
+					set etat = -5;
+				END IF;
+
+			ELSE
+				set etat = -1;
+			END IF;
+		ELSE
+			set etat = -4;
+		END IF;
+	END IF;
+END//
+
+create procedure insee.processTodo()
+BEGIN
+	DECLARE tNom, tPrenom VARCHAR(80);
+	DECLARE tSexe CHAR(1);
+	DECLARE tNaissanceY, tDecesY CHAR(4);
+	DECLARE tNaissanceM, tNaissanceD, tDecesM, tDecesD CHAR(2);
+	DECLARE tNaissancePlace, tDecesPlace VARCHAR(500);
+	DECLARE tCle VARCHAR(100);
+	DECLARE myEtat, myNbMatch, myScore INTEGER;
+	DECLARE tId, bestId INTEGER UNSIGNED;
+	DECLARE myRecord, myMsg VARCHAR(1000);
+
+	DECLARE theEnd INT;
+	DECLARE cursorTodo CURSOR FOR
+		select
+		 Id,
+		 Nom, Prenom, Sexe,
+		 NaissanceD, NaissanceM, NaissanceY, NaissancePlace,
+		 DecesD, DecesM, DecesY, DecesPlace,
+		 Cle
+		from TODO
+		where Etat = 0
+	;
+	DECLARE CONTINUE HANDLER FOR NOT FOUND SET theEnd = TRUE;
+
+	set theEnd = false;
 	OPEN cursorTodo;
 	b1: LOOP
-		set theEnd = false;
-
 		FETCH cursorTodo INTO tId,
 		 tNom, tPrenom, tSexe,
 		 tNaissanceD, tNaissanceM, tNaissanceY, tNaissancePlace,
@@ -344,212 +597,15 @@ BEGIN
 			LEAVE b1;
 		END IF;
 
-		/* Look for extact match */
-		set iId = 0;
-		select Id INTO iId
-		from INSEE
-		where Nom = tNom
-		  and Prenom = tPrenom
-		  and Sexe = tSexe
-		  and NaissanceY = tNaissanceY
-		  and NaissanceM = tNaissanceM
-		  and NaissanceD = tNaissanceD
-		  and getPlaceLib(NaissanceCode,NaissanceY,NaissanceM,NaissanceD) = tNaissancePlace
-		  and DecesY = tDecesY
-		  and DecesM = tDecesM
-		  and DecesD = tDecesD
-		  and getPlaceLib(DecesCode,DecesY,DecesM,DecesD) = tDecesPlace
-		;
+		call insee.processOne(
+			tNom, tPrenom, tSexe,
+			tNaissanceY, tNaissanceM, tNaissanceD, tNaissancePlace,
+			tDecesY, tDecesM, tDecesD, tDecesPlace, tCle,
+			myEtat, myNbMatch, myScore, bestId, myRecord, myMsg );
 
-		IF ! theEnd THEN
-			update TODO set Etat=1, IdInsee = iId where Id = tId;
-		ELSE
+		/* Store result */
+		update TODO set Etat = myEtat, NbMatch = myNbMatch, Score = myScore, IdInsee = bestId, Msg = concat( myRecord, myMsg ) where Id = tId;
 
-			/* Look for Nom / Prenom */
-
-			set tPrenom2 = replace( tPrenom, '-', '_' );
-			set tPrenom2 = replace( tPrenom2, "'", '_' );
-			set tPrenom2 = replace( tPrenom2, ' ', '_' );
-
-			set bestScore = -10;
-			set nbMatch = 0;
-			set bestRecord = "";
-			set bestMsg = "";
-			set bestId = 0;
-			set nbRows = 0;
-
-			OPEN cursorNP;
-			b2: LOOP
-				set theEnd = false;
-				FETCH cursorNP INTO iId,
-				 iNom, iPrenom, iSexe,
-				 iNaissanceD, iNaissanceM, iNaissanceY, iNaissancePlace, iNaissanceCode,
-				 iNaissanceLocalite, iNaissancePays,
-				 iDecesD, iDecesM, iDecesY, iDecesPlace, iDecesCode, iNumActe;
-
-				IF theEnd THEN
-					LEAVE b2;
-				END IF;
-
-				set nbRows = nbRows + 1;
-
-				call insee.compare(
-					tNom, tPrenom, tSexe,
-					tNaissanceY, tNaissanceM, tNaissanceD, tNaissancePlace,
-					tDecesY, tDecesM, tDecesD, tDecesPlace,
-					iId, iNom, iPrenom, iSexe,
-					iNaissanceY, iNaissanceM, iNaissanceD, iNaissancePlace, iNaissanceCode,
-					iNaissanceLocalite, iNaissancePays,
-					iDecesY, iDecesM, iDecesD, iDecesPlace, iDecesCode, iNumActe,
-					score, record, msg);
-
-				IF score > bestScore THEN
-					set bestScore = score;
-					set bestRecord = record;
-					set bestMsg = msg;
-					set bestId = iId;
-					set nbMatch = 1;
-				ELSEIF score = bestScore THEN
-					IF record = bestRecord THEN
-						/* Un doublon ! */
-						delete from INSEE where Id = iId;
-						select 'WARNING', 'Removed duplicate entry in INSEE', iId;
-					ELSE
-						IF score > 3 THEN
-							IF nbMatch = 1 THEN
-								set bestMsg = concat( bestMsg, '\n Doublons INSEE ? : ', bestId );
-							END IF;
-							set bestMsg = concat( bestMsg, ', ', iId );
-						END IF;
-						set nbMatch = nbMatch + 1;
-					END IF;
-				END IF;
-			END LOOP;
-			CLOSE cursorNP;
-
-			/* Bilan */
-			IF bestScore > 1 THEN
-				IF nbMatch = 1 THEN
-					IF bestMsg = '' THEN
-						update TODO set Etat = 3, NbMatch = nbMatch, Score = bestScore, IdInsee = bestId, Msg = concat( bestRecord, bestMsg ) where Id = tId;
-					ELSE
-						update TODO set Etat = 2, NbMatch = nbMatch, Score = bestScore, IdInsee = bestId, Msg = concat( bestRecord, bestMsg ) where Id = tId;
-					END IF;
-				ELSE
-					update TODO set Etat = -2, NbMatch = nbMatch, Score = bestScore, IdInsee = bestId, Msg = concat( bestRecord, bestMsg ) where Id = tId;
-				END IF;
-			ELSEIF nbRows = 0 THEN
-				IF tDecesY > "1969" THEN
-
-					/* Look for dates */
-
-					IF tNaissanceD = "00" THEN
-						set cNaisD = "__";
-					ELSE
-						set cNaisD = tNaissanceD;
-					END IF;
-					IF tNaissanceM = "00" THEN
-						set cNaisM = "__";
-					ELSE
-						set cNaisM = tNaissanceM;
-					END IF;
-					IF tNaissanceY = "0000" THEN
-						set cNaisY = "__";
-					ELSE
-						set cNaisY = tNaissanceY;
-					END IF;
-					IF tDecesD = "00" THEN
-						set cDesD = "__";
-					ELSE
-						set cDesD = tDecesD;
-					END IF;
-					IF tDecesM = "00" THEN
-						set cDesM = "__";
-					ELSE
-						set cDesM = tDecesM;
-					END IF;
-
-					set bestScore = -10;
-					set nbMatch = 0;
-					set bestRecord = "";
-					set bestMsg = "";
-					set bestId = 0;
-					set nbRows = 0;
-
-					OPEN cursorD;
-					b4: LOOP
-						set theEnd = false;
-						FETCH cursorD INTO iId,
-						 iNom, iPrenom, iSexe,
-						 iNaissanceD, iNaissanceM, iNaissanceY, iNaissancePlace, iNaissanceCode,
-						 iNaissanceLocalite, iNaissancePays,
-						 iDecesD, iDecesM, iDecesY, iDecesPlace, iDecesCode, iNumActe;
-
-						IF theEnd THEN
-							LEAVE b4;
-						END IF;
-
-						set nbRows = nbRows + 1;
-
-						call insee.compare(
-							tNom, tPrenom, tSexe,
-							tNaissanceY, tNaissanceM, tNaissanceD, tNaissancePlace,
-							tDecesY, tDecesM, tDecesD, tDecesPlace,
-							iId, iNom, iPrenom, iSexe,
-							iNaissanceY, iNaissanceM, iNaissanceD, iNaissancePlace, iNaissanceCode,
-							iNaissanceLocalite, iNaissancePays,
-							iDecesY, iDecesM, iDecesD, iDecesPlace, iDecesCode, iNumActe,
-							score, record, msg);
-
-						IF score > bestScore THEN
-							set bestScore = score;
-							set bestRecord = record;
-							set bestMsg = msg;
-							set bestId = iId;
-							set nbMatch = 1;
-						ELSEIF score = bestScore THEN
-							IF record = bestRecord THEN
-								/* Un doublon ! */
-								delete from INSEE where Id = iId;
-								select 'WARNING', 'Removed duplicate entry in INSEE', iId;
-							ELSE
-								IF score > 3 THEN
-									IF nbMatch = 1 THEN
-										set bestMsg = concat( bestMsg, '\n Doublons INSEE ? : ', bestId );
-									END IF;
-									set bestMsg = concat( bestMsg, ', ', iId );
-								END IF;
-								set nbMatch = nbMatch + 1;
-							END IF;
-						END IF;
-					END LOOP;
-					CLOSE cursorD;
-
-					/* Nouveau bilan */
-					IF bestScore > 1 THEN
-						IF nbMatch = 1 THEN
-							IF bestMsg = '' THEN
-								update TODO set Etat = 3, NbMatch = nbMatch, Score = bestScore, IdInsee = bestId, Msg = concat( bestRecord, bestMsg ) where Id = tId;
-							ELSE
-								update TODO set Etat = 2, NbMatch = nbMatch, Score = bestScore, IdInsee = bestId, Msg = concat( bestRecord, bestMsg ) where Id = tId;
-							END IF;
-						ELSE
-							update TODO set Etat = -2, NbMatch = nbMatch, Score = bestScore, IdInsee = bestId, Msg = concat( bestRecord, bestMsg ) where Id = tId;
-						END IF;
-					ELSEIF nbRows = 0 THEN
-						update TODO set Etat = -3 where Id = tId;
-					ELSE
-						update TODO set Etat = -5, NbMatch = nbMatch, Score = bestScore, IdInsee = bestId, Msg = concat( bestRecord, bestMsg ) where Id = tId;
-					END IF;
-
-				ELSE
-					update TODO set Etat = -1 where Id = tId;
-				END IF;
-			ELSE
-				update TODO set Etat = -4, NbMatch = nbMatch, Score = bestScore, IdInsee = bestId, Msg = concat( bestRecord, bestMsg ) where Id = tId;
-			END IF;
-		END IF;
-	
 	END LOOP;
 	CLOSE cursorTodo;
 END//
