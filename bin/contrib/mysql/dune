@@ -1,0 +1,4 @@
+(executables
+  (names gw2mysql)
+  (libraries mysql geneweb)
+)
