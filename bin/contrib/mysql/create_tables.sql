@@ -1,4 +1,3 @@
-DROP TABLE IF EXISTS consanguinity; -- FIXME à supprimer
 DROP TABLE IF EXISTS person_group;
 DROP TABLE IF EXISTS groups;
 DROP TABLE IF EXISTS person_event;
@@ -31,7 +30,7 @@ CREATE TABLE persons (
 	death	enum('NotDead','Dead','DeadYoung','DeadDontKnowWhen','DontKnowIfDead','OfCourseDead') NOT NULL,
 	n_id	INTEGER UNSIGNED,
 	s_id	INTEGER UNSIGNED,
-	consang	INTEGER UNSIGNED DEFAULT 0, -- FIXME spécifique
+	consang	FLOAT(10) DEFAULT -1, -- FIXME spécifique
 	sex	enum('','M','F') NOT NULL DEFAULT '',
 	access	enum(
 		'IfTitles',
@@ -175,10 +174,10 @@ CREATE TABLE person_group (
 		'Father',
 		'Mother',
 		'Child',
-		'AdoptedChild',    -- FIXME privilégier person_event pour événement ADOP ?
-		'RecognitedChild', -- FIXME privilégier person_event
+		'AdoptedChild',    -- FIXME not used -> person_event
+		'RecognitedChild', -- FIXME not used -> person_event
 		'CandidateChild',
-		'FosterChild'      -- FIXME privilégier person_event
+		'FosterChild'      -- FIXME not used -> person_event
 	) NOT NULL,
 	FOREIGN KEY (g_id) REFERENCES groups(g_id),
 	FOREIGN KEY (p_id) REFERENCES persons(p_id)

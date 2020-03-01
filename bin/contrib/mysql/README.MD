@@ -11,7 +11,7 @@ mysql -u root -p
 Renseigner le mot de passe puis valider avec `Entrée`
 Puis, dans la console `mysql>` :
 ```
-create database geneweb;
+create database geneweb character set UTF8;
 create user 'gw'@'localhost' identified by 'gw_pw';
 grant all privileges on geneweb.* to 'gw'@'localhost';
 exit
@@ -19,12 +19,16 @@ exit
 
 ### Lancer la migration
 
-Prè-requis :
+Pré-requis :
 ```
-opam install mysql
+opam install conf-mysql mysql
+```
+ou
+```
+opam install conf-mariadb mysql
 ```
 
-Lancer le script ```run.sh``` qui va enchaîner les étapes suivantes :
+Lancer le script ```./run.sh``` qui va enchaîner les étapes suivantes :
 * Compilation de l'extracteur Ocaml (j'utilise la version 4.07)
 * Création des tables dans la base MySQL (écrase les donnnées issues des précédentes migrations)
 * Exécution de l'extracteur (durée constatée de 45 minutes avec ma base de presque 250000 personnes)
