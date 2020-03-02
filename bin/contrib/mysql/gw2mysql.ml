@@ -22,7 +22,7 @@ let event base db i_p1 i_p2 t n date place note source reason witnesses =
   let place = sou base place in
   let note = sou base note in
   let source = sou base source in
-  if date <> Adef.cdate_None || place <> "" || note <> "" || source <> "" then (* FIXME contrôle à revoir car on perd peut-être de l'info *)
+  if date <> Adef.cdate_None || place <> "" || note <> "" || source <> "" then (* FIXME contrôle à revoir car on perd peut-être de l'info en v7 *)
     let date = Adef.od_of_cdate date in
     let go_insert d =
 	let n_id =
@@ -72,6 +72,7 @@ let event base db i_p1 i_p2 t n date place note source reason witnesses =
 	  | Some (Dgreg (dmy, _)) -> dmy.year
 	  | _ -> 0
 	  ) ;
+	  ml2rstr db "Gregorian" ; ml2int 0 ; ml2int 0 ; ml2int 0 ;
 	  ml2rstr db (match d with
 	  | Some Dtext s -> s
 	  | _ -> ""
@@ -129,27 +130,28 @@ let event base db i_p1 i_p2 t n date place note source reason witnesses =
 	end
     | _ -> go_insert date
 
-let create_group db n_id s_id o =
+let create_group_fix db g_id n_id s_id o =
   insert db false "groups" (values [
-	"null" ;
+	ml2int g_id ;
 	n_id ;
 	s_id ;
 	ml2rstr db o ;
-  ]) ;
-  ml642int (insert_id db)
+  ])
 
-let populate_group db g p_i role =
+let populate_group db g_id p_i role seq =
   ignore (insert db false "person_group" (values [
 	"null" ;
-	g ;
+	ml2int g_id ;
 	ml2int p_i ;
         ml2rstr db role ;
+	ml2int seq ;
   ]))
 
 let gw_to_mysql base db =
   Printf.eprintf "Parsing persons - step 1 :\n%!" ;
   (* For each person *)
   let nb_ind = nb_of_persons base in
+  (* iper -> p_id *)
   ProgrBar.start ();
   for i = 0 to nb_ind - 1 do
     ProgrBar.run i nb_ind;
@@ -176,13 +178,20 @@ let gw_to_mysql base db =
       if psources <> "" then ml642int (insert_new_text db false "sources" psources)
       else "null"
     in
+    let consang = get_consang p in
+    let consang =
+      if consang = Adef.fix (-1) then -1.0
+      else Adef.float_of_fix consang *. 100.0
+    in
     insert db false "persons" (values [
 	ml2int i ;
+	ml2rstr db (Mutil.tr ' ' '_' (Name.lower fn)) ;
 	ml2int (get_occ p) ;
+	ml2rstr db (Mutil.tr ' ' '_' (Name.lower sn)) ;
 	ml2rstr db (isDead death) ;
 	n_id ;
 	s_id ;
-	ml2float (Adef.float_of_fix (get_consang p)) ;
+	ml2float consang ;
 	(* FIXME image useless for me *)
 	ml2rstr db (match get_sex p with
 	| Male -> "M"
@@ -194,7 +203,7 @@ let gw_to_mysql base db =
 	| Public -> "Public"
 	| Private -> "Private"
 	) ;
-	(* FIXME titles *)
+	(* FIXME titles -> tables dédiées ? *)
 	(* FIXME dispatch occupation on events *)
     ]);
     if sn <> "?" || fn <> "?" then
@@ -226,6 +235,28 @@ let gw_to_mysql base db =
 	ml2rstr db "False" ;
       ])
     ) (get_surnames_aliases p) ;
+    (* Initilise family group / parent link *)
+    Array.iteri (fun seq ifam ->
+      let g_id = (Adef.int_of_ifam ifam) in
+      let cpl = foi base ifam in
+      let i_father = Adef.int_of_iper (get_father cpl) in
+      let i_mother = Adef.int_of_iper (get_mother cpl) in
+      if (i = i_father && i_father < i_mother) ||
+         (i = i_mother && i_mother < i_father) then begin
+        let n_id =
+          let note = sou base (get_comment cpl) in
+          if note <> "" then ml642int (insert_new_text db false "notes" note)
+          else "null"
+        in
+        let s_id =
+          let source = sou base (get_fsources cpl) in
+          if source <> "" then ml642int (insert_new_text db false "sources" source)
+          else "null"
+        in
+        create_group_fix db g_id n_id s_id (sou base (get_origin_file cpl))
+      end ;
+      populate_group db g_id i "Parent" seq
+    ) (get_family p) ;
     (* Ces événements sont en doublon dans pevents en v7 / à conserver pour la v6
     event base db i "BIRT" "" (get_birth p) (get_birth_place p) (get_birth_note p) (get_birth_src p) "" [];
     event base db i "BAPM" "" (get_baptism p) (get_baptism_place p) (get_baptism_note p) (get_baptism_src p) "" [];
@@ -249,6 +280,59 @@ let gw_to_mysql base db =
     | UnknownBurial -> ()
     end ;
     *)
+  done ;
+  ProgrBar.finish ();
+  (* For each person - step 2 (constraint person_event.p_id) *)
+  Printf.eprintf "Parsing persons - step 2 :\n%!" ;
+  ProgrBar.start ();
+  for i = 0 to nb_ind - 1 do
+    ProgrBar.run i nb_ind;
+    let p = poi base (Adef.iper_of_int i) in
+    let insert_person_event opt_p e_id role =
+      match opt_p with
+      | Some iper ->
+          insert db false "person_event" (values [
+		"null" ;
+		e_id ;
+		ml2int (Adef.int_of_iper iper) ;
+		ml2rstr db role ;
+          ])
+      | None -> ()
+    in
+    let as_an_event e_t e_n r s_id role =
+      let e_id =
+        insert db false "events" (values [
+	      "null" ;
+	      ml2rstr db e_t ; ml2rstr db e_n ;
+	      ml2rstr db "" ;
+	      ml2rstr db "Gregorian" ; ml2int 0 ; ml2int 0 ; ml2int 0 ;
+	      ml2rstr db "Gregorian" ; ml2int 0 ; ml2int 0 ; ml2int 0 ;
+	      ml2rstr db "" ;
+	      ml2rstr db "" ;
+	      ml2rstr db "" ; "null" ;
+	      "null" ;
+	      s_id ;
+        ]) ;
+        ml642int (insert_id db)
+      in
+      insert_person_event (Some (Adef.iper_of_int i)) e_id "Main" ;
+      insert_person_event r.r_fath e_id role ;
+      insert_person_event r.r_moth e_id role
+    in
+    List.iter (fun r ->
+      let s_id = (* Only populated from API ! *)
+        let source = sou base r.r_sources in
+        if source <> "" then ml642int (insert_new_text db false "sources" source)
+        else "null"
+      in
+      match r.r_type with
+      | Adoption -> as_an_event "ADOP" "" r s_id "AdoptionParent"
+      | Recognition -> as_an_event "EVEN" "Recognition" r s_id "RecognitionParent"
+      | CandidateParent -> as_an_event "FACT" "CandidateParent" r s_id "CandidateParent"
+      | GodParent -> as_an_event "BAPM" "" r s_id "GodParent"
+      | FosterParent -> as_an_event "EVEN" "FosterParent" r s_id "FosterParent"
+    ) (get_rparents p) ;
+    let death = get_death p in
     List.iter (fun evt ->
 	let (e_t, e_n) =
 	  match evt.epers_name with
@@ -318,96 +402,23 @@ let gw_to_mysql base db =
 	  else ""
 	in
 	event base db i None e_t e_n evt.epers_date evt.epers_place evt.epers_note evt.epers_src reason evt.epers_witnesses
-    ) (get_pevents p)
+    ) (get_pevents p) ;
   done ;
-  ProgrBar.finish ();
-  (* For each person - step 2 (constraint person_event.p_id) *)
-  Printf.eprintf "Parsing persons - step 2 :\n%!" ;
-  ProgrBar.start ();
-  for i = 0 to nb_ind - 1 do
-    ProgrBar.run i nb_ind;
-    let p = poi base (Adef.iper_of_int i) in
-    let insert_person_event opt_p e_id role =
-      match opt_p with
-      | Some iper ->
-          insert db false "person_event" (values [
-		"null" ;
-		e_id ;
-		ml2int (Adef.int_of_iper iper) ;
-		ml2rstr db role ;
-          ])
-      | None -> ()
-    in
-    let as_an_event e_t e_n r s_id role =
-      let e_id =
-        insert db false "events" (values [
-	      "null" ;
-	      ml2rstr db e_t ; ml2rstr db e_n ;
-	      ml2rstr db "" ; ml2rstr db "Gregorian" ; ml2int 0 ; ml2int 0 ; ml2int 0 ; ml2rstr db "" ;
-	      ml2rstr db "" ;
-	      ml2rstr db "" ; "null" ;
-	      "null" ;
-	      s_id ;
-        ]) ;
-        ml642int (insert_id db)
-      in
-      insert_person_event (Some (Adef.iper_of_int i)) e_id "Main" ;
-      insert_person_event r.r_fath e_id role ;
-      insert_person_event r.r_moth e_id role
-    in
-    let as_a_group r s_id =
-      let g_id = create_group db "null" s_id "" in
-      begin match r.r_fath with
-      | Some iper -> populate_group db g_id (Adef.int_of_iper iper) "Father"
-      | None -> ()
-      end ;
-      begin match r.r_moth with
-      | Some iper -> populate_group db g_id (Adef.int_of_iper iper) "Mother"
-      | None -> ()
-      end ;
-      populate_group db g_id i "CandidateChild"
-    in
-    List.iter (fun r ->
-      let s_id = (* Only populated from API ! *)
-        let source = sou base r.r_sources in
-        if source <> "" then ml642int (insert_new_text db false "sources" source)
-        else "null"
-      in
-      match r.r_type with
-      | Adoption -> as_an_event "ADOP" "" r s_id "Parent"
-      | Recognition -> as_an_event "EVEN" "Recognition" r s_id "Parent"
-      | CandidateParent -> as_a_group r s_id
-      | GodParent -> as_an_event "BAPM" "" r s_id "GodParent"
-      | FosterParent -> as_an_event "EVEN" "FosterParent" r s_id "Parent"
-    ) (get_rparents p)
-  done ;
-  ProgrBar.finish ();
+  ProgrBar.finish () ;
   (* For each family *)
   Printf.eprintf "Parsing families :\n%!" ;
   let nb_fam = nb_of_families base in
+  (* ifam -> g_id *)
   ProgrBar.start ();
   for i = 0 to nb_fam - 1 do
     ProgrBar.run i nb_fam;
     let fam = foi base (Adef.ifam_of_int i) in
     if is_deleted_family fam then ()
     else begin
-      let n_id =
-        let note = sou base (get_comment fam) in
-        if note <> "" then ml642int (insert_new_text db false "notes" note)
-        else "null"
-      in
-      let s_id =
-        let source = sou base (get_fsources fam) in
-        if source <> "" then ml642int (insert_new_text db false "sources" source)
-        else "null"
-      in
-      let g = create_group db n_id s_id (sou base (get_origin_file fam)) in
       let ip_father = Adef.int_of_iper (get_father fam) in
       let ip_mother = Adef.int_of_iper (get_mother fam) in
-      populate_group db g ip_father "Father" ;
-      populate_group db g ip_mother "Mother" ;
-      Array.iter
-        (fun c -> populate_group db g (Adef.int_of_iper c) "Child")
+      Array.iteri
+        (fun seq c -> populate_group db i (Adef.int_of_iper c) "Child" seq)
         (get_children fam) ;
       List.iter (fun evt ->
 	let (e_t, e_n) =
@@ -433,6 +444,27 @@ let gw_to_mysql base db =
   ProgrBar.finish ()
   (* FIXME process linked_notes *)
   (* FIXME process history *)
+
+(*
+let gw_history_to_mysql base db =
+  Printf.eprintf "Parsing history :\n%!" ;
+  (* For each person *)
+  let nb_ind = nb_of_persons base in
+  ProgrBar.start ();
+  for i = 0 to nb_ind - 1 do
+    ProgrBar.run i nb_ind;
+    let p = poi base (Adef.iper_of_int i) in
+    let fn = sou base (get_first_name p) in
+    let sn = sou base (get_surname p) in
+    let occ = get_occ p in
+    let person_file = History_diff.history_file fn sn occ in
+    if Sys.file_exists (History_diff.history_path conf person_file) then begin
+      List.iter (fun h ->
+      ) (load_person_history conf
+    end
+  done
+  ProgrBar.finish ()
+*)
 
 (* main *)
 

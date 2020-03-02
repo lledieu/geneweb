@@ -1,3 +1,3 @@
 #!/bin/bash
 
-mysql -ugw -pgw_pw geneweb
+mysql -ugw -pgw_pw geneweb $@
