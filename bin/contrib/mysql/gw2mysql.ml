@@ -7,6 +7,23 @@ open Gwdb
 
 exception Impossible of string
 
+let string_of_sex = function
+| Male -> "M"
+| Female -> "F"
+| Neuter -> ""
+
+let string_of_access = function
+| IfTitles -> "IfTitles"
+| Public -> "Public"
+| Private -> "Private"
+
+type gen_record = History_diff.gen_record =
+  { date : string;
+    wizard : string;
+    gen_p : (iper, string) gen_person;
+    gen_f : (iper, string) gen_family list;
+    gen_c : iper array list }
+
 let insert db debug t v =
   if debug then Printf.printf "%s\n%!" v ;
   ignore (exec db ( "insert into " ^ t ^ " values " ^ v))
@@ -158,6 +175,7 @@ let gw_to_mysql base db =
     let p = poi base (Adef.iper_of_int i) in
     let sn = p_surname base p in
     let fn = p_first_name base p in
+    let oc = get_occ p in
     let death = get_death p in
     let isDead d =
 	match d with
@@ -185,24 +203,20 @@ let gw_to_mysql base db =
     in
     insert db false "persons" (values [
 	ml2int i ;
-	ml2rstr db (Mutil.tr ' ' '_' (Name.lower fn)) ;
-	ml2int (get_occ p) ;
-	ml2rstr db (Mutil.tr ' ' '_' (Name.lower sn)) ;
+	ml2rstr db (
+	  (Mutil.tr ' ' '_' (Name.lower fn)) ^ "." ^
+	  (string_of_int oc) ^ "." ^
+	  (Mutil.tr ' ' '_' (Name.lower sn))
+        ) ;
+	ml2rstr db (fn ^ "." ^ (string_of_int oc) ^ " " ^ sn) ;
+	ml2int oc ;
 	ml2rstr db (isDead death) ;
 	n_id ;
 	s_id ;
 	ml2float consang ;
-	(* FIXME image useless for me *)
-	ml2rstr db (match get_sex p with
-	| Male -> "M"
-	| Female -> "F"
-	| Neuter -> ""
-	) ;
-	ml2rstr db (match get_access p with
-	| IfTitles -> "IfTitles"
-	| Public -> "Public"
-	| Private -> "Private"
-	) ;
+	(* FIXME image + parse disc -> person_medias *)
+	ml2rstr db (string_of_sex (get_sex p)) ;
+	ml2rstr db (string_of_access (get_access p)) ;
 	(* FIXME titles -> tables dédiées ? *)
 	(* FIXME dispatch occupation on events *)
     ]);
@@ -445,35 +459,160 @@ let gw_to_mysql base db =
   (* FIXME process linked_notes *)
   (* FIXME process history *)
 
-(*
-let gw_history_to_mysql base db =
-  Printf.eprintf "Parsing history :\n%!" ;
-  (* For each person *)
-  let nb_ind = nb_of_persons base in
-  ProgrBar.start ();
-  for i = 0 to nb_ind - 1 do
-    ProgrBar.run i nb_ind;
-    let p = poi base (Adef.iper_of_int i) in
-    let fn = sou base (get_first_name p) in
-    let sn = sou base (get_surname p) in
-    let occ = get_occ p in
-    let person_file = History_diff.history_file fn sn occ in
-    if Sys.file_exists (History_diff.history_path conf person_file) then begin
-      List.iter (fun h ->
-      ) (load_person_history conf
-    end
-  done
-  ProgrBar.finish ()
-*)
+let gw_history_to_mysql db fname =
+  let load_person_history fname =
+    let history = ref [] in
+    begin match
+      (try Some (Secure.open_in_bin fname) with Sys_error _ -> None)
+    with
+      Some ic ->
+        begin try
+          while true do
+            let v : gen_record = input_value ic in history := v :: !history
+          done
+        with End_of_file -> ()
+        end;
+        close_in ic
+    | None -> ()
+    end;
+    !history
+  in
+  Printf.eprintf "Parsing history...\n%!" ;
+  let rec list_remove_same d_old d_new =
+    match d_old, d_new with
+    | [], l_new -> [], l_new
+    | l_old, [] -> l_old, []
+    | e_old :: l_old, e_new :: l_new ->
+        if e_old = e_new then list_remove_same l_old l_new
+        else
+          let old_in_new = List.mem e_old l_new in
+          let new_in_old = List.mem e_new l_old in
+          let l_old = List.filter (fun e -> e <> e_new) l_old in
+          let l_new = List.filter (fun e -> e <> e_old) l_new in
+          let l1, l2 = list_remove_same l_old l_new in
+          begin match old_in_new, new_in_old with
+          | true, true -> l1, l2
+          | false, true -> e_old :: l1, l2
+          | true, false -> l1, e_new :: l2
+          | false, false -> e_old :: l1, e_new :: l2
+          end
+  in
+  let rec loop dir =
+    Array.iter (fun f ->
+      let dir = dir ^ "/" ^ f in
+      if Sys.is_directory dir then loop dir
+      else
+        let insert_history r =
+          insert db false "history" (values [
+	    "null" ;
+	    ml2rstr db r.date ;
+	    ml2rstr db r.wizard ;
+	    "null" ;
+	    ml2rstr db f ;
+          ]) ;
+          ml642int (insert_id db)
+        in
+        let insert_history_detail h_id data d_old d_new =
+          ignore (insert db false "history_details" (values [
+	    "null" ;
+            h_id ;
+	    ml2rstr db data ;
+	    ml2rstr db d_old ;
+	    ml2rstr db d_new ;
+          ]))
+        in
+        let rec loop =
+          function
+          | [] -> ()
+          | [r] ->
+              ignore (insert_history r)
+          | new_r :: old_r :: l ->
+              begin
+                let h_id = insert_history new_r in
+	        if old_r.gen_p.first_name <> new_r.gen_p.first_name then
+                  insert_history_detail h_id "first_name" old_r.gen_p.first_name new_r.gen_p.first_name ;
+	        if old_r.gen_p.surname <> new_r.gen_p.surname then
+                  insert_history_detail h_id "surname" old_r.gen_p.surname new_r.gen_p.surname ;
+	        if old_r.gen_p.occ <> new_r.gen_p.occ then
+                  insert_history_detail h_id "occ" (string_of_int old_r.gen_p.occ) (string_of_int new_r.gen_p.occ) ;
+	        if old_r.gen_p.image <> new_r.gen_p.image then
+                  insert_history_detail h_id "image" old_r.gen_p.image new_r.gen_p.image ;
+	        if old_r.gen_p.public_name <> new_r.gen_p.public_name then
+                  insert_history_detail h_id "public_name" old_r.gen_p.public_name new_r.gen_p.public_name ;
+	        if old_r.gen_p.qualifiers <> new_r.gen_p.qualifiers then begin
+                  let d_old, d_new = list_remove_same old_r.gen_p.qualifiers new_r.gen_p.qualifiers in
+                  insert_history_detail h_id "qualifiers" (String.concat "\n" d_old) (String.concat "\n" d_new)
+                end ; (* FIXME *)
+	        if old_r.gen_p.aliases <> new_r.gen_p.aliases then begin
+                  let d_old, d_new = list_remove_same old_r.gen_p.aliases new_r.gen_p.aliases in
+                  insert_history_detail h_id "aliases" (String.concat "\n" d_old) (String.concat "\n" d_new)
+                end ; (* FIXME *)
+	        if old_r.gen_p.first_names_aliases <> new_r.gen_p.first_names_aliases then begin
+                  let d_old, d_new = list_remove_same old_r.gen_p.first_names_aliases new_r.gen_p.first_names_aliases in
+                  insert_history_detail h_id "first_names_aliases" (String.concat "\n" d_old) (String.concat "\n" d_new)
+                end ; (* FIXME *)
+	        if old_r.gen_p.surnames_aliases <> new_r.gen_p.surnames_aliases then begin
+                  let d_old, d_new = list_remove_same old_r.gen_p.surnames_aliases new_r.gen_p.surnames_aliases in
+                  insert_history_detail h_id "surnames_aliases" (String.concat "\n" d_old) (String.concat "\n" d_new)
+                end ; (* FIXME *)
+	        if old_r.gen_p.titles <> new_r.gen_p.titles then begin
+                  let d_old, d_new = list_remove_same old_r.gen_p.titles new_r.gen_p.titles in
+                  insert_history_detail h_id "titles" ("Nbr" ^ (string_of_int (List.length d_old))) ("Nbr" ^ (string_of_int (List.length d_new)))
+		end ; (* FIXME *)
+	        if old_r.gen_p.occupation <> new_r.gen_p.occupation then
+                  insert_history_detail h_id "occupation" old_r.gen_p.occupation new_r.gen_p.occupation ;
+	        if old_r.gen_p.sex <> new_r.gen_p.sex then
+                  insert_history_detail h_id "sex" (string_of_sex old_r.gen_p.sex) (string_of_sex new_r.gen_p.sex) ;
+	        if old_r.gen_p.pevents <> new_r.gen_p.pevents then begin
+                  let d_old, d_new = list_remove_same old_r.gen_p.pevents new_r.gen_p.pevents in
+                  insert_history_detail h_id "pevents" ("Nbr" ^ (string_of_int (List.length d_old))) ("Nbr" ^ (string_of_int (List.length d_new)))
+                end ; (* FIXME *)
+	        if old_r.gen_p.notes <> new_r.gen_p.notes then
+                  insert_history_detail h_id "notes" old_r.gen_p.notes new_r.gen_p.notes ;
+	        if old_r.gen_p.psources <> new_r.gen_p.psources then
+                  insert_history_detail h_id "psources" old_r.gen_p.psources new_r.gen_p.psources ;
+	        if old_r.gen_f <> new_r.gen_f then begin
+                  let d_old, d_new = list_remove_same old_r.gen_f new_r.gen_f in
+                  match d_old, d_new with
+                  | [e_old], [e_new] -> begin
+                       if e_old.fevents <> e_new.fevents then begin
+                         let d_old, d_new = list_remove_same e_old.fevents e_new.fevents in
+                         insert_history_detail h_id "fevents" ("Nbr" ^ (string_of_int (List.length d_old))) ("Nbr" ^ (string_of_int (List.length d_new)))
+                       end ; (* FIXME *)
+                       if e_old.comment <> e_new.comment then
+                         insert_history_detail h_id "comment" e_old.comment e_new.comment ;
+                       if e_old.fsources <> e_new.fsources then
+                         insert_history_detail h_id "fsources" e_old.comment e_new.comment ;
+                    end
+                  | _, _ -> insert_history_detail h_id "families" ("Nbr" ^ (string_of_int (List.length d_old))) ("Nbr" ^ (string_of_int (List.length d_new)))
+		end ; (* FIXME *)
+	        if old_r.gen_c <> new_r.gen_c then begin
+                  let d_old, d_new = list_remove_same old_r.gen_c new_r.gen_c in
+                  insert_history_detail h_id "children" ("Nbr" ^ (string_of_int (List.length d_old))) ("Nbr" ^ (string_of_int (List.length d_new)))
+		end ; (* FIXME *)
+                loop (old_r :: l)
+              end
+        in
+        loop (load_person_history dir)
+    ) (Sys.readdir dir)
+  in
+  loop ("./" ^ fname ^ ".gwb/history_d")
 
 (* main *)
 
 let fname = ref ""
 
+let current = ref true
+
+let history = ref true
+
 let errmsg = "usage: " ^ Sys.argv.(0) ^ " [options] <database>"
 
-let speclist =
-  [("-nolock", Arg.Set Lock.no_lock_flag, ": do not lock data base")]
+let speclist = [
+ ("-nolock", Arg.Set Lock.no_lock_flag, ": do not lock data base");
+ ("-noCurrent", Arg.Clear current, ": do not export current data");
+ ("-noHistory", Arg.Clear history, ": do not export history data")
+]
 
 let anonfun s =
   if !fname = "" then fname := s
@@ -489,13 +628,16 @@ let main () =
   end
   else
     let base = open_base !fname in
-    let () = load_strings_array base in
-    let () = load_ascends_array base in
-    let () = load_couples_array base in
-    let () = load_descends_array base in
     let db = quick_connect ~database:"geneweb" ~user:"gw" ~password:"gw_pw" () in
     set_charset db "utf8" ;
-    gw_to_mysql base db ;
+    if !current then begin
+      let () = load_strings_array base in
+      let () = load_ascends_array base in
+      let () = load_couples_array base in
+      let () = load_descends_array base in
+      gw_to_mysql base db
+    end ;
+    if !history then begin gw_history_to_mysql db !fname end ;
     disconnect db
 
 let _ = Printexc.catch main ()

@@ -26,9 +26,9 @@ CREATE TABLE sources (
 
 CREATE TABLE persons (
 	p_id	INTEGER UNSIGNED PRIMARY KEY, -- value 0 not working with AUTO_INCREMENT
-	p_key	VARCHAR(120) NOT NULL,
+	pkey	VARCHAR(250) NOT NULL, -- FIXME not unique
+	pkey2	VARCHAR(250) NOT NULL, -- removed after migration
 	occ	TINYINT UNSIGNED NOT NULL,
-	n_key	VARCHAR(120) NOT NULL,
 	death	enum('NotDead','Dead','DeadYoung','DeadDontKnowWhen','DontKnowIfDead','OfCourseDead') NOT NULL,
 	n_id	INTEGER UNSIGNED,
 	s_id	INTEGER UNSIGNED,
@@ -43,6 +43,8 @@ CREATE TABLE persons (
 	FOREIGN KEY (s_id) REFERENCES sources(s_id)
 );
 
+create index idx_persons_pkey2 on persons (pkey2);
+
 CREATE TABLE names (
 	n_id	INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 	p_id	INTEGER UNSIGNED NOT NULL,
@@ -55,7 +57,7 @@ CREATE TABLE names (
 CREATE TABLE events (
 	e_id	INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 	-- Type
-	type	ENUM(
+	e_type	ENUM(
 		-- From INDIVIDUAL_EVENT_STRUCTURE
 		'BIRT',
 		'CHR',

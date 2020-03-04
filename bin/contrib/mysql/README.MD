@@ -20,6 +20,9 @@ exit
 ### Lancer la migration
 
 Pré-requis :
+Pour Windows / cygwin : package ```libmysqlclient-devel```
+Pour Linux / Ubuntu : package ```libmysqlclient-dev```
+puis
 ```
 opam install conf-mysql mysql
 ```

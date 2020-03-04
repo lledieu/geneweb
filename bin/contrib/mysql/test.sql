@@ -2,7 +2,7 @@ set @id = 17424;
 
 select concat(givn, ' ', surn) from names where p_id = @id;
 
-select concat(type, ' ', dmy1_d , '/', dmy1_m, '/', dmy1_y, ' ', place), role, n_id, s_id
+select concat(e_type, ' ', dmy1_d , '/', dmy1_m, '/', dmy1_y, ' ', place), role, n_id, s_id
 from person_event
 inner join events using(e_id)
 inner join places using(pl_id)
@@ -19,4 +19,13 @@ inner join names n on n.p_id = pg2.p_id
 where pg1.p_id = @id
   and pg2.p_id <> @id
   and n.main = 'True'
-order by 1, 2, 4;
+order by 1 desc, 2 asc, 3 asc, 4 asc;
+
+select "pkey à revoir", count(*)
+from persons where pkey = '.0.';
+
+select "Personnes orphelines", count(*)
+from persons p
+where not exists (select 1 from names where p_id = p.p_id)
+  and not exists (select 1 from person_event where p_id = p.p_id)
+  and not exists (select 1 from person_group where p_id = p.p_id);
