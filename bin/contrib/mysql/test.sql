@@ -1,15 +1,33 @@
 -- set @id = 17424;
 set @id = 17418;
 
-select concat(givn, ' ', surn) from names where p_id = @id;
+select givn, nick, surn from names where p_id = @id;
 
-select concat(e_type, ' ', dmy1_d , '/', dmy1_m, '/', dmy1_y, ' '), place, name, role, n_id, s_id
+select
+ e_type, t_name,
+ concat(' ', dmy1_d , '/', dmy1_m, '/', dmy1_y, ' ') as "date",
+ ifnull(place,'') as "place",
+ role,
+ ifnull(n_id,'') as "note",
+ ifnull(s_id,'') as "source"
 from person_event
 inner join events using(e_id)
 left join places using(pl_id)
-left join occupation_details using(e_id)
-left join occupations using(o_id)
-where person_event.p_id = @id;
+where person_event.p_id = @id
+order by dmy1_y;
+
+select
+ name,
+ group_concat(case d_prec
+  when 'FROM-TO' then concat(dmy1_y, '-',  dmy2_y)
+  else dmy1_y
+ end order by dmy1_y separator ', ') as period
+from events
+inner join occupation_details using(e_id)
+inner join occupations using(o_id)
+where e_type = 'OCCU'
+  and e_id in (select concat_ws(',',e_id) from person_event where p_id = @id and role = 'Main')
+group by 1 order by period;
 
 select
  pg1.role, pg1.seq,
@@ -23,6 +41,17 @@ where pg1.p_id = @id
   and pg2.p_id <> @id
   and n.main = 'True'
 order by 1 desc, 2 asc, 3 asc, 4 asc;
+
+select distinct case ln_type
+  when 'PgInd' then concat( 'p_id: ', p_id)
+  when 'PgFam' then concat( 'g_id: ', g_id)
+  when 'PgNotes' then 'PgNotes'
+  when 'PgMisc' then nkey
+  when 'PgWizard' then concat( 'w:', nkey)
+ end as 'Linked from'
+from linked_notes_ind
+inner join linked_notes using(ln_id)
+where pkey = (select pkey from persons where p_id = @id);
 
 select "pkey à revoir", count(*)
 from persons where pkey = '.0.';
