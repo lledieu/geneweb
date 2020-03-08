@@ -5,8 +5,6 @@ open Geneweb
 open Def
 open Gwdb
 
-exception Impossible of string
-
 let string_of_sex = function
 | Male -> "M"
 | Female -> "F"
@@ -39,7 +37,7 @@ let event base db i_p1 i_p2 t n date place note source reason witnesses =
   let place = sou base place in
   let note = sou base note in
   let source = sou base source in
-  if date <> Adef.cdate_None || place <> "" || note <> "" || source <> "" then (* FIXME contrôle à revoir car on perd peut-être de l'info en v7 *)
+  (* if date <> Adef.cdate_None || place <> "" || note <> "" || source <> "" then FIXME contrôle utile uniquement en v6 ? *)
     let date = Adef.od_of_cdate date in
     let go_insert d =
 	let n_id =
@@ -62,8 +60,8 @@ let event base db i_p1 i_p2 t n date place note source reason witnesses =
 		| Maybe -> "Maybe" (* FIXME: mauvais usage dans GeneWeb => comment ajuster ? *)
 		| Before -> "BEF"
 		| After -> "AFT"
-		| OrYear _ -> raise (Impossible "OrYear")
-		| YearInt _ -> raise (Impossible "YearInt")
+		| OrYear _ -> raise (Failure "OrYear")
+		| YearInt _ -> raise (Failure "YearInt")
 		end
 	  | _ -> ""
 	  ) ;
@@ -164,7 +162,7 @@ let populate_group db g_id p_i role seq =
 	ml2int seq ;
   ]))
 
-let gw_to_mysql base db =
+let gw_to_mysql base db fname =
   Printf.eprintf "Parsing persons - step 1 :\n%!" ;
   (* For each person *)
   let nb_ind = nb_of_persons base in
@@ -201,42 +199,175 @@ let gw_to_mysql base db =
       if consang = Adef.fix (-1) then -1.0
       else Adef.float_of_fix consang *. 100.0
     in
+    let pkey =
+      (Mutil.tr ' ' '_' (Name.lower fn)) ^ "." ^
+      (string_of_int oc) ^ "." ^
+      (Mutil.tr ' ' '_' (Name.lower sn))
+    in
     insert db false "persons" (values [
 	ml2int i ;
-	ml2rstr db (
-	  (Mutil.tr ' ' '_' (Name.lower fn)) ^ "." ^
-	  (string_of_int oc) ^ "." ^
-	  (Mutil.tr ' ' '_' (Name.lower sn))
-        ) ;
+	ml2rstr db pkey ;
 	ml2rstr db (fn ^ "." ^ (string_of_int oc) ^ " " ^ sn) ;
 	ml2int oc ;
 	ml2rstr db (isDead death) ;
 	n_id ;
 	s_id ;
 	ml2float consang ;
-	(* FIXME image + parse disc -> person_medias *)
 	ml2rstr db (string_of_sex (get_sex p)) ;
 	ml2rstr db (string_of_access (get_access p)) ;
-	(* FIXME titles -> tables dédiées ? *)
-	(* FIXME dispatch occupation on events *)
+	ml2rstr db (sou base (get_public_name p)) ;
     ]);
+    (* Dispatch occupation on events *)
+    let insert_occupation p_id r o_start o_end y_start y_end =
+      let occu =
+        let last = (BatText.length r) - 1 in
+        if o_start >= o_end || o_end > last then begin
+          Printf.eprintf "\nBUG insert_occupation : (%d) %d-%d-%d %s\n%!" i o_start o_end last (BatText.to_string r) ;
+          raise (Failure "insert_occupation")
+        end else BatText.to_string (BatText.sub r o_start (o_end-o_start+1))
+      in
+      insert db false "events" (values [
+	  "null" ;
+	  ml2rstr db "OCCU" ; ml2rstr db "" ;
+	  ml2rstr db (if y_end <> 0 then "FROM-TO" else "") ;
+	  ml2rstr db "Gregorian" ; ml2int 0 ; ml2int 0 ; ml2int y_start ;
+	  ml2rstr db "Gregorian" ; ml2int 0 ; ml2int 0 ; ml2int y_end ;
+	  ml2rstr db "" ; ml2rstr db "" ; ml2rstr db "" ;
+	  "null" ; "null" ; "null" ;
+      ]);
+      let e_id = ml642int (insert_id db) in
+      insert db false "occupation_details" (values [
+	e_id ;
+	ml2rstr db occu ;
+	"null" ;
+      ]);
+      insert db false "person_event" (values [
+	"null" ;
+	e_id ;
+	ml2int p_id ;
+	ml2rstr db "Main" ;
+      ])
+    in
+    let my_index_from_opt r pos c =
+      try
+        let pos1 = BatText.index_from r pos c in
+        if pos1 < pos then None (* BUG workarround *)
+        else Some pos1
+      with
+      | Not_found -> None
+      | _ -> begin
+          Printf.eprintf "\nBUG my_index_from_opt : (%d) %d %s\n%!" i pos (BatText.to_string r) ;
+          raise (Failure "my_index_from_opt")
+        end
+    in
+    let parse_period r o_start o_end p_start p_end =
+      (* Printf.eprintf "DEBUG period (%d) : %d-%d %d-%d\n%!" i o_start o_end p_start p_end ; *)
+      let to_int r pos1 pos2 =
+        let last = (BatText.length r) - 1 in
+        if pos1 > last || pos2 > last then begin
+          Printf.eprintf "\nBUG to_int : (%d) %d-%d %s\n%!" i pos1 pos2 (BatText.to_string r) ;
+          raise (Failure "to_int")
+        end ;
+	if pos1 >= pos2 then 0
+        else int_of_string (BatText.to_string (BatText.sub r pos1 (pos2-pos1+1)))
+      in
+      match my_index_from_opt r p_start (BatUChar.of_char '-') with
+      | Some pos when pos <= p_end -> insert_occupation i
+          r o_start o_end
+          (to_int r p_start (pos-1))
+          (to_int r (pos+1) p_end)
+      | _ -> insert_occupation i
+          r o_start o_end
+          (to_int r p_start p_end)
+          0
+    in
+    let rec parse_dates r o_start o_end d_start d_end =
+      (* Printf.eprintf "DEBUG dates (%d) : %d-%d %d-%d\n%!" i o_start o_end d_start d_end ; *)
+      if (BatText.get r o_start) = (BatUChar.of_char ' ') then parse_dates r (o_start+1) o_end d_start d_end
+      else if (BatText.get r o_end) = (BatUChar.of_char ' ') then parse_dates r o_start (o_end-1) d_start d_end
+      else if (BatText.get r d_start) = (BatUChar.of_char ' ') then parse_dates r o_start o_end (d_start+1) d_end
+      else if o_start >= o_end then
+        raise (Failure (Printf.sprintf "Occupation (%d) %d-%d !! : %s\n" i o_start o_end (BatText.to_string r)))
+      else
+        match my_index_from_opt r d_start (BatUChar.of_char ',') with
+        | Some pos when pos <= d_end -> begin
+            parse_period r o_start o_end d_start (pos-1) ;
+            parse_dates r o_start o_end (pos+1) d_end
+          end
+        | _ -> parse_period r o_start o_end d_start d_end
+    in
+    let rec parse_occupation r pos0 =
+      (* Printf.eprintf "DEBUG occupation (%d) %d : %s\n%!" i pos0 (BatText.to_string r) ; *)
+      let last = (BatText.length r) - 1 in
+      if last <= pos0 then ()
+      else if (BatText.get r pos0) = (BatUChar.of_char ',') ||
+        (BatText.get r pos0) = (BatUChar.of_char ' ') then parse_occupation r (pos0+1)
+      else
+        let subparse pos1 =
+          match my_index_from_opt r pos1 (BatUChar.of_char ')') with
+          | Some pos2 -> begin
+              begin
+                try parse_dates r pos0 (pos1-1) (pos1+1) (pos2-1)
+                with Failure _ -> insert_occupation i r pos0 pos2 0 0
+              end ;
+              parse_occupation r (pos2+1)
+            end
+          | None -> Printf.eprintf "\nMalformed occupation (%d) : %s\n" i (BatText.to_string r)
+        in
+        match my_index_from_opt r pos0 (BatUChar.of_char '('),
+              my_index_from_opt r pos0 (BatUChar.of_char ',') with
+        | Some pos1, None -> subparse pos1
+        | Some pos1, Some pos1b when pos1 < pos1b -> subparse pos1
+        | _, Some pos1 -> begin
+            insert_occupation i r pos0 (pos1-1) 0 0 ;
+            parse_occupation r (pos1+1)
+          end
+        | None, None -> insert_occupation i r pos0 last 0 0
+    in parse_occupation (BatText.of_string (sou base (get_occupation p))) 0 ;
+    (* FIXME trop simplifié ? *)
+    let has_image_file =
+      let f = "images/" ^ fname ^ "/" ^ pkey in
+      if Sys.file_exists (f ^ ".gif") then Some (f ^ ".gif")
+      else if Sys.file_exists (f ^ ".jpg") then Some (f ^ ".jpg")
+      else if Sys.file_exists (f ^ ".png") then Some (f ^ ".png")
+      else None
+    in
+    begin match has_image_file with
+    | Some f ->
+        insert db false "medias" (values [
+		"null" ;
+		ml2rstr db f ;
+	]);
+	let m_id = ml642int (insert_id db) in
+        insert db false "person_media" (values [
+		"null" ;
+		ml2int i ;
+		m_id ;
+	]);
+    | None -> ()
+    end ;
     if sn <> "?" || fn <> "?" then
     insert db false "names" (values [
 	"null" ;
 	ml2int i ;
+	ml2rstr db "" ;
 	ml2rstr db fn ;
+	ml2rstr db "" ;
+	ml2rstr db "" ;
 	ml2rstr db sn ;
+	ml2rstr db "" ;
 	ml2rstr db "True" ;
-	(* FIXME public_name -> directement dans persons ? *)
-	(* FIXME qualifiers -> table dédiée ? *)
-	(* FIXME aliases -> table dédiée ? *)
     ]);
     List.iter (fun a ->
       insert db false "names" (values [
 	"null" ;
 	ml2int i ;
+	ml2rstr db "" ;
 	ml2rstr db (sou base a) ;
+	ml2rstr db "" ;
+	ml2rstr db "" ;
 	ml2rstr db sn ;
+	ml2rstr db "" ;
 	ml2rstr db "False" ;
       ])
     ) (get_first_names_aliases p) ;
@@ -244,11 +375,236 @@ let gw_to_mysql base db =
       insert db false "names" (values [
 	"null" ;
 	ml2int i ;
+	ml2rstr db "" ;
 	ml2rstr db fn ;
+	ml2rstr db "" ;
+	ml2rstr db "" ;
 	ml2rstr db (sou base a) ;
+	ml2rstr db "" ;
 	ml2rstr db "False" ;
       ])
     ) (get_surnames_aliases p) ;
+    List.iter (fun a ->
+      insert db false "names" (values [
+	"null" ;
+	ml2int i ;
+	ml2rstr db "" ;
+	ml2rstr db (sou base a) ;
+	ml2rstr db "" ;
+	ml2rstr db "" ;
+	ml2rstr db "" ;
+	ml2rstr db "" ;
+	ml2rstr db "False" ;
+      ])
+    ) (get_aliases p) ;
+    List.iter (fun a ->
+      insert db false "names" (values [
+	"null" ;
+	ml2int i ;
+	ml2rstr db "" ;
+	ml2rstr db fn ;
+	ml2rstr db (sou base a) ;
+	ml2rstr db "" ;
+	ml2rstr db "" ;
+	ml2rstr db "" ;
+	ml2rstr db "False" ;
+      ])
+    ) (get_qualifiers p) ;
+    (* titles FIXME rework needed *)
+    let get_dmy2 d =
+      match d with
+      | Some (Dgreg (dmy, _)) ->
+	begin match dmy.prec with
+	| OrYear dmy2 -> Some dmy2
+	| YearInt dmy2 -> Some dmy2
+	| _ -> None
+	end
+      | _ -> None
+    in
+    List.iter (fun t ->
+      let d_start = Adef.od_of_cdate t.t_date_start in
+      let d_start_dmy2 = get_dmy2 d_start in
+      let d_end = Adef.od_of_cdate t.t_date_end in
+      let d_end_dmy2 = get_dmy2 d_end in
+      insert db false "events" (values [
+	  "null" ;
+	  ml2rstr db "TITL" ;
+	  ml2rstr db "" ;
+	  ml2rstr db (match d_start, d_end with
+	  | None, None -> ""
+          | Some _, None -> "FROM"
+          | None, Some _ -> "TO"
+          | Some _, Some _ -> "FROM-TO"
+	  ) ;
+	  ml2rstr db (match d_start with
+	  | Some (Dgreg (_, calendar)) -> 
+		begin match calendar with
+		| Dgregorian -> "Gregorian"
+		| Djulian -> "Julian"
+		| Dfrench -> "French"
+		| Dhebrew -> "Hebrew"
+		end
+	  | _ -> "Gregorian"
+          ) ;
+	  ml2int (match d_start with
+	  | Some (Dgreg (dmy, _)) -> dmy.day
+	  | _ -> 0
+	  ) ;
+	  ml2int (match d_start with
+	  | Some (Dgreg (dmy, _)) -> dmy.month
+	  | _ -> 0
+	  ) ;
+	  ml2int (match d_start with
+	  | Some (Dgreg (dmy, _)) -> dmy.year
+	  | _ -> 0
+	  ) ;
+	  ml2rstr db (match d_end with
+	  | Some (Dgreg (_, calendar)) -> 
+		begin match calendar with
+		| Dgregorian -> "Gregorian"
+		| Djulian -> "Julian"
+		| Dfrench -> "French"
+		| Dhebrew -> "Hebrew"
+		end
+	  | _ -> "Gregorian"
+          ) ;
+	  ml2int (match d_end with
+	  | Some (Dgreg (dmy, _)) -> dmy.day
+	  | _ -> 0
+	  ) ;
+	  ml2int (match d_end with
+	  | Some (Dgreg (dmy, _)) -> dmy.month
+	  | _ -> 0
+	  ) ;
+	  ml2int (match d_end with
+	  | Some (Dgreg (dmy, _)) -> dmy.year
+	  | _ -> 0
+	  ) ;
+	  ml2rstr db "" ;
+	  ml2rstr db "" ;
+	  ml2rstr db "" ;
+	  "null" ;
+	  "null" ;
+	  "null" ;
+        ]);
+	let e_id = ml642int (insert_id db) in
+	insert db false "title_details" (values [
+		e_id ;
+		ml2rstr db (sou base t.t_ident) ;
+		ml2rstr db (sou base t.t_place) ;
+	  	ml2int t.t_nth ;
+		ml2rstr db (match t.t_name with
+                | Tmain -> "True"
+                | _ -> "False"
+                ) ;
+		ml2rstr db (match t.t_name with
+                | Tname n -> sou base n
+                | _ -> ""
+                ) ;
+	        ml2rstr db (match d_start with
+	        | Some (Dgreg (dmy, _)) ->
+		  begin match dmy.prec with
+		  | Sure -> ""
+		  | About -> "ABT"
+		  | Maybe -> "Maybe"
+		  | Before -> "BEF"
+		  | After -> "AFT"
+		  | OrYear _ -> "OrYear"
+		  | YearInt _ -> "YearInt"
+		  end
+	        | _ -> ""
+	        ) ;
+	        ml2rstr db (match d_start with
+	        | Some (Dgreg (_, calendar)) -> 
+		  begin match calendar with
+		  | Dgregorian -> "Gregorian"
+		  | Djulian -> "Julian"
+		  | Dfrench -> "French"
+		  | Dhebrew -> "Hebrew"
+		  end
+	        | _ -> "Gregorian"
+                ) ;
+	        ml2int (match d_start with
+	        | Some (Dgreg (dmy, _)) -> dmy.day
+	        | _ -> 0
+	        ) ;
+	        ml2int (match d_start with
+	        | Some (Dgreg (dmy, _)) -> dmy.month
+	        | _ -> 0
+	        ) ;
+	        ml2int (match d_start with
+	        | Some (Dgreg (dmy, _)) -> dmy.year
+	        | _ -> 0
+	        ) ;
+	        ml2int (match d_start_dmy2 with
+	        | Some dmy -> dmy.day2
+	        | _ -> 0
+	        ) ;
+	        ml2int (match d_start_dmy2 with
+	        | Some dmy -> dmy.month2
+	        | _ -> 0
+	        ) ;
+	        ml2int (match d_start_dmy2 with
+	        | Some dmy -> dmy.year2
+	        | _ -> 0
+	        ) ;
+	        ml2rstr db (match d_start with
+	        | Some Dtext s -> s
+	        | _ -> ""
+                ) ;
+	        ml2rstr db (match d_end with
+	        | Some (Dgreg (dmy, _)) ->
+		  begin match dmy.prec with
+		  | Sure -> ""
+		  | About -> "ABT"
+		  | Maybe -> "Maybe"
+		  | Before -> "BEF"
+		  | After -> "AFT"
+		  | OrYear _ -> "OrYear"
+		  | YearInt _ -> "YearInt"
+		  end
+	        | _ -> ""
+	        ) ;
+	        ml2rstr db (match d_end with
+	        | Some (Dgreg (_, calendar)) -> 
+		  begin match calendar with
+		  | Dgregorian -> "Gregorian"
+		  | Djulian -> "Julian"
+		  | Dfrench -> "French"
+		  | Dhebrew -> "Hebrew"
+		  end
+	        | _ -> "Gregorian"
+                ) ;
+	        ml2int (match d_end with
+	        | Some (Dgreg (dmy, _)) -> dmy.day
+	        | _ -> 0
+	        ) ;
+	        ml2int (match d_end with
+	        | Some (Dgreg (dmy, _)) -> dmy.month
+	        | _ -> 0
+	        ) ;
+	        ml2int (match d_end with
+	        | Some (Dgreg (dmy, _)) -> dmy.year
+	        | _ -> 0
+	        ) ;
+	        ml2int (match d_end_dmy2 with
+	        | Some dmy -> dmy.day2
+	        | _ -> 0
+	        ) ;
+	        ml2int (match d_end_dmy2 with
+	        | Some dmy -> dmy.month2
+	        | _ -> 0
+	        ) ;
+	        ml2int (match d_end_dmy2 with
+	        | Some dmy -> dmy.year2
+	        | _ -> 0
+	        ) ;
+	        ml2rstr db (match d_end with
+	        | Some Dtext s -> s
+	        | _ -> ""
+                ) ;
+	]) ;
+    ) (get_titles p) ;
     (* Initilise family group / parent link *)
     Array.iteri (fun seq ifam ->
       let g_id = (Adef.int_of_ifam ifam) in
@@ -455,9 +811,44 @@ let gw_to_mysql base db =
       ) (get_fevents fam)
     end
   done ;
-  ProgrBar.finish ()
-  (* FIXME process linked_notes *)
-  (* FIXME process history *)
+  ProgrBar.finish () ;
+  Printf.eprintf "Parsing linked notes :\n%!" ;
+  let insert_linked_note ln_type ln_key ln_iper ln_ifam (list_nt, list_ind) =
+    insert db false "linked_notes" (values [
+	"null" ;
+	ml2rstr db ln_type ;
+	ml2rstr db ln_key ;
+	ln_iper ;
+	ln_ifam ;
+    ]) ;
+    let ln_id = ml642int (insert_id db) in
+    List.iter (fun nt ->
+      insert db false "linked_notes_nt" (values [
+	"null" ;
+	ln_id ;
+	ml2rstr db nt ;
+      ])
+    ) list_nt ;
+    List.iter (fun ((fn, sn, oc), { NotesLinks.lnTxt = text ; NotesLinks.lnPos = pos } ) ->
+      insert db false "linked_notes_ind" (values [
+	"null" ;
+	ln_id ;
+	ml2rstr db (fn ^ "." ^ (string_of_int oc) ^ "." ^ sn) ;
+        begin match text with
+        | Some s -> ml2rstr db s
+        | None -> "null"
+        end ;
+	ml2int pos ;
+      ])
+    ) list_ind ;
+  in
+  List.iter (function
+    | NotesLinks.PgInd iper, l -> insert_linked_note "PgInd" "" (ml2int (Adef.int_of_iper iper)) "null" l
+    | NotesLinks.PgFam ifam, l -> insert_linked_note "PgFam" "" "null" (ml2int (Adef.int_of_ifam ifam)) l
+    | NotesLinks.PgNotes, l -> insert_linked_note "PgNotes" "" "null" "null" l
+    | NotesLinks.PgMisc s, l -> insert_linked_note "PgMisc" s "null" "null" l
+    | NotesLinks.PgWizard s, l -> insert_linked_note "PgWizard" s "null" "null" l
+  ) (NotesLinks.read_db (fname ^ ".gwb/"))
 
 let gw_history_to_mysql db fname =
   let load_person_history fname =
@@ -596,7 +987,7 @@ let gw_history_to_mysql db fname =
         loop (load_person_history dir)
     ) (Sys.readdir dir)
   in
-  loop ("./" ^ fname ^ ".gwb/history_d")
+  loop (fname ^ ".gwb/history_d")
 
 (* main *)
 
@@ -635,7 +1026,7 @@ let main () =
       let () = load_ascends_array base in
       let () = load_couples_array base in
       let () = load_descends_array base in
-      gw_to_mysql base db
+      gw_to_mysql base db !fname
     end ;
     if !history then begin gw_history_to_mysql db !fname end ;
     disconnect db

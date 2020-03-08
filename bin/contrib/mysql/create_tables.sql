@@ -1,12 +1,20 @@
+DROP TABLE IF EXISTS linked_notes_ind;
+DROP TABLE IF EXISTS linked_notes_nt;
+DROP TABLE IF EXISTS linked_notes;
+DROP TABLE IF EXISTS person_media;
+DROP TABLE IF EXISTS medias;
 DROP TABLE IF EXISTS person_group;
 DROP TABLE IF EXISTS groups;
 DROP TABLE IF EXISTS person_event;
+DROP TABLE IF EXISTS title_details;
+DROP TABLE IF EXISTS occupation_details;
 DROP TABLE IF EXISTS events;
 DROP TABLE IF EXISTS names;
 DROP TABLE IF EXISTS persons;
 DROP TABLE IF EXISTS sources;
 DROP TABLE IF EXISTS notes;
 DROP TABLE IF EXISTS places;
+DROP TABLE IF EXISTS occupations;
 
 CREATE TABLE places (
 	pl_id	INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -39,6 +47,7 @@ CREATE TABLE persons (
 		'Public',
 		'Private'
 	) NOT NULL DEFAULT 'IfTitles',
+	public_name VARCHAR(120) NOT NULL DEFAULT '', -- FIXME spécifique
 	FOREIGN KEY (n_id) REFERENCES notes(n_id),
 	FOREIGN KEY (s_id) REFERENCES sources(s_id)
 );
@@ -48,9 +57,13 @@ create index idx_persons_pkey2 on persons (pkey2);
 CREATE TABLE names (
 	n_id	INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 	p_id	INTEGER UNSIGNED NOT NULL,
+	npfx	VARCHAR(30) NOT NULL,
 	givn	VARCHAR(120) NOT NULL,
+	nick	VARCHAR(30) NOT NULL,
+	spfx	VARCHAR(30) NOT NULL,
 	surn	VARCHAR(120) NOT NULL,
-	main	Enum('True','False') NOT NULL DEFAULT 'False', -- FIXME à retravailler
+	nsfx	VARCHAR(30) NOT NULL,
+	main	Enum('True','False') NOT NULL DEFAULT 'False', -- FIXME à retravailler ?
 	FOREIGN KEY (p_id) REFERENCES persons(p_id)
 );
 
@@ -92,7 +105,7 @@ CREATE TABLE events (
 		'PROP',
 		'RELI',
 		'RESI',
-		'TITL', -- FIXME implémentation spécifique dans GeneWeb
+		'TITL',
 		'FACT',
 		-- From FAMILY_EVENT_STRUCTURE
 		'ANNU',
@@ -115,9 +128,11 @@ CREATE TABLE events (
 		'EST',
 		'BEF',
 		'AFT',
+		'BET-AND', -- FIXME privilégier 2 événements avec AFT et BEF ?
 		'FROM',
 		'TO',
-		'FROM-TO'
+		'FROM-TO',
+		'INT'
 	) NOT NULL DEFAULT '',
 	d_cal1	enum(
 		'Gregorian',
@@ -153,6 +168,76 @@ CREATE TABLE events (
 	FOREIGN KEY (pl_id) REFERENCES places(pl_id),
 	FOREIGN KEY (n_id) REFERENCES notes(n_id),
 	FOREIGN KEY (s_id) REFERENCES sources(s_id)
+);
+
+CREATE TABLE title_details (
+	e_id	INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+	ident	VARCHAR(120) NOT NULL,
+	place	VARCHAR(120) NOT NULL DEFAULT '',
+	nth	TINYINT UNSIGNED NOT NULL DEFAULT 0,
+	main	enum( 'True', 'False') NOT NULL DEFAULT 'False',
+	name	VARCHAR(120) NOT NULL DEFAULT '',
+	-- FROM
+	d1_prec	enum(
+		'',
+		'ABT',
+		'Maybe',
+		'BEF',
+		'AFT',
+		'OrYear',
+		'YearInt'
+	) NOT NULL DEFAULT '',
+	d1_cal	enum(
+		'Gregorian',
+		'Julian',
+		'French',
+		'Hebrew'
+	) NOT NULL DEFAULT 'Gregorian',
+	d1_dmy1_d TINYINT UNSIGNED NOT NULL DEFAULT 0,
+	d1_dmy1_m TINYINT UNSIGNED NOT NULL DEFAULT 0,
+	d1_dmy1_y SMALLINT NOT NULL DEFAULT 0,
+	d1_dmy2_d TINYINT UNSIGNED NOT NULL DEFAULT 0,
+	d1_dmy2_m TINYINT UNSIGNED NOT NULL DEFAULT 0,
+	d1_dmy2_y SMALLINT NOT NULL DEFAULT 0,
+	d1_text	VARCHAR(35) NOT NULL DEFAULT '',
+	-- TO
+	d2_prec	enum(
+		'',
+		'ABT',
+		'Maybe',
+		'BEF',
+		'AFT',
+		'OrYear',
+		'YearInt'
+	) NOT NULL DEFAULT '',
+	d2_cal	enum(
+		'Gregorian',
+		'Julian',
+		'French',
+		'Hebrew'
+	) NOT NULL DEFAULT 'Gregorian',
+	d2_dmy1_d TINYINT UNSIGNED NOT NULL DEFAULT 0,
+	d2_dmy1_m TINYINT UNSIGNED NOT NULL DEFAULT 0,
+	d2_dmy1_y SMALLINT NOT NULL DEFAULT 0,
+	d2_dmy2_d TINYINT UNSIGNED NOT NULL DEFAULT 0,
+	d2_dmy2_m TINYINT UNSIGNED NOT NULL DEFAULT 0,
+	d2_dmy2_y SMALLINT NOT NULL DEFAULT 0,
+	d2_text	VARCHAR(35) NOT NULL DEFAULT '',
+	FOREIGN KEY (e_id) REFERENCES events(e_id)
+);
+
+CREATE TABLE occupations (
+	o_id	INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+	name	VARCHAR(200) NOT NULL, -- /!\ limité à 90 caractères selon GEDCOM 5.5.5
+	unique (name)
+);
+
+CREATE TABLE occupation_details (
+	e_id	INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+	name	VARCHAR(200) NOT NULL, -- removed after migration
+	o_id	INTEGER UNSIGNED, 
+	FOREIGN KEY (e_id) REFERENCES events(e_id),
+	FOREIGN KEY (o_id) REFERENCES occupations(o_id)
 );
 
 CREATE TABLE person_event (
@@ -193,4 +278,49 @@ CREATE TABLE person_group (
 	seq	TINYINT UNSIGNED NOT NULL DEFAULT 0,
 	FOREIGN KEY (g_id) REFERENCES groups(g_id),
 	FOREIGN KEY (p_id) REFERENCES persons(p_id)
+);
+
+CREATE TABLE medias (
+	m_id	INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+	fname	VARCHAR(200) NOT NULL
+);
+
+CREATE TABLE person_media (
+	pm_id	INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+	p_id	INTEGER UNSIGNED NOT NULL,
+	m_id	INTEGER UNSIGNED NOT NULL,
+	FOREIGN KEY (p_id) REFERENCES persons(p_id),
+	FOREIGN KEY (m_id) REFERENCES medias(m_id)
+);
+
+CREATE TABLE linked_notes (
+	ln_id	INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+	ln_type enum (
+		'PgInd',
+		'PgFam',
+		'PgNotes',
+		'PgMisc',
+		'PgWizard'
+	) NOT NULL,
+	nkey	VARCHAR(100) NOT NULL,
+	p_id	INTEGER UNSIGNED,
+	g_id	INTEGER UNSIGNED,
+	FOREIGN KEY (p_id) REFERENCES persons(p_id),
+	FOREIGN KEY (g_id) REFERENCES groups(g_id)
+);
+
+CREATE TABLE linked_notes_nt (
+	lnn_id	INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+	ln_id	INTEGER UNSIGNED NOT NULL,
+	nkey	VARCHAR(100) NOT NULL,
+	FOREIGN KEY (ln_id) REFERENCES linked_notes(ln_id)
+);
+
+CREATE TABLE linked_notes_ind (
+	lni_id	INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+	ln_id	INTEGER UNSIGNED NOT NULL,
+	pkey	VARCHAR(250) NOT NULL,
+	text	VARCHAR(200),
+	pos	INTEGER NOT NULL,
+	FOREIGN KEY (ln_id) REFERENCES linked_notes(ln_id)
 );

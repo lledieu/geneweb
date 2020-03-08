@@ -1,11 +1,14 @@
-set @id = 17424;
+-- set @id = 17424;
+set @id = 17418;
 
 select concat(givn, ' ', surn) from names where p_id = @id;
 
-select concat(e_type, ' ', dmy1_d , '/', dmy1_m, '/', dmy1_y, ' ', place), role, n_id, s_id
+select concat(e_type, ' ', dmy1_d , '/', dmy1_m, '/', dmy1_y, ' '), place, name, role, n_id, s_id
 from person_event
 inner join events using(e_id)
-inner join places using(pl_id)
+left join places using(pl_id)
+left join occupation_details using(e_id)
+left join occupations using(o_id)
 where person_event.p_id = @id;
 
 select
