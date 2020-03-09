@@ -1,10 +1,25 @@
 DROP TABLE IF EXISTS history_details;
 DROP TABLE IF EXISTS history;
 DROP TABLE IF EXISTS old_history;
+DROP TABLE IF EXISTS transactions;
 DROP TABLE IF EXISTS users;
+
+CREATE TABLE users (
+	u_id	INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+	user	VARCHAR(20) NOT NULL
+);
+
+CREATE TABLE transactions (
+	t_id	INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+	h_date	DATETIME NOT NULL,
+	u_id	INTEGER UNSIGNED NOT NULL,
+	FOREIGN KEY (u_id) REFERENCES users(u_id),
+	unique (h_date, u_id)
+);
 
 CREATE TABLE history (
 	h_id	INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+	t_id	INTEGER UNSIGNED,
 	h_date	DATETIME NOT NULL,
 	wizard	VARCHAR(20) NOT NULL, -- removed after migration
 	u_id	INTEGER UNSIGNED,
@@ -22,6 +37,7 @@ CREATE TABLE history_details (
 
 CREATE TABLE old_history (
 	oh_id	INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+	t_id	INTEGER UNSIGNED,
 	h_date	DATETIME NOT NULL,
 	wizard	VARCHAR(20) NOT NULL, -- removed after migration
 	u_id	INTEGER UNSIGNED,
@@ -49,9 +65,4 @@ CREATE TABLE old_history (
 	) NOT NULL,
 	pkey 	VARCHAR(250) NOT NULL,
 	pkey2	VARCHAR(250) NOT NULL -- removed after migration
-);
-
-CREATE TABLE users (
-	u_id	INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-	user	VARCHAR(20) NOT NULL
 );

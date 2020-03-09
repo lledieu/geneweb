@@ -2,7 +2,7 @@ DROP TABLE IF EXISTS tmp1_sources;
 CREATE TABLE tmp1_sources (
 	s_id	INTEGER UNSIGNED PRIMARY KEY,
 	source	TEXT,
-	unique (source(500))
+	unique (source(200))
 );
 
 insert into tmp1_sources

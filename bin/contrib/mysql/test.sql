@@ -1,7 +1,11 @@
--- set @id = 17424;
-set @id = 17418;
+set @id = 17424;
+-- set @id = 17417;
+-- set @id = 17418;
 
-select givn, nick, surn from names where p_id = @id;
+select n_type, givn, nick, surn
+from names
+inner join person_name using(n_id)
+where p_id = @id;
 
 select
  e_type, t_name,
@@ -36,14 +40,15 @@ select
 from person_group pg1
 inner join groups g1 on pg1.g_id = g1.g_id
 inner join person_group pg2 on pg1.g_id = pg2.g_id
-inner join names n on n.p_id = pg2.p_id
+inner join person_name pn on pn.p_id = pg2.p_id
+inner join names n on n.n_id = pn.n_id
 where pg1.p_id = @id
   and pg2.p_id <> @id
-  and n.main = 'True'
+  and pn.n_type = 'Main'
 order by 1 desc, 2 asc, 3 asc, 4 asc;
 
 select distinct case ln_type
-  when 'PgInd' then concat( 'p_id: ', p_id)
+  when 'PgInd' then concat( 'p_id: ', linked_notes.p_id)
   when 'PgFam' then concat( 'g_id: ', g_id)
   when 'PgNotes' then 'PgNotes'
   when 'PgMisc' then nkey
@@ -52,6 +57,22 @@ select distinct case ln_type
 from linked_notes_ind
 inner join linked_notes using(ln_id)
 where pkey = (select pkey from persons where p_id = @id);
+
+select
+ h_date,
+ action,
+ old_history.pkey as "pkey(a)",
+ history.pkey as "pkey",
+ data, old, new
+from transactions
+left join history using(t_id)
+left join old_history using(t_id)
+left join history_details using(h_id)
+where t_id in (
+ select t_id
+ from history
+ where pkey = (select pkey from persons where p_id = @id)
+);
 
 select "pkey à revoir", count(*)
 from persons where pkey = '.0.';

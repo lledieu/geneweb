@@ -73,3 +73,13 @@ echo "Adjusting occupations..."
 echo BEGIN $(date '+%FT%T')
 $MYSQL < changeOccupations.sql
 echo END $(date '+%FT%T')
+
+if [ $res != 0 ]
+then
+  exit -1
+fi
+
+echo "Adjusting names..."
+echo BEGIN $(date '+%FT%T')
+$MYSQL < changeNames.sql
+echo END $(date '+%FT%T')

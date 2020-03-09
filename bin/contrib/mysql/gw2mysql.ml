@@ -15,6 +15,98 @@ let string_of_access = function
 | Public -> "Public"
 | Private -> "Private"
 
+let string_of_pevent fs = function
+| Epers_Birth -> "BIRT", ""
+| Epers_Baptism -> "BAPM", ""
+| Epers_Death -> "DEAT", ""
+| Epers_Burial -> "BURI", ""
+| Epers_Cremation -> "CREM", ""
+| Epers_Accomplishment -> "EVEN", "Accomplishment"
+| Epers_Acquisition -> "EVEN", "Acquisition"
+| Epers_Adhesion -> "EVEN", "Membership"
+| Epers_BaptismLDS -> "BAPM", "" (* BAPL removed from GEDCOM 5.5.5 *)
+| Epers_BarMitzvah -> "BARM", ""
+| Epers_BatMitzvah -> "BASM", ""
+| Epers_Benediction -> "EVEN", "BLES" (* BLES removed from GEDCOM 5.5.5 *)
+| Epers_ChangeName -> "EVEN", "Change name"
+| Epers_Circumcision -> "EVEN", "Circumcision"
+| Epers_Confirmation -> "CONF", ""
+| Epers_ConfirmationLDS -> "CONF", "" (* CONL removed from GEDCOM 5.5.5 *)
+| Epers_Decoration -> "EVEN", "Award"
+| Epers_DemobilisationMilitaire -> "EVEN", "Military discharge"
+| Epers_Diploma -> "EVEN", "Degree"
+| Epers_Distinction -> "EVEN", "Distinction"
+| Epers_Dotation -> "EVEN", "ENDL" (* ENDL removed from GEDCOM 5.5.5 *)
+| Epers_DotationLDS -> "EVEN", "DotationLDS"
+| Epers_Education -> "EDUC", ""
+| Epers_Election -> "EVEN", "Election"
+| Epers_Emigration -> "EMIG", ""
+| Epers_Excommunication -> "EVEN", "Excommunication"
+| Epers_FamilyLinkLDS -> "EVEN", "Family link LDS"
+| Epers_FirstCommunion -> "FCOM", ""
+| Epers_Funeral -> "EVEN", "Funeral"
+| Epers_Graduate -> "GRAD", ""
+| Epers_Hospitalisation -> "EVEN", "Hospitalization"
+| Epers_Illness -> "EVEN", "Illness"
+| Epers_Immigration -> "IMMI", ""
+| Epers_ListePassenger -> "EVEN", "Passenger list"
+| Epers_MilitaryDistinction -> "EVEN", "Military distinction"
+| Epers_MilitaryPromotion -> "EVEN", "Military promotion"
+| Epers_MilitaryService -> "EVEN", "Military service"
+| Epers_MobilisationMilitaire -> "EVEN", "Military mobilization"
+| Epers_Naturalisation -> "NATU", ""
+| Epers_Occupation -> "OCCU", ""
+| Epers_Ordination -> "EVEN", "ORDN" (* ORDN removed from GEDCOM 5.5.5 *)
+| Epers_Property -> "PROP", ""
+| Epers_Recensement -> "CENS", ""
+| Epers_Residence -> "RESI", ""
+| Epers_Retired -> "RETI", ""
+| Epers_ScellentChildLDS -> "EVEN", "SLGC" (* SLGC removed from GEDCOM 5.5.5 *)
+| Epers_ScellentParentLDS -> "EVEN", "Scellent parent LDS"
+| Epers_ScellentSpouseLDS -> "EVEN", "SLGS" (* SLGS removed from GEDCOM 5.5.5 *)
+| Epers_VenteBien -> "EVEN", "Property sale"
+| Epers_Will -> "WILL", ""
+| Epers_Name s -> "EVEN", (fs s)
+
+let string_of_fevent fs = function
+| Efam_Marriage -> "MARR", ""
+| Efam_NoMarriage -> "EVEN", "unmarried" (* FIXME not an event ! *)
+| Efam_NoMention -> "EVEN", "nomen" (* FIXME not an event ! *)
+| Efam_Engage -> "ENGA", ""
+| Efam_Divorce -> "DIV", ""
+| Efam_Separated -> "EVEN", "SEP"
+| Efam_Annulation -> "ANUL", ""
+| Efam_MarriageBann -> "MARB", ""
+| Efam_MarriageContract -> "MARC", ""
+| Efam_MarriageLicense -> "MARL", ""
+| Efam_PACS -> "EVEN", "pacs"
+| Efam_Residence -> "RESI", ""
+| Efam_Name n -> "EVEN", (fs n)
+
+let string_of_calendar = function
+| Dgregorian -> "Gregorian"
+| Djulian -> "Julian"
+| Dfrench -> "French"
+| Dhebrew -> "Hebrew"
+
+let string_of_isDead = function
+| NotDead -> "NotDead"
+| Death _ -> "Dead"
+| DeadYoung -> "DeadYoung"
+| DeadDontKnowWhen -> "DeadDontKnowWhen"
+| DontKnowIfDead -> "DontKnowIfDead"
+| OfCourseDead -> "OfCourseDead"
+
+let string_of_death_reason = function
+| Death (r, _) -> begin match r with
+    | Killed -> "Killed"
+    | Murdered -> "Murdered"
+    | Executed -> "Executed"
+    | Disappeared -> "Disappeared"
+    | Unspecified -> ""
+  end
+| _ -> ""
+
 type gen_record = History_diff.gen_record =
   { date : string;
     wizard : string;
@@ -66,13 +158,7 @@ let event base db i_p1 i_p2 t n date place note source reason witnesses =
 	  | _ -> ""
 	  ) ;
 	  ml2rstr db (match d with
-	  | Some (Dgreg (_, calendar)) -> 
-		begin match calendar with
-		| Dgregorian -> "Gregorian"
-		| Djulian -> "Julian"
-		| Dfrench -> "French"
-		| Dhebrew -> "Hebrew"
-		end
+	  | Some (Dgreg (_, calendar)) -> string_of_calendar calendar
 	  | _ -> "Gregorian"
           ) ;
 	  ml2int (match d with
@@ -175,15 +261,6 @@ let gw_to_mysql base db fname =
     let fn = p_first_name base p in
     let oc = get_occ p in
     let death = get_death p in
-    let isDead d =
-	match d with
-	| NotDead -> "NotDead"
-	| Death _ -> "Dead"
-	| DeadYoung -> "DeadYoung"
-	| DeadDontKnowWhen -> "DeadDontKnowWhen"
-	| DontKnowIfDead -> "DontKnowIfDead"
-	| OfCourseDead -> "OfCourseDead"
-    in
     let n_id =
       let notes = sou base (get_notes p) in
       if notes <> "" then ml642int (insert_new_text db false "notes" notes)
@@ -209,13 +286,12 @@ let gw_to_mysql base db fname =
 	ml2rstr db pkey ;
 	ml2rstr db (fn ^ "." ^ (string_of_int oc) ^ " " ^ sn) ;
 	ml2int oc ;
-	ml2rstr db (isDead death) ;
+	ml2rstr db (string_of_isDead death) ;
 	n_id ;
 	s_id ;
 	ml2float consang ;
 	ml2rstr db (string_of_sex (get_sex p)) ;
 	ml2rstr db (string_of_access (get_access p)) ;
-	ml2rstr db (sou base (get_public_name p)) ;
     ]);
     (* Dispatch occupation on events *)
     let insert_occupation p_id r o_start o_end y_start y_end =
@@ -346,70 +422,39 @@ let gw_to_mysql base db fname =
 	]);
     | None -> ()
     end ;
-    if sn <> "?" || fn <> "?" then
-    insert db false "names" (values [
+    let insert_person_name givn nick surn t =
+      insert db false "person_name" (values [
 	"null" ;
 	ml2int i ;
-	ml2rstr db "" ;
-	ml2rstr db fn ;
-	ml2rstr db "" ;
-	ml2rstr db "" ;
-	ml2rstr db sn ;
-	ml2rstr db "" ;
-	ml2rstr db "True" ;
-    ]);
-    List.iter (fun a ->
-      insert db false "names" (values [
 	"null" ;
-	ml2int i ;
 	ml2rstr db "" ;
-	ml2rstr db (sou base a) ;
+	ml2rstr db givn ;
+	ml2rstr db nick ;
 	ml2rstr db "" ;
+	ml2rstr db surn ;
 	ml2rstr db "" ;
-	ml2rstr db sn ;
-	ml2rstr db "" ;
-	ml2rstr db "False" ;
+	ml2rstr db t ;
       ])
+    in
+    if sn <> "?" || fn <> "?" then begin
+      insert_person_name fn "" sn "Main"
+    end ;
+    List.iter (fun a ->
+      insert_person_name (sou base a) "" sn "FirstNamesAlias"
     ) (get_first_names_aliases p) ;
     List.iter (fun a ->
-      insert db false "names" (values [
-	"null" ;
-	ml2int i ;
-	ml2rstr db "" ;
-	ml2rstr db fn ;
-	ml2rstr db "" ;
-	ml2rstr db "" ;
-	ml2rstr db (sou base a) ;
-	ml2rstr db "" ;
-	ml2rstr db "False" ;
-      ])
+      insert_person_name fn "" (sou base a) "SurnamesAlias"
     ) (get_surnames_aliases p) ;
     List.iter (fun a ->
-      insert db false "names" (values [
-	"null" ;
-	ml2int i ;
-	ml2rstr db "" ;
-	ml2rstr db (sou base a) ;
-	ml2rstr db "" ;
-	ml2rstr db "" ;
-	ml2rstr db "" ;
-	ml2rstr db "" ;
-	ml2rstr db "False" ;
-      ])
+      insert_person_name (sou base a) "" "" "Alias"
     ) (get_aliases p) ;
     List.iter (fun a ->
-      insert db false "names" (values [
-	"null" ;
-	ml2int i ;
-	ml2rstr db "" ;
-	ml2rstr db fn ;
-	ml2rstr db (sou base a) ;
-	ml2rstr db "" ;
-	ml2rstr db "" ;
-	ml2rstr db "" ;
-	ml2rstr db "False" ;
-      ])
+      insert_person_name fn (sou base a) "" "Qualifier"
     ) (get_qualifiers p) ;
+    let public_name = sou base (get_public_name p) in
+    if public_name <> "" then begin
+      insert_person_name public_name "" "" "PublicName"
+    end ;
     (* titles FIXME rework needed *)
     let get_dmy2 d =
       match d with
@@ -437,13 +482,7 @@ let gw_to_mysql base db fname =
           | Some _, Some _ -> "FROM-TO"
 	  ) ;
 	  ml2rstr db (match d_start with
-	  | Some (Dgreg (_, calendar)) -> 
-		begin match calendar with
-		| Dgregorian -> "Gregorian"
-		| Djulian -> "Julian"
-		| Dfrench -> "French"
-		| Dhebrew -> "Hebrew"
-		end
+	  | Some (Dgreg (_, calendar)) -> string_of_calendar calendar
 	  | _ -> "Gregorian"
           ) ;
 	  ml2int (match d_start with
@@ -459,13 +498,7 @@ let gw_to_mysql base db fname =
 	  | _ -> 0
 	  ) ;
 	  ml2rstr db (match d_end with
-	  | Some (Dgreg (_, calendar)) -> 
-		begin match calendar with
-		| Dgregorian -> "Gregorian"
-		| Djulian -> "Julian"
-		| Dfrench -> "French"
-		| Dhebrew -> "Hebrew"
-		end
+	  | Some (Dgreg (_, calendar)) -> string_of_calendar calendar
 	  | _ -> "Gregorian"
           ) ;
 	  ml2int (match d_end with
@@ -515,13 +548,7 @@ let gw_to_mysql base db fname =
 	        | _ -> ""
 	        ) ;
 	        ml2rstr db (match d_start with
-	        | Some (Dgreg (_, calendar)) -> 
-		  begin match calendar with
-		  | Dgregorian -> "Gregorian"
-		  | Djulian -> "Julian"
-		  | Dfrench -> "French"
-		  | Dhebrew -> "Hebrew"
-		  end
+	        | Some (Dgreg (_, calendar)) -> string_of_calendar calendar
 	        | _ -> "Gregorian"
                 ) ;
 	        ml2int (match d_start with
@@ -566,13 +593,7 @@ let gw_to_mysql base db fname =
 	        | _ -> ""
 	        ) ;
 	        ml2rstr db (match d_end with
-	        | Some (Dgreg (_, calendar)) -> 
-		  begin match calendar with
-		  | Dgregorian -> "Gregorian"
-		  | Djulian -> "Julian"
-		  | Dfrench -> "French"
-		  | Dhebrew -> "Hebrew"
-		  end
+	        | Some (Dgreg (_, calendar)) -> string_of_calendar calendar
 	        | _ -> "Gregorian"
                 ) ;
 	        ml2int (match d_end with
@@ -605,7 +626,7 @@ let gw_to_mysql base db fname =
                 ) ;
 	]) ;
     ) (get_titles p) ;
-    (* Initilise family group / parent link *)
+    (* Initialize family group / parent link *)
     Array.iteri (fun seq ifam ->
       let g_id = (Adef.int_of_ifam ifam) in
       let cpl = foi base ifam in
@@ -702,73 +723,10 @@ let gw_to_mysql base db fname =
       | GodParent -> as_an_event "BAPM" "" r s_id "GodParent"
       | FosterParent -> as_an_event "EVEN" "FosterParent" r s_id "FosterParent"
     ) (get_rparents p) ;
-    let death = get_death p in
     List.iter (fun evt ->
-	let (e_t, e_n) =
-	  match evt.epers_name with
-	  | Epers_Birth -> "BIRT", ""
-	  | Epers_Baptism -> "BAPM", ""
-	  | Epers_Death -> "DEAT", ""
-	  | Epers_Burial -> "BURI", ""
-	  | Epers_Cremation -> "CREM", ""
-	  | Epers_Accomplishment -> "EVEN", "Accomplishment"
-	  | Epers_Acquisition -> "EVEN", "Acquisition"
-	  | Epers_Adhesion -> "EVEN", "Membership"
-	  | Epers_BaptismLDS -> "BAPM", "" (* BAPL removed from GEDCOM 5.5.5 *)
-	  | Epers_BarMitzvah -> "BARM", ""
-	  | Epers_BatMitzvah -> "BASM", ""
-	  | Epers_Benediction -> "EVEN", "BLES" (* BLES removed from GEDCOM 5.5.5 *)
-	  | Epers_ChangeName -> "EVEN", "Change name"
-	  | Epers_Circumcision -> "EVEN", "Circumcision"
-	  | Epers_Confirmation -> "CONF", ""
-	  | Epers_ConfirmationLDS -> "CONF", "" (* CONL removed from GEDCOM 5.5.5 *)
-	  | Epers_Decoration -> "EVEN", "Award"
-	  | Epers_DemobilisationMilitaire -> "EVEN", "Military discharge"
-	  | Epers_Diploma -> "EVEN", "Degree"
-	  | Epers_Distinction -> "EVEN", "Distinction"
-	  | Epers_Dotation -> "EVEN", "ENDL" (* ENDL removed from GEDCOM 5.5.5 *)
-	  | Epers_DotationLDS -> "EVEN", "DotationLDS"
-	  | Epers_Education -> "EDUC", ""
-	  | Epers_Election -> "EVEN", "Election"
-	  | Epers_Emigration -> "EMIG", ""
-	  | Epers_Excommunication -> "EVEN", "Excommunication"
-	  | Epers_FamilyLinkLDS -> "EVEN", "Family link LDS"
-	  | Epers_FirstCommunion -> "FCOM", ""
-	  | Epers_Funeral -> "EVEN", "Funeral"
-	  | Epers_Graduate -> "GRAD", ""
-	  | Epers_Hospitalisation -> "EVEN", "Hospitalization"
-	  | Epers_Illness -> "EVEN", "Illness"
-	  | Epers_Immigration -> "IMMI", ""
-	  | Epers_ListePassenger -> "EVEN", "Passenger list"
-	  | Epers_MilitaryDistinction -> "EVEN", "Military distinction"
-	  | Epers_MilitaryPromotion -> "EVEN", "Military promotion"
-	  | Epers_MilitaryService -> "EVEN", "Military service"
-	  | Epers_MobilisationMilitaire -> "EVEN", "Military mobilization"
-	  | Epers_Naturalisation -> "NATU", ""
-	  | Epers_Occupation -> "OCCU", ""
-	  | Epers_Ordination -> "EVEN", "ORDN" (* ORDN removed from GEDCOM 5.5.5 *)
-	  | Epers_Property -> "PROP", ""
-	  | Epers_Recensement -> "CENS", ""
-	  | Epers_Residence -> "RESI", ""
-	  | Epers_Retired -> "RETI", ""
-	  | Epers_ScellentChildLDS -> "EVEN", "SLGC" (* SLGC removed from GEDCOM 5.5.5 *)
-	  | Epers_ScellentParentLDS -> "EVEN", "Scellent parent LDS"
-	  | Epers_ScellentSpouseLDS -> "EVEN", "SLGS" (* SLGS removed from GEDCOM 5.5.5 *)
-	  | Epers_VenteBien -> "EVEN", "Property sale"
-	  | Epers_Will -> "WILL", ""
-	  | Epers_Name s -> "EVEN", (sou base s)
-        in
+	let e_t, e_n = string_of_pevent (sou base) evt.epers_name in
 	let reason = (* do not use evt.epers_reason (empty !) *)
-	  if e_t = "DEAT" then
-	    match death with
-	    | Death (r, _) -> begin match r with
-	        | Killed -> "Killed"
-	        | Murdered -> "Murdered"
-	        | Executed -> "Executed"
-	        | Disappeared -> "Disappeared"
-	        | Unspecified -> ""
-	        end
-	    | _ -> ""
+	  if e_t = "DEAT" then string_of_death_reason (get_death p)
 	  else ""
 	in
 	event base db i None e_t e_n evt.epers_date evt.epers_place evt.epers_note evt.epers_src reason evt.epers_witnesses
@@ -791,22 +749,7 @@ let gw_to_mysql base db fname =
         (fun seq c -> populate_group db i (Adef.int_of_iper c) "Child" seq)
         (get_children fam) ;
       List.iter (fun evt ->
-	let (e_t, e_n) =
-	  match evt.efam_name with
-          | Efam_Marriage -> "MARR", ""
-          | Efam_NoMarriage -> "EVEN", "unmarried" (* FIXME not an event ! *)
-          | Efam_NoMention -> "EVEN", "nomen" (* FIXME not an event ! *)
-          | Efam_Engage -> "ENGA", ""
-          | Efam_Divorce -> "DIV", ""
-          | Efam_Separated -> "EVEN", "SEP"
-          | Efam_Annulation -> "ANUL", ""
-          | Efam_MarriageBann -> "MARB", ""
-          | Efam_MarriageContract -> "MARC", ""
-          | Efam_MarriageLicense -> "MARL", ""
-          | Efam_PACS -> "EVEN", "pacs"
-          | Efam_Residence -> "RESI", ""
-          | Efam_Name n -> "EVEN", (sou base n)
-        in
+	let e_t, e_n = string_of_fevent (sou base) evt.efam_name in
 	event base db ip_father (Some ip_mother) e_t e_n evt.efam_date evt.efam_place evt.efam_note evt.efam_src "" evt.efam_witnesses
       ) (get_fevents fam)
     end
@@ -834,6 +777,7 @@ let gw_to_mysql base db fname =
 	"null" ;
 	ln_id ;
 	ml2rstr db (fn ^ "." ^ (string_of_int oc) ^ "." ^ sn) ;
+	"null" ;
         begin match text with
         | Some s -> ml2rstr db s
         | None -> "null"
@@ -896,6 +840,7 @@ let gw_history_to_mysql db fname =
         let insert_history r =
           insert db false "history" (values [
 	    "null" ;
+	    "null" ;
 	    ml2rstr db r.date ;
 	    ml2rstr db r.wizard ;
 	    "null" ;
@@ -912,11 +857,346 @@ let gw_history_to_mysql db fname =
 	    ml2rstr db d_new ;
           ]))
         in
+        let string_of_date d =
+          let d = Adef.od_of_cdate d in
+          match d with
+          | Some d -> begin match d with
+              | Dgreg (dmy, cal) -> begin
+                  let cal = string_of_calendar cal in
+                  let prec = match dmy.prec with
+                  | Sure -> "Sure"
+                  | About -> "About"
+                  | Maybe -> "Maybe"
+                  | Before -> "Before"
+                  | After -> "After"
+                  | OrYear _ -> "OrYear"
+                  | YearInt _ -> "YearInt"
+                  in
+                  match dmy.prec with
+                  | OrYear dmy2 | YearInt dmy2 ->
+                      Printf.sprintf "%s - %s %d/%d/%d %d/%d/%d" cal prec dmy.day dmy.month dmy.year dmy2.day2 dmy2.month2 dmy2.year2
+                  | _ -> Printf.sprintf "%s - %s %d/%d/%d" cal prec dmy.day dmy.month dmy.year
+                end
+              | Dtext s -> "(" ^ s ^ ")"
+            end
+          | None -> ""
+        in
+        let string_of_witnesses aw =
+          Array.fold_left (fun s (iper, _) ->
+            let s =
+              if s <> "" then s ^ ","
+              else ""
+            in
+            s ^ (string_of_int (Adef.int_of_iper iper))
+	  ) "" aw
+        in
+        let string_of_children ac =
+          Array.fold_left (fun s iper ->
+            let s =
+              if s <> "" then s ^ ","
+              else ""
+            in
+            s ^ (string_of_int (Adef.int_of_iper iper))
+	  ) "" ac
+        in
+        let diff_pevent h_id n prefix e_old e_new =
+          let data = prefix ^ "pevent[" ^ (string_of_int n) ^ "]." in
+          let old_e_t, old_e_n = string_of_pevent (fun s -> s) e_old.epers_name in
+          let new_e_t, new_e_n = string_of_pevent (fun s -> s) e_new.epers_name in
+          insert_history_detail h_id (data ^ "e_type") old_e_t new_e_t ;
+          if old_e_n <> "" && new_e_n <> "" then
+            insert_history_detail h_id (data ^ "t_name") old_e_n new_e_n ;
+          if e_old.epers_date <> e_new.epers_date then begin
+            let old_date = string_of_date e_old.epers_date in
+            let new_date = string_of_date e_new.epers_date in
+            insert_history_detail h_id (data ^ "date") old_date new_date
+          end ;
+          if e_old.epers_place <> e_new.epers_place then
+            insert_history_detail h_id (data ^ "place") e_old.epers_place e_new.epers_place ;
+          if e_old.epers_reason <> e_new.epers_reason then
+            insert_history_detail h_id (data ^ "reason") e_old.epers_reason e_new.epers_reason ;
+          if e_old.epers_note <> e_new.epers_note then
+            insert_history_detail h_id (data ^ "note") e_old.epers_note e_new.epers_note ;
+          if e_old.epers_src <> e_new.epers_src then
+            insert_history_detail h_id (data ^ "src") e_old.epers_src e_new.epers_src ;
+          if e_old.epers_witnesses <> e_new.epers_witnesses then
+            insert_history_detail h_id (data ^ "witnesses") (string_of_witnesses e_old.epers_witnesses) (string_of_witnesses e_new.epers_witnesses) ;
+        in
+        let add_pevent h_id n prefix e =
+          let data = prefix ^ "+pevent[" ^ (string_of_int n) ^ "]." in
+          let e_t, e_n = string_of_pevent (fun s -> s) e.epers_name in
+          insert_history_detail h_id (data ^ "e_type") "" e_t ;
+          if e_n <> "" then
+            insert_history_detail h_id (data ^ "t_name") "" e_n ;
+          let new_date = string_of_date e.epers_date in
+          if new_date <> "" then
+            insert_history_detail h_id (data ^ "date") "" new_date ;
+          if e.epers_place <> "" then
+            insert_history_detail h_id (data ^ "place") "" e.epers_place ;
+          if e.epers_reason <> "" then
+            insert_history_detail h_id (data ^ "reason") "" e.epers_reason ;
+          if e.epers_note <> "" then
+            insert_history_detail h_id (data ^ "note") "" e.epers_note ;
+          if e.epers_src <> "" then
+            insert_history_detail h_id (data ^ "src") "" e.epers_src ;
+          let ws = string_of_witnesses e.epers_witnesses in
+          if ws <> "" then
+           insert_history_detail h_id (data ^ "witnesses") "" ws ;
+        in
+        let del_pevent h_id n prefix e =
+          let data = prefix ^ "-pevent[" ^ (string_of_int n) ^ "]." in
+          let e_t, e_n = string_of_pevent (fun s -> s) e.epers_name in
+          insert_history_detail h_id (data ^ "e_type") e_t "" ;
+          if e_n <> "" then
+            insert_history_detail h_id (data ^ "t_name") e_n "" ;
+          let old_date = string_of_date e.epers_date in
+          if old_date <> "" then
+            insert_history_detail h_id (data ^ "date") old_date "" ;
+          if e.epers_place <> "" then
+            insert_history_detail h_id (data ^ "place") e.epers_place "" ;
+          if e.epers_reason <> "" then
+            insert_history_detail h_id (data ^ "reason") e.epers_reason "" ;
+          if e.epers_note <> "" then
+            insert_history_detail h_id (data ^ "note") e.epers_note "" ;
+          if e.epers_src <> "" then
+            insert_history_detail h_id (data ^ "src") e.epers_src "" ;
+          let ws = string_of_witnesses e.epers_witnesses in
+          if ws <> "" then
+            insert_history_detail h_id (data ^ "witnesses") ws "" ;
+        in
+        let diff_fevent h_id n prefix e_old e_new =
+          let data = prefix ^ "fevent[" ^ (string_of_int n) ^ "]." in
+          let old_e_t, old_e_n = string_of_fevent (fun s -> s) e_old.efam_name in
+          let new_e_t, new_e_n = string_of_fevent (fun s -> s) e_new.efam_name in
+          insert_history_detail h_id (data ^ "e_type") old_e_t new_e_t ;
+          if old_e_n <> "" && new_e_n <> "" then
+            insert_history_detail h_id (data ^ "t_name") old_e_n new_e_n ;
+          if e_old.efam_date <> e_new.efam_date then begin
+            let old_date = string_of_date e_old.efam_date in
+            let new_date = string_of_date e_new.efam_date in
+            insert_history_detail h_id (data ^ "date") old_date new_date
+          end ;
+          if e_old.efam_place <> e_new.efam_place then
+            insert_history_detail h_id (data ^ "place") e_old.efam_place e_new.efam_place ;
+          if e_old.efam_reason <> e_new.efam_reason then
+            insert_history_detail h_id (data ^ "reason") e_old.efam_reason e_new.efam_reason ;
+          if e_old.efam_note <> e_new.efam_note then
+            insert_history_detail h_id (data ^ "note") e_old.efam_note e_new.efam_note ;
+          if e_old.efam_src <> e_new.efam_src then
+            insert_history_detail h_id (data ^ "src") e_old.efam_src e_new.efam_src ;
+          if e_old.efam_witnesses <> e_new.efam_witnesses then
+            insert_history_detail h_id (data ^ "witnesses") (string_of_witnesses e_old.efam_witnesses) (string_of_witnesses e_new.efam_witnesses) ;
+        in
+        let add_fevent h_id n prefix e =
+          let data = prefix ^ "+fevent[" ^ (string_of_int n) ^ "]." in
+          let e_t, e_n = string_of_fevent (fun s -> s) e.efam_name in
+          insert_history_detail h_id (data ^ "e_type") "" e_t ;
+          if e_n <> "" then
+            insert_history_detail h_id (data ^ "t_name") "" e_n ;
+          let new_date = string_of_date e.efam_date in
+          if new_date <> "" then
+            insert_history_detail h_id (data ^ "date") "" new_date ;
+          if e.efam_place <> "" then
+            insert_history_detail h_id (data ^ "place") "" e.efam_place ;
+          if e.efam_reason <> "" then
+            insert_history_detail h_id (data ^ "reason") "" e.efam_reason ;
+          if e.efam_note <> "" then
+            insert_history_detail h_id (data ^ "note") "" e.efam_note ;
+          if e.efam_src <> "" then
+            insert_history_detail h_id (data ^ "src") "" e.efam_src ;
+          let ws = string_of_witnesses e.efam_witnesses in
+          if ws <> "" then
+            insert_history_detail h_id (data ^ "witnesses") "" ws ;
+        in
+        let del_fevent h_id n prefix e =
+          let data = prefix ^ "-fevent[" ^ (string_of_int n) ^ "]." in
+          let e_t, e_n = string_of_fevent (fun s -> s) e.efam_name in
+          insert_history_detail h_id (data ^ "e_type") e_t "" ;
+          if e_n <> "" then
+            insert_history_detail h_id (data ^ "t_name") e_n "" ;
+          let old_date = string_of_date e.efam_date in
+          if old_date <> "" then
+            insert_history_detail h_id (data ^ "date") old_date "" ;
+          if e.efam_place <> "" then
+            insert_history_detail h_id (data ^ "place") e.efam_place "" ;
+          if e.efam_reason <> "" then
+            insert_history_detail h_id (data ^ "reason") e.efam_reason "" ;
+          if e.efam_note <> "" then
+            insert_history_detail h_id (data ^ "note") e.efam_note "" ;
+          if e.efam_src <> "" then
+            insert_history_detail h_id (data ^ "src") e.efam_src "" ;
+          let ws = string_of_witnesses e.efam_witnesses in
+          if ws <> "" then
+           insert_history_detail h_id (data ^ "witnesses") ws "" ;
+        in
+        let rec diff_events h_id n prefix diff del add d_old d_new =
+          match d_old, d_new with
+          | e_old :: l_old, e_new :: l_new -> begin
+              diff h_id n prefix e_old e_new ;
+              diff_events h_id (n+1) prefix diff del add l_old l_new
+            end
+          | e_old :: l_old, [] -> begin
+              del h_id n prefix e_old ;
+              diff_events h_id (n+1) prefix diff del add l_old []
+            end
+          | [], e_new :: l_new -> begin
+              add h_id n prefix e_new ;
+              diff_events h_id (n+1) prefix diff del add [] l_new
+            end
+          | [], [] -> ()
+        in
+        let rec diff_families h_id n fc_old fc_new =
+          let data = "fam[" ^ (string_of_int n) ^ "]." in
+          match fc_old, fc_new with
+          | (f_old, c_old) :: l_old, (f_new, c_new) :: l_new -> begin
+              insert_history_detail h_id (data ^ "index") (string_of_int (Adef.int_of_ifam f_old.fam_index)) (string_of_int (Adef.int_of_ifam f_new.fam_index)) ;
+              if f_old.fevents <> f_new.fevents then begin
+                let d_old, d_new = list_remove_same f_old.fevents f_new.fevents in
+                diff_events h_id 0 data diff_fevent del_fevent add_fevent d_old d_new
+              end ;
+              if f_old.comment <> f_new.comment then
+                insert_history_detail h_id (data ^ "comment") f_old.comment f_new.comment ;
+              if f_old.fsources <> f_new.fsources then
+                insert_history_detail h_id (data ^ "fsources") f_old.fsources f_new.fsources ;
+              if c_old <> c_new then
+                insert_history_detail h_id (data ^ "children") (string_of_children c_old) (string_of_children c_new) ;
+              diff_families h_id (n+1) l_old l_new
+            end
+          | [], (f_new, c_new) :: l_new -> begin
+              let data = "+" ^ data in
+              insert_history_detail h_id (data ^ "index") "" (string_of_int (Adef.int_of_ifam f_new.fam_index)) ;
+              diff_events h_id 0 data diff_fevent del_fevent add_fevent [] f_new.fevents ;
+              if f_new.comment <> "" then
+                insert_history_detail h_id (data ^ "comment") "" f_new.comment ;
+              if f_new.fsources <> "" then
+                insert_history_detail h_id (data ^ "fsources") "" f_new.fsources ;
+              let c_new = string_of_children c_new in
+              if c_new <> "" then
+                insert_history_detail h_id (data ^ "children") "" c_new ;
+              diff_families h_id (n+1) [] l_new
+            end
+          | (f_old, c_old) :: l_old, [] -> begin
+              let data = "-" ^ data in
+              insert_history_detail h_id (data ^ "index") (string_of_int (Adef.int_of_ifam f_old.fam_index)) "" ;
+              diff_events h_id 0 data diff_fevent del_fevent add_fevent f_old.fevents [] ;
+              if f_old.comment <> "" then
+                insert_history_detail h_id (data ^ "comment") f_old.comment "" ;
+              if f_old.fsources <> "" then
+                insert_history_detail h_id (data ^ "fsources") f_old.fsources "" ;
+              let c_old = string_of_children c_old in
+              if c_old <> "" then
+                insert_history_detail h_id (data ^ "children") c_old "" ;
+              diff_families h_id (n+1) l_old []
+            end
+          | [], [] -> ()
+        in
+        let split_notes s = (* WARNING maybe specific *)
+          (* Printf.eprintf "DEBUG split_notes %s\n%!" s ; *)
+          let r = BatText.of_string s in
+          let last = (BatText.length r) - 1 in
+          let part posd posf =
+            if posd >= posf then raise (Failure "part")
+            else BatText.to_string (BatText.sub r posd (posf-posd+1))
+          in
+          let rec loop pos posf l =
+            (* Printf.eprintf "DEBUG part %d-%d\n%!" pos posf ; *)
+            if pos <= 0 then l
+            else try begin
+                let pos1 = BatText.rindex_from r (pos-1) (BatUChar.of_char '\n') in
+                if (BatText.get r (pos1+1)) = (BatUChar.of_char '*') then
+                  loop (pos1-1) (pos1-1) ((part (pos1+1) posf) :: l)
+                else loop pos1 posf l
+              end with Not_found -> (part 0 posf) :: l
+          in loop last last []
+        in
+        let rec diff_string_list h_id data d_old d_new =
+          match d_old, d_new with
+          | e_old :: l_old, e_new :: l_new -> begin
+              insert_history_detail h_id data e_old e_new ;
+              diff_string_list h_id data l_old l_new
+            end
+          | e_old :: l_old, [] -> begin
+              insert_history_detail h_id ("-" ^ data) e_old "" ;
+              diff_string_list h_id data l_old []
+            end
+          | [], e_new :: l_new -> begin
+              insert_history_detail h_id ("+" ^ data) "" e_new ;
+              diff_string_list h_id data [] l_new
+            end
+          | [], [] -> ()
+        in
+        let string_of_tname = function
+        | Tmain -> "(main)"
+        | Tname s -> s
+        | Tnone -> "(none)"
+        in
+	let diff_title h_id data t_old t_new =
+          if t_old.t_name <> t_new.t_name then
+            insert_history_detail h_id (data ^ "name") (string_of_tname t_old.t_name) (string_of_tname t_new.t_name) ;
+          if t_old.t_ident <> t_new.t_ident then
+            insert_history_detail h_id (data ^ "ident") t_old.t_ident t_new.t_ident ;
+          if t_old.t_place <> t_new.t_place then
+            insert_history_detail h_id (data ^ "place") t_old.t_place t_new.t_place ;
+          if t_old.t_date_start <> t_new.t_date_start then
+            insert_history_detail h_id (data ^ "date_start") (string_of_date t_old.t_date_start) (string_of_date t_new.t_date_start) ;
+          if t_old.t_date_end <> t_new.t_date_end then
+            insert_history_detail h_id (data ^ "date_end") (string_of_date t_old.t_date_end) (string_of_date t_new.t_date_end) ;
+          if t_old.t_nth <> t_new.t_nth then
+            insert_history_detail h_id (data ^ "nth") (string_of_int t_old.t_nth) (string_of_int t_new.t_nth) ;
+        in
+	let del_title h_id data t =
+          insert_history_detail h_id (data ^ "name") (string_of_tname t.t_name) "" ;
+          if t.t_ident <> "" then
+            insert_history_detail h_id (data ^ "ident") t.t_ident "" ;
+          if t.t_place <> "" then
+            insert_history_detail h_id (data ^ "place") t.t_place "" ;
+          let d_start = string_of_date t.t_date_start in
+          if d_start <> "" then
+            insert_history_detail h_id (data ^ "date_start") d_start "" ;
+          let d_end = string_of_date t.t_date_end in
+          if d_end <> "" then
+            insert_history_detail h_id (data ^ "date_end") d_end "" ;
+          if t.t_nth <> 0 then
+            insert_history_detail h_id (data ^ "nth") (string_of_int t.t_nth) "" ;
+        in
+	let add_title h_id data t =
+          insert_history_detail h_id (data ^ "name") "" (string_of_tname t.t_name) ;
+          if t.t_ident <> "" then
+            insert_history_detail h_id (data ^ "ident") "" t.t_ident ;
+          if t.t_place <> "" then
+            insert_history_detail h_id (data ^ "place") "" t.t_place ;
+          let d_start = string_of_date t.t_date_start in
+          if d_start <> "" then
+            insert_history_detail h_id (data ^ "date_start") "" d_start ;
+          let d_end = string_of_date t.t_date_end in
+          if d_end <> "" then
+            insert_history_detail h_id (data ^ "date_end") "" d_end ;
+          if t.t_nth <> 0 then
+            insert_history_detail h_id (data ^ "nth") "" (string_of_int t.t_nth) ;
+        in
+        let rec diff_titles_list h_id pos d_old d_new =
+          let data = "title[" ^ (string_of_int pos) ^ "]." in
+          match d_old, d_new with
+          | e_old :: l_old, e_new :: l_new -> begin
+              diff_title h_id data e_old e_new ;
+              diff_titles_list h_id (pos+1) l_old l_new
+            end
+          | e_old :: l_old, [] -> begin
+              del_title h_id ("-"^data) e_old ;
+              diff_titles_list h_id (pos+1) l_old []
+            end
+          | [], e_new :: l_new -> begin
+              add_title h_id ("+"^data) e_new ;
+              diff_titles_list h_id (pos+1) [] l_new
+            end
+          | [], [] -> ()
+        in
         let rec loop =
           function
           | [] -> ()
           | [r] ->
-              ignore (insert_history r)
+              let h_id = insert_history r in
+              insert_history_detail h_id "created" "" "" (* FIXME trop simplifié ? *)
           | new_r :: old_r :: l ->
               begin
                 let h_id = insert_history new_r in
@@ -932,55 +1212,52 @@ let gw_history_to_mysql db fname =
                   insert_history_detail h_id "public_name" old_r.gen_p.public_name new_r.gen_p.public_name ;
 	        if old_r.gen_p.qualifiers <> new_r.gen_p.qualifiers then begin
                   let d_old, d_new = list_remove_same old_r.gen_p.qualifiers new_r.gen_p.qualifiers in
-                  insert_history_detail h_id "qualifiers" (String.concat "\n" d_old) (String.concat "\n" d_new)
-                end ; (* FIXME *)
+                  diff_string_list h_id "qualifiers" d_old d_new
+                end ;
 	        if old_r.gen_p.aliases <> new_r.gen_p.aliases then begin
                   let d_old, d_new = list_remove_same old_r.gen_p.aliases new_r.gen_p.aliases in
-                  insert_history_detail h_id "aliases" (String.concat "\n" d_old) (String.concat "\n" d_new)
-                end ; (* FIXME *)
+                  diff_string_list h_id "aliases" d_old d_new
+                end ;
 	        if old_r.gen_p.first_names_aliases <> new_r.gen_p.first_names_aliases then begin
                   let d_old, d_new = list_remove_same old_r.gen_p.first_names_aliases new_r.gen_p.first_names_aliases in
-                  insert_history_detail h_id "first_names_aliases" (String.concat "\n" d_old) (String.concat "\n" d_new)
-                end ; (* FIXME *)
+                  diff_string_list h_id "first_names_aliases" d_old d_new
+                end ;
 	        if old_r.gen_p.surnames_aliases <> new_r.gen_p.surnames_aliases then begin
                   let d_old, d_new = list_remove_same old_r.gen_p.surnames_aliases new_r.gen_p.surnames_aliases in
-                  insert_history_detail h_id "surnames_aliases" (String.concat "\n" d_old) (String.concat "\n" d_new)
-                end ; (* FIXME *)
+                  diff_string_list h_id "surnames_aliases" d_old d_new
+                end ;
 	        if old_r.gen_p.titles <> new_r.gen_p.titles then begin
                   let d_old, d_new = list_remove_same old_r.gen_p.titles new_r.gen_p.titles in
-                  insert_history_detail h_id "titles" ("Nbr" ^ (string_of_int (List.length d_old))) ("Nbr" ^ (string_of_int (List.length d_new)))
-		end ; (* FIXME *)
+                  diff_titles_list h_id 0 d_old d_new
+		end ;
 	        if old_r.gen_p.occupation <> new_r.gen_p.occupation then
                   insert_history_detail h_id "occupation" old_r.gen_p.occupation new_r.gen_p.occupation ;
 	        if old_r.gen_p.sex <> new_r.gen_p.sex then
                   insert_history_detail h_id "sex" (string_of_sex old_r.gen_p.sex) (string_of_sex new_r.gen_p.sex) ;
 	        if old_r.gen_p.pevents <> new_r.gen_p.pevents then begin
                   let d_old, d_new = list_remove_same old_r.gen_p.pevents new_r.gen_p.pevents in
-                  insert_history_detail h_id "pevents" ("Nbr" ^ (string_of_int (List.length d_old))) ("Nbr" ^ (string_of_int (List.length d_new)))
-                end ; (* FIXME *)
-	        if old_r.gen_p.notes <> new_r.gen_p.notes then
-                  insert_history_detail h_id "notes" old_r.gen_p.notes new_r.gen_p.notes ;
+                  diff_events h_id 0 "" diff_pevent del_pevent add_pevent d_old d_new
+                end ;
+	        if old_r.gen_p.notes <> new_r.gen_p.notes then begin
+                  let d_old, d_new = list_remove_same (split_notes old_r.gen_p.notes) (split_notes new_r.gen_p.notes) in
+                  diff_string_list h_id "notes" d_old d_new
+                end ;
 	        if old_r.gen_p.psources <> new_r.gen_p.psources then
                   insert_history_detail h_id "psources" old_r.gen_p.psources new_r.gen_p.psources ;
-	        if old_r.gen_f <> new_r.gen_f then begin
-                  let d_old, d_new = list_remove_same old_r.gen_f new_r.gen_f in
-                  match d_old, d_new with
-                  | [e_old], [e_new] -> begin
-                       if e_old.fevents <> e_new.fevents then begin
-                         let d_old, d_new = list_remove_same e_old.fevents e_new.fevents in
-                         insert_history_detail h_id "fevents" ("Nbr" ^ (string_of_int (List.length d_old))) ("Nbr" ^ (string_of_int (List.length d_new)))
-                       end ; (* FIXME *)
-                       if e_old.comment <> e_new.comment then
-                         insert_history_detail h_id "comment" e_old.comment e_new.comment ;
-                       if e_old.fsources <> e_new.fsources then
-                         insert_history_detail h_id "fsources" e_old.comment e_new.comment ;
-                    end
-                  | _, _ -> insert_history_detail h_id "families" ("Nbr" ^ (string_of_int (List.length d_old))) ("Nbr" ^ (string_of_int (List.length d_new)))
-		end ; (* FIXME *)
-	        if old_r.gen_c <> new_r.gen_c then begin
-                  let d_old, d_new = list_remove_same old_r.gen_c new_r.gen_c in
-                  insert_history_detail h_id "children" ("Nbr" ^ (string_of_int (List.length d_old))) ("Nbr" ^ (string_of_int (List.length d_new)))
-		end ; (* FIXME *)
+		let old_isDead = string_of_isDead old_r.gen_p.death in
+		let new_isDead = string_of_isDead new_r.gen_p.death in
+		if old_isDead <> new_isDead then
+                  insert_history_detail h_id "isDead" old_isDead new_isDead ;
+		let old_death_reason = string_of_death_reason old_r.gen_p.death in
+		let new_death_reason = string_of_death_reason new_r.gen_p.death in
+		if old_death_reason <> new_death_reason then
+                  insert_history_detail h_id "death_reason" old_death_reason new_death_reason ;
+                let old_fc = List.map2 (fun f c -> f, c) old_r.gen_f old_r.gen_c in
+                let new_fc = List.map2 (fun f c -> f, c) new_r.gen_f new_r.gen_c in
+                if old_fc <> new_fc then begin
+                  let d_old, d_new = list_remove_same old_fc new_fc in
+                  diff_families h_id 0 d_old d_new
+                end ;
                 loop (old_r :: l)
               end
         in

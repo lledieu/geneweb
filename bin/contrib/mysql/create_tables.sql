@@ -1,3 +1,6 @@
+DROP TABLE IF EXISTS php_notes_ind;
+DROP TABLE IF EXISTS php_notes;
+
 DROP TABLE IF EXISTS linked_notes_ind;
 DROP TABLE IF EXISTS linked_notes_nt;
 DROP TABLE IF EXISTS linked_notes;
@@ -9,6 +12,7 @@ DROP TABLE IF EXISTS person_event;
 DROP TABLE IF EXISTS title_details;
 DROP TABLE IF EXISTS occupation_details;
 DROP TABLE IF EXISTS events;
+DROP TABLE IF EXISTS person_name;
 DROP TABLE IF EXISTS names;
 DROP TABLE IF EXISTS persons;
 DROP TABLE IF EXISTS sources;
@@ -47,7 +51,6 @@ CREATE TABLE persons (
 		'Public',
 		'Private'
 	) NOT NULL DEFAULT 'IfTitles',
-	public_name VARCHAR(120) NOT NULL DEFAULT '', -- FIXME spécifique
 	FOREIGN KEY (n_id) REFERENCES notes(n_id),
 	FOREIGN KEY (s_id) REFERENCES sources(s_id)
 );
@@ -56,15 +59,35 @@ create index idx_persons_pkey2 on persons (pkey2);
 
 CREATE TABLE names (
 	n_id	INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-	p_id	INTEGER UNSIGNED NOT NULL,
 	npfx	VARCHAR(30) NOT NULL,
 	givn	VARCHAR(120) NOT NULL,
 	nick	VARCHAR(30) NOT NULL,
 	spfx	VARCHAR(30) NOT NULL,
 	surn	VARCHAR(120) NOT NULL,
 	nsfx	VARCHAR(30) NOT NULL,
-	main	Enum('True','False') NOT NULL DEFAULT 'False', -- FIXME à retravailler ?
-	FOREIGN KEY (p_id) REFERENCES persons(p_id)
+	unique(npfx, givn, nick, spfx, surn, nsfx)
+);
+
+CREATE TABLE person_name (
+	pn_id	INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+	p_id	INTEGER UNSIGNED NOT NULL,
+	n_id	INTEGER UNSIGNED,
+	npfx	VARCHAR(30) NOT NULL,
+	givn	VARCHAR(120) NOT NULL,
+	nick	VARCHAR(30) NOT NULL,
+	spfx	VARCHAR(30) NOT NULL,
+	surn	VARCHAR(120) NOT NULL,
+	nsfx	VARCHAR(30) NOT NULL,
+	n_type	enum(
+		'Main',
+		'FirstNamesAlias',
+		'SurnamesAlias',
+		'Alias',
+		'Qualifier',
+		'PublicName'
+	) NOT NULL DEFAULT 'Main',
+	FOREIGN KEY (p_id) REFERENCES persons(p_id),
+	FOREIGN KEY (n_id) REFERENCES names(n_id)
 );
 
 CREATE TABLE events (

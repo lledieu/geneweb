@@ -33,8 +33,6 @@ where pkey2 <> '?.0 ?' and action <> 'modifyNote';
 
 alter table old_history modify column u_id integer unsigned not null;
 
-alter table old_history add foreign key (u_id) references users(u_id);
-
 alter table old_history drop column wizard;
 
 alter table old_history drop column a;
@@ -45,6 +43,30 @@ set history.u_id = users.u_id;
 
 alter table history modify column u_id integer unsigned not null;
 
-alter table history add foreign key (u_id) references users(u_id);
-
 alter table history drop column wizard;
+
+insert into transactions
+select distinct null, h_date, u_id from old_history;
+
+insert ignore into transactions
+select distinct null, h_date, u_id from history;
+
+update old_history
+inner join transactions using(h_date, u_id)
+set old_history.t_id = transactions.t_id;
+
+update history
+inner join transactions using(h_date, u_id)
+set history.t_id = transactions.t_id;
+
+alter table history add foreign key (t_id) references transactions(t_id);
+
+alter table old_history add foreign key (t_id) references transactions(t_id);
+
+alter table history
+ drop column h_date,
+ drop column u_id;
+
+alter table old_history
+ drop column h_date,
+ drop column u_id;
