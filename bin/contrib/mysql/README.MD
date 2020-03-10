@@ -27,9 +27,7 @@ Pour Linux / Ubuntu : package ```libmariadbclient-dev```
 
 puis
 
-```
-opam install conf-mariadb mysql batteries
-```
+> opam install conf-mariadb mysql batteries
 
 Lancer le script ```./run.sh``` qui va enchaîner les étapes suivantes :
 * Compilation de l'extracteur Ocaml (j'utilise la version 4.07)
@@ -44,12 +42,13 @@ Lancer le script ```./run2.sh``` qui va enchaîner les étapes suivantes :
 * Exécution des scripts de transformations (actuellement changeHistory.sql)
 * Chargement de l'ancien système d'histique (via load_old_history.sql)
 
-Je conserve un ancêtre des notes liées (gérées via PHP) que je charge avec ```./load_php_notes.sh```
+Je conserve un ancêtre des notes liées (gérées via PHP) que je charge avec :
+
+> ./load_php_notes.sh
 
 Pour info, j'ai mis un fichier test.sql. Pour l'utiliser, il faut modifier en tête du fichier le "set @id = <p_id>" avec l'identifiant d'une personne qui vous intéresse et lancer :
-```
-./mysql.sh -t < test.sql
-```
+
+> ./mysql.sh -t < test.sql
 
 ### État du modèle
 ![Modèle](modele.png)

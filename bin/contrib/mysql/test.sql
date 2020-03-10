@@ -56,7 +56,13 @@ select distinct case ln_type
  end as 'Linked from'
 from linked_notes_ind
 inner join linked_notes using(ln_id)
-where pkey = (select pkey from persons where p_id = @id);
+where pkey = (select pkey from persons where p_id = @id)
+union
+select concat('PHP - ', nkey) as 'Linked from'
+from php_notes
+inner join php_notes_ind using (pn_id)
+where pkey = (select pkey from persons where p_id = @id)
+;
 
 select
  h_date,
