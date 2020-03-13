@@ -1,6 +1,6 @@
-set @id = 17424;
+-- set @id = 17424;
 -- set @id = 17417;
--- set @id = 17418;
+ set @id = 17418;
 
 select n_type, givn, nick, surn
 from names
@@ -53,14 +53,10 @@ select distinct case ln_type
   when 'PgNotes' then 'PgNotes'
   when 'PgMisc' then nkey
   when 'PgWizard' then concat( 'w:', nkey)
+  when 'PgPhp' then concat( 'PHP - ', nkey)
  end as 'Linked from'
 from linked_notes_ind
 inner join linked_notes using(ln_id)
-where pkey = (select pkey from persons where p_id = @id)
-union
-select concat('PHP - ', nkey) as 'Linked from'
-from php_notes
-inner join php_notes_ind using (pn_id)
 where pkey = (select pkey from persons where p_id = @id)
 ;
 

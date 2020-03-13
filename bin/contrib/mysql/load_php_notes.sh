@@ -8,46 +8,38 @@ cd $DIR
 grep '.' *ctl | sed -e "s/\.ctl:/:/" -e "s/+/_/g" -e "s/ /_/g" -e "s/:\([^:]*\):\([^:]*\):\([^:]*\)/:\L\1.\3.\L\2/" > $OLDPWD/txt/php_notes.txt
 cd -
 
-echo "(Re)create tables an load them..."
+echo "Load PHP notes..."
 $MYSQL << EOF
-DROP TABLE IF EXISTS php_notes_ind;
-DROP TABLE IF EXISTS php_notes;
+DROP TABLE IF EXISTS tmp_php_notes;
 
-CREATE TABLE php_notes (
-	pn_id	INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-	nkey	VARCHAR(100) NOT NULL,
-	UNIQUE(nkey)
-);
-
-CREATE TABLE php_notes_ind (
+CREATE TABLE tmp_php_notes (
 	pni_id	INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 	nkey	VARCHAR(100) NOT NULL,
-	pn_id	INTEGER UNSIGNED,
-	role	enum( 'Main', 'Witness' ),
-	pkey	VARCHAR(100) NOT NULL,
-	p_id	INTEGER UNSIGNED,
-	FOREIGN KEY (pn_id) REFERENCES php_notes(pn_id),
-	FOREIGN KEY (p_id) REFERENCES persons(p_id)
+	role	enum( '', 'Main' ),
+	pkey	VARCHAR(100) NOT NULL
 );
 
 LOAD DATA
  LOCAL INFILE 'txt/php_notes.txt'
- INTO TABLE php_notes_ind
+ INTO TABLE tmp_php_notes
  FIELDS TERMINATED BY ':'
  (nkey, pkey)
- set pni_id = null, role = 'Witness'
+ set pni_id = null, role = ''
 ;
 
-update php_notes_ind
+update tmp_php_notes
 set role = 'Main'
 where nkey like concat('%',pkey,'%');
 
-insert into php_notes
-select distinct null, nkey from php_notes_ind;
+insert into linked_notes
+select distinct null, 'PgPhp', nkey, null, null
+from tmp_php_notes;
 
-update php_notes_ind
-inner join php_notes using(nkey)
-set php_notes_ind.pn_id = php_notes.pn_id;
+insert into linked_notes_ind
+select null,
+ (select ln_id from linked_notes where ln_type = 'PgPhp' and nkey = tmp_php_notes.nkey),
+ pkey, null, '', 0, role
+from tmp_php_notes;
 
-alter table php_notes_ind drop column nkey;
+DROP TABLE tmp_php_notes;
 EOF

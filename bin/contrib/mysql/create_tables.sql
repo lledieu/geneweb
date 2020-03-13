@@ -323,13 +323,15 @@ CREATE TABLE linked_notes (
 		'PgFam',
 		'PgNotes',
 		'PgMisc',
-		'PgWizard'
+		'PgWizard',
+		'PgPhp' -- Specific
 	) NOT NULL,
 	nkey	VARCHAR(100) NOT NULL,
 	p_id	INTEGER UNSIGNED,
 	g_id	INTEGER UNSIGNED,
 	FOREIGN KEY (p_id) REFERENCES persons(p_id),
-	FOREIGN KEY (g_id) REFERENCES groups(g_id)
+	FOREIGN KEY (g_id) REFERENCES groups(g_id),
+	unique(nkey)
 );
 
 CREATE TABLE linked_notes_nt (
@@ -346,6 +348,7 @@ CREATE TABLE linked_notes_ind (
 	p_id	INTEGER UNSIGNED,
 	text	VARCHAR(200),
 	pos	INTEGER NOT NULL,
+	role	enum( '', 'Main' ) NOT NULL DEFAULT '', -- Specific
 	FOREIGN KEY (ln_id) REFERENCES linked_notes(ln_id),
 	FOREIGN KEY (p_id) REFERENCES persons(p_id)
 );
