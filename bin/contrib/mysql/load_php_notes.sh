@@ -5,7 +5,7 @@ MYSQL=./mysql.sh
 
 echo "Extract PHP notes..."
 cd $DIR
-grep '.' *ctl | sed -e "s/\.ctl:/:/" -e "s/+/_/g" -e "s/ /_/g" -e "s/:\([^:]*\):\([^:]*\):\([^:]*\)/:\L\1.\3.\L\2/" > $OLDPWD/php_notes.txt
+grep '.' *ctl | sed -e "s/\.ctl:/:/" -e "s/+/_/g" -e "s/ /_/g" -e "s/:\([^:]*\):\([^:]*\):\([^:]*\)/:\L\1.\3.\L\2/" > $OLDPWD/txt/php_notes.txt
 cd -
 
 echo "(Re)create tables an load them..."
@@ -31,7 +31,7 @@ CREATE TABLE php_notes_ind (
 );
 
 LOAD DATA
- LOCAL INFILE 'php_notes.txt'
+ LOCAL INFILE 'txt/php_notes.txt'
  INTO TABLE php_notes_ind
  FIELDS TERMINATED BY ':'
  (nkey, pkey)

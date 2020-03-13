@@ -36,13 +36,39 @@ then
   exit -1
 fi
 
+mkdir -p txt
 cd $BDDIR
 echo "Migrating GeneWeb -> MySql..."
 echo BEGIN $(date '+%FT%T')
-$OLDPWD/../../../_build/default/bin/contrib/mysql/gw2mysql.exe -noCurrent $BD
+$OLDPWD/../../../_build/default/bin/contrib/mysql/gw2mysql.exe -noCurrent $OLDPWD/txt $BD
+res=$?
+cd -
+
+if [ $res != 0 ]
+then
+  exit -1
+fi
+
+$MYSQL << EOF
+LOAD DATA
+ LOCAL INFILE 'txt/history.txt'
+ INTO TABLE history
+ CHARACTER SET UTF8
+ FIELDS TERMINATED BY '££' ENCLOSED BY '$'
+ (h_id, h_date, wizard, pkey)
+;
+
+LOAD DATA
+ LOCAL INFILE 'txt/history_details.txt'
+ INTO TABLE history_details
+ CHARACTER SET UTF8
+ FIELDS TERMINATED BY '££' ENCLOSED BY '$'
+ (h_id, data, old, new)
+ set hd_id = 0
+;
+EOF
 res=$?
 echo END $(date '+%FT%T')
-cd -
 
 if [ $res != 0 ]
 then

@@ -19,20 +19,14 @@ exit
 
 ### Lancer la migration
 
-Pré-requis pour MariaDB:
+Pré-requis :
 
-Pour Windows / cygwin : package ```libmariadbclient-devel```
-
-Pour Linux / Ubuntu : package ```libmariadbclient-dev```
-
-puis
-
-> opam install conf-mariadb mysql batteries
+> opam install batteries
 
 Lancer le script ```./run.sh``` qui va enchaîner les étapes suivantes :
 * Compilation de l'extracteur Ocaml (j'utilise la version 4.07)
 * Création des tables dans la base MariaDB (écrase les donnnées issues des précédentes migrations)
-* Exécution de l'extracteur (durée constatée de 1 heure avec ma base de presque 250000 personnes)
+* Exécution de l'extracteur
 * Exécution des scripts de transformations (actuellement changePlaces.sql, changeSources.sql, occupationsChange.sql)
 
 Lancer le script ```./run2.sh``` qui va enchaîner les étapes suivantes :
@@ -49,6 +43,10 @@ Je conserve un ancêtre des notes liées (gérées via PHP) que je charge avec :
 Pour info, j'ai mis un fichier test.sql. Pour l'utiliser, il faut modifier en tête du fichier le "set @id = <p_id>" avec l'identifiant d'une personne qui vous intéresse et lancer :
 
 > ./mysql.sh -t < test.sql
+
+Idem pour test-asc.sql :
+
+> ./mysql.sh -t < test-asc.sql
 
 ### État du modèle
 ![Modèle](modele.png)
