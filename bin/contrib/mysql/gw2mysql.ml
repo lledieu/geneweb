@@ -6,9 +6,9 @@ open Gwdb
 
 let null = "__NULL__"
 
-let e_id = ref 0
 let n_id = ref 0
 let s_id = ref 0
+let e_id = ref 0
 let m_id = ref 0
 let ln_id = ref 0
 let h_id = ref 0
@@ -77,6 +77,7 @@ let string_of_pevent fs = function
 | Epers_ScellentSpouseLDS -> "EVEN", "SLGS" (* SLGS removed from GEDCOM 5.5.5 *)
 | Epers_VenteBien -> "EVEN", "Property sale"
 | Epers_Will -> "WILL", ""
+| Epers_Name s when (fs s) = "FS" -> "FACT", "FS"
 | Epers_Name s -> "EVEN", (fs s)
 
 let string_of_fevent fs = function
@@ -92,7 +93,8 @@ let string_of_fevent fs = function
 | Efam_MarriageLicense -> "MARL", ""
 | Efam_PACS -> "EVEN", "pacs"
 | Efam_Residence -> "RESI", ""
-| Efam_Name n -> "EVEN", (fs n)
+| Efam_Name s when (fs s) = "FSc" -> "FACT", "FSc" (* FACT is not valid for GEDCOM 5.5.5 *)
+| Efam_Name s -> "EVEN", (fs s)
 
 let string_of_calendar = function
 | Dgregorian -> "Gregorian"
@@ -178,6 +180,9 @@ let gw_to_mysql base dir_out fname =
   let oc_e = open_oc dir_out "events" in
   let oc_e_od = open_oc dir_out "occupation_details" in
   let oc_e_t = open_oc dir_out "title_details" in
+  let oc_e_d = open_oc dir_out "death_details" in
+  let oc_e_v = open_oc dir_out "event_values" in
+  let oc_e_d2 = open_oc dir_out "event_dmy2" in
   let oc_pe = open_oc dir_out "person_event" in
   let oc_m = open_oc dir_out "medias" in
   let oc_pm = open_oc dir_out "person_media" in
@@ -191,9 +196,14 @@ let gw_to_mysql base dir_out fname =
       let date = Adef.od_of_cdate date in
         let go_insert d =
 	  let n_id_opt = insert_note note in
-	  let s_id_opt = insert_source source in
+	  let s_id_opt, src_as_value =
+            match t, n with
+            | "FACT", "FS" -> null, true
+            | "FACT", "FSc" -> null, true
+            | _ -> insert_source source, false
+          in
           incr e_id ;
-          Printf.fprintf oc_e "$%d$££$%s$££$%s$££$%s$££$%s$££$%d$££$%d$££$%d$££$Gregorian$££$0$££$0$££$0$££$%s$££$%s$££$%s$££$%s$££$%s$££\n" !e_id
+          Printf.fprintf oc_e "$%d$££$%s$££$%s$££$%s$££$%s$££$%d$££$%d$££$%d$££$%s$££$%s$££$%s$££$%s$££\n" !e_id
 	    (if t = "Name" then "EVEN" else t)
 	    (if t = "EVEN" || t = "FACT" then n else "")
 	    (match d with
@@ -212,7 +222,13 @@ let gw_to_mysql base dir_out fname =
 	    (match d with
 	      | Some Dtext s -> s
 	      | _ -> "")
-	    reason place n_id_opt s_id_opt ;
+	    place n_id_opt s_id_opt ;
+          if t = "DEAT" && reason <> "" then begin
+            Printf.fprintf oc_e_d "$%d$££$%s$££\n" !e_id reason
+          end ;
+          if src_as_value then begin
+            Printf.fprintf oc_e_v "$%d$££${\"ref\":\"%s\"}$££\n" !e_id (sou base source)
+          end;
           Printf.fprintf oc_pe "$%d$££$%d$££$Main$££\n" !e_id i_p1 ;
 	  begin match i_p2 with
 	  | Some i -> Printf.fprintf oc_pe "$%d$££$%d$££$Main$££\n" !e_id i ;
@@ -282,8 +298,11 @@ let gw_to_mysql base dir_out fname =
         end else BatText.to_string (BatText.sub r o_start (o_end-o_start+1))
       in
       incr e_id ;
-      Printf.fprintf oc_e "$%d$££$OCCU$££$$££$%s$££$Gregorian$££$0$££$0$££$%d$££$Gregorian$££$0$££$0$££$%d$££$$££$$££$$££$%s$££$%s$££\n" !e_id
-        (if y_end <> 0 then "FROM-TO" else "") y_start y_end null null ;
+      Printf.fprintf oc_e "$%d$££$OCCU$££$$££$%s$££$Gregorian$££$0$££$0$££$%d$££$$££$$££$%s$££$%s$££\n" !e_id
+        (if y_end <> 0 then "FROM-TO" else "") y_start null null ;
+      if y_end <> 0 then begin
+        Printf.fprintf oc_e_d2 "$%d$££$Gregorian$££$0$££$0$££$%d$££\n" !e_id y_end
+      end ;
       Printf.fprintf oc_e_od "$%d$££$%s$££\n" !e_id occu ;
       Printf.fprintf oc_pe "$%d$££$%d$££$Main$££\n" !e_id p_id ;
     in
@@ -416,17 +435,21 @@ let gw_to_mysql base dir_out fname =
       let d_start_dmy2 = get_dmy2 d_start in
       let d_end = Adef.od_of_cdate t.t_date_end in
       let d_end_dmy2 = get_dmy2 d_end in
+        let prec =
+	  match d_start, d_end with
+	  | None, None -> ""
+          | Some _, None -> "FROM"
+          | None, Some _ -> "TO"
+          | Some _, Some _ -> "FROM-TO"
+        in
         incr e_id ;
-        Printf.fprintf oc_e "$%d$££$TITL$££$$££$%s$££$%s$££$%d$££$%d$££$%d$££$%s$££$%d$££$%d$££$%d$££$$££$$££$$££$%s$££$%s$££\n" !e_id
-	  (match d_start, d_end with
-	    | None, None -> ""
-            | Some _, None -> "FROM"
-            | None, Some _ -> "TO"
-            | Some _, Some _ -> "FROM-TO"
-	  )
+        Printf.fprintf oc_e "$%d$££$TITL$££$$££$%s$££$%s$££$%d$££$%d$££$%d$££$$££$$££$%s$££$%s$££\n" !e_id prec
 	  (get_calendar d_start) (get_day d_start) (get_month d_start) (get_year d_start)
-	  (get_calendar d_end) (get_day d_end) (get_month d_end) (get_year d_end)
 	  null null ;
+        if prec = "FROM-TO" then begin
+          Printf.fprintf oc_e_d2 "$%d$££$%s$££$%d$££$%d$££$%d$££\n" !e_id
+	    (get_calendar d_end) (get_day d_end) (get_month d_end) (get_year d_end)
+        end ;
         Printf.fprintf oc_e_t "$%d$££$%s$££$%s$££$%d$££$%s$££$%s$££$%s$££$%s$££$%d$££$%d$££$%d$££$%d$££$%d$££$%d$££$%s$££$%s$££$%s$££$%d$££$%d$££$%d$££$%d$££$%d$££$%d$££$%s$££\n" !e_id
           (sou base t.t_ident) (sou base t.t_place) t.t_nth
 	  (match t.t_name with | Tmain -> "True" | _ -> "False")
@@ -506,7 +529,7 @@ let gw_to_mysql base dir_out fname =
     in
     let as_an_event e_t e_n r s_id_opt role =
       incr e_id ;
-      Printf.fprintf oc_e "$%d$££$%s$££$%s$££$$££$Gregorian$££$0$££$0$££$0$££$Gregorian$££$0$££$0$££$0$££$$££$$££$$££$%s$££$%s$££\n"
+      Printf.fprintf oc_e "$%d$££$%s$££$%s$££$$££$Gregorian$££$0$££$0$££$0$££££$$££$$££$%s$££$%s$££\n"
         !e_id e_t e_n null s_id_opt ;
       insert_person_event (Some (Adef.iper_of_int i)) "Main" ;
       insert_person_event r.r_fath role ;
@@ -535,6 +558,7 @@ let gw_to_mysql base dir_out fname =
   close_out oc_p ;
   close_out oc_e_od ;
   close_out oc_e_t ;
+  close_out oc_e_d ;
   close_out oc_pm ;
   close_out oc_pn ;
   close_out oc_m ;
@@ -564,6 +588,8 @@ let gw_to_mysql base dir_out fname =
   close_out oc_n ;
   close_out oc_s ;
   close_out oc_e ;
+  close_out oc_e_v ;
+  close_out oc_e_d2 ;
   close_out oc_pe ;
   close_out oc_g ;
   close_out oc_pg ;

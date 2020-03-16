@@ -37,8 +37,11 @@ then
 fi
 
 mkdir -p txt
+if [ -d "$BDDIR/$BD.gwb/history_d" ]
+then
+
 cd $BDDIR
-echo "Migrating GeneWeb -> MySql..."
+echo "Migrating GeneWeb -> MariaDB..."
 echo BEGIN $(date '+%FT%T')
 $OLDPWD/../../../_build/default/bin/contrib/mysql/gw2mysql.exe -noCurrent $OLDPWD/txt $BD
 res=$?
@@ -49,6 +52,7 @@ then
   exit -1
 fi
 
+echo "Loading data..."
 $MYSQL << EOF
 LOAD DATA
  LOCAL INFILE 'txt/history.txt'
@@ -75,10 +79,18 @@ then
   exit -1
 fi
 
-echo "Formating old history..."
-sed "s/\(.*\) \[\(.*\)\] \(..\) \(.*\)\$/\1||\2||\3||\4||/" $BDDIR/$BD.gwb/history > old_history.tmp
-$MYSQL < load_old_history.sql
-rm old_history.tmp
+else
+	echo "Nothing to do : missing history_d !"
+fi
+
+if [ -f "$BDDIR/$BD.gwb/history" ]
+then
+	echo "Formating old history..."
+	sed "s/\(.*\) \[\(.*\)\] \(..\) \(.*\)\$/\1||\2||\3||\4||/" $BDDIR/$BD.gwb/history > txt/old_history.txt
+	$MYSQL < load_old_history.sql
+else
+	echo "Nothing to do : missing history !"
+fi
 
 echo "Adjusting history..."
 echo BEGIN $(date '+%FT%T')

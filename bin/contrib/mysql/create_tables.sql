@@ -1,6 +1,3 @@
-DROP TABLE IF EXISTS php_notes_ind;
-DROP TABLE IF EXISTS php_notes;
-
 DROP TABLE IF EXISTS linked_notes_ind;
 DROP TABLE IF EXISTS linked_notes_nt;
 DROP TABLE IF EXISTS linked_notes;
@@ -11,10 +8,14 @@ DROP TABLE IF EXISTS groups;
 DROP TABLE IF EXISTS person_event;
 DROP TABLE IF EXISTS title_details;
 DROP TABLE IF EXISTS occupation_details;
+DROP TABLE IF EXISTS death_details;
+DROP TABLE IF EXISTS event_dmy2;
+DROP TABLE IF EXISTS event_values;
 DROP TABLE IF EXISTS events;
 DROP TABLE IF EXISTS person_name;
 DROP TABLE IF EXISTS names;
 DROP TABLE IF EXISTS persons;
+DROP TABLE IF EXISTS representations;
 DROP TABLE IF EXISTS sources;
 DROP TABLE IF EXISTS notes;
 DROP TABLE IF EXISTS places;
@@ -49,7 +50,9 @@ CREATE TABLE persons (
 	access	enum(
 		'IfTitles',
 		'Public',
-		'Private'
+		'Private',
+		'Friend', -- Roglo specific
+		'Friend_m' -- Roglo specific
 	) NOT NULL DEFAULT 'IfTitles',
 	FOREIGN KEY (n_id) REFERENCES notes(n_id),
 	FOREIGN KEY (s_id) REFERENCES sources(s_id)
@@ -166,6 +169,31 @@ CREATE TABLE events (
 	dmy1_d	TINYINT UNSIGNED NOT NULL DEFAULT 0,
 	dmy1_m	TINYINT UNSIGNED NOT NULL DEFAULT 0,
 	dmy1_y	SMALLINT NOT NULL DEFAULT 0,
+	d_text	VARCHAR(35) NOT NULL DEFAULT '', -- FIXME deprecated
+	-- Autres champs
+	place	VARCHAR(120) NOT NULL DEFAULT '', -- Removed after migration
+	pl_id	INTEGER UNSIGNED,
+	n_id	INTEGER UNSIGNED,
+	s_id	INTEGER UNSIGNED,
+	FOREIGN KEY (pl_id) REFERENCES places(pl_id),
+	FOREIGN KEY (n_id) REFERENCES notes(n_id),
+	FOREIGN KEY (s_id) REFERENCES sources(s_id)
+);
+
+CREATE TABLE death_details (
+	e_id	INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        reason enum (
+		'Killed',
+		'Murdered',
+		'Executed',
+		'Disappeared',
+		''
+	) NOT NULL DEFAULT '',
+	FOREIGN KEY (e_id) REFERENCES events(e_id)
+);
+
+CREATE TABLE event_dmy2 (
+	e_id	INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 	d_cal2	enum(
 		'Gregorian',
 		'Julian',     -- @#DJULIAN@
@@ -175,22 +203,14 @@ CREATE TABLE events (
 	dmy2_d	TINYINT UNSIGNED NOT NULL DEFAULT 0,
 	dmy2_m	TINYINT UNSIGNED NOT NULL DEFAULT 0,
 	dmy2_y	SMALLINT NOT NULL DEFAULT 0,
-	d_text	VARCHAR(35) NOT NULL DEFAULT '', -- FIXME deprecated
-	-- Autres champs
-        death_reason enum (
-		'Killed',
-		'Murdered',
-		'Executed',
-		'Disappeared',
-		''
-	) NOT NULL DEFAULT '',
-	place	VARCHAR(120) NOT NULL DEFAULT '', -- Removed after migration
-	pl_id	INTEGER UNSIGNED,
-	n_id	INTEGER UNSIGNED,
-	s_id	INTEGER UNSIGNED,
-	FOREIGN KEY (pl_id) REFERENCES places(pl_id),
-	FOREIGN KEY (n_id) REFERENCES notes(n_id),
-	FOREIGN KEY (s_id) REFERENCES sources(s_id)
+	FOREIGN KEY (e_id) REFERENCES events(e_id)
+);
+
+CREATE TABLE event_values (
+	e_id	INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+	attr	VARCHAR(2000) NOT NULL,
+	FOREIGN KEY (e_id) REFERENCES events(e_id),
+	CHECK( JSON_VALID(attr) )
 );
 
 CREATE TABLE title_details (

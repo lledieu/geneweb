@@ -10,12 +10,12 @@ sudo mysql -u root -p
 ```
 Renseigner le mot de passe puis valider avec `Entrée`
 Puis, dans la console `MariaDB>` :
-```
+`
 create database geneweb character set UTF8;
 create user 'gw'@'localhost' identified by 'gw_pw';
 grant all privileges on geneweb.* to 'gw'@'localhost';
 exit
-```
+`
 
 ### Lancer la migration
 
@@ -23,30 +23,29 @@ Pré-requis :
 
 > opam install batteries
 
-Lancer le script ```./run.sh``` qui va enchaîner les étapes suivantes :
+Lancer le script `./run.sh` qui va enchaîner les étapes suivantes :
 * Compilation de l'extracteur Ocaml (j'utilise la version 4.07)
 * Création des tables dans la base MariaDB (écrase les donnnées issues des précédentes migrations)
 * Exécution de l'extracteur
 * Exécution des scripts de transformations (actuellement changePlaces.sql, changeSources.sql, occupationsChange.sql)
 
-Lancer le script ```./run2.sh``` qui va enchaîner les étapes suivantes :
+Lancer le script `./run2.sh` qui va enchaîner les étapes suivantes :
 * Compilation de l'extracteur Ocaml (j'utilise la version 4.07)
 * Création des tables dans la base MariaDB pour la partie historique (écrase les donnnées issues des précédentes migrations)
 * Exécution de l'extracteur
 * Exécution des scripts de transformations (actuellement changeHistory.sql)
 * Chargement de l'ancien système d'histique (via load_old_history.sql)
 
-Je conserve un ancêtre des notes liées (gérées via PHP) que je charge avec :
+Je conserve un ancêtre des notes liées (gérées via PHP) que je charge avec `./load_php_notes.sh`.
 
-> ./load_php_notes.sh
+Pour info, j'ai préparé quelques scripts SQL que vous pouvez lancer en prenant soin de choisir un identifiant de personne (<p_id>) ou de source (<s_id>) :
 
-Pour info, j'ai mis un fichier test.sql. Pour l'utiliser, il faut modifier en tête du fichier le "set @id = <p_id>" avec l'identifiant d'une personne qui vous intéresse et lancer :
-
-> ./mysql.sh -t < test.sql
-
-Idem pour test-asc.sql :
-
-> ./mysql.sh -t < test-asc.sql
+`
+./mysql.sh -t
+MariaDB> set @id = <p_id> ; \. p_id2person.sql
+MariaDB> set @id = <p_id> ; \. p_id2asc.sql
+MariaDB> set @id = <s_id> ; \. s_id2pkey2.sql
+`
 
 ### État du modèle
 ![Modèle](modele.png)

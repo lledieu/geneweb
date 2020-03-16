@@ -1,4 +1,6 @@
-set @id = 460;
+select @id := ifnull(@id, 460);
+
+select @max_gen := ifnull(@max_gen, 100);
 
 with recursive ancestors as (
  select 1 as "gen", cast("1" as decimal(20)) as "sosa", g_id, p_id
@@ -10,6 +12,7 @@ union
  inner join persons using(p_id)
  inner join ancestors a on p.g_id = a.g_id and p.role = 'Parent'
  left join person_group c on p.p_id = c.p_id and p.role = 'Parent' and c.role = 'Child'
+ where a.gen < @max_gen
 )
 
 -- Version complète

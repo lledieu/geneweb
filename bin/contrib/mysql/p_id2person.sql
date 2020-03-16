@@ -1,6 +1,8 @@
 -- set @id = 17424;
 -- set @id = 17417;
- set @id = 17418;
+-- set @id = 17418;
+
+select @id := ifnull(@id, 17424);
 
 select n_type, givn, nick, surn
 from names
@@ -27,6 +29,7 @@ select
   else dmy1_y
  end order by dmy1_y separator ', ') as period
 from events
+left join event_dmy2 using(e_id)
 inner join occupation_details using(e_id)
 inner join occupations using(o_id)
 where e_type = 'OCCU'
@@ -75,12 +78,3 @@ where t_id in (
  from history
  where pkey = (select pkey from persons where p_id = @id)
 );
-
-select "pkey à revoir", count(*)
-from persons where pkey = '.0.';
-
-select "Personnes orphelines", count(*)
-from persons p
-where not exists (select 1 from names where p_id = p.p_id)
-  and not exists (select 1 from person_event where p_id = p.p_id)
-  and not exists (select 1 from person_group where p_id = p.p_id);

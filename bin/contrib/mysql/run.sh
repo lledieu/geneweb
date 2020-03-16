@@ -38,7 +38,7 @@ fi
 
 mkdir -p txt
 cd $BDDIR
-echo "Migrating GeneWeb -> MySql..."
+echo "Migrating GeneWeb -> MariaDB..."
 echo BEGIN $(date '+%FT%T')
 $OLDPWD/../../../_build/default/bin/contrib/mysql/gw2mysql.exe -noHistory $OLDPWD/txt $BD
 res=$?
@@ -49,6 +49,7 @@ then
   exit -1
 fi
 
+echo "Loading data..."
 $MYSQL << EOF
 LOAD DATA
  LOCAL INFILE 'txt/notes.txt'
@@ -81,9 +82,33 @@ LOAD DATA
  INTO TABLE events
  CHARACTER SET UTF8
  FIELDS TERMINATED BY '££' ENCLOSED BY '$'
- (e_id, e_type, t_name, d_prec, d_cal1, dmy1_d, dmy1_m, dmy1_y, d_cal2, dmy2_d, dmy2_m, dmy2_y, d_text, death_reason, place, @n_id, @s_id)
+ (e_id, e_type, t_name, d_prec, d_cal1, dmy1_d, dmy1_m, dmy1_y, d_text, place, @n_id, @s_id)
  set n_id = nullif(@n_id, '__NULL__'),
      s_id = nullif(@s_id, '__NULL__')
+;
+
+LOAD DATA
+ LOCAL INFILE 'txt/death_details.txt'
+ INTO TABLE death_details
+ CHARACTER SET UTF8
+ FIELDS TERMINATED BY '££' ENCLOSED BY '$'
+ (e_id, reason)
+;
+
+LOAD DATA
+ LOCAL INFILE 'txt/event_dmy2.txt'
+ INTO TABLE event_dmy2
+ CHARACTER SET UTF8
+ FIELDS TERMINATED BY '££' ENCLOSED BY '$'
+ (e_id, d_cal2, dmy2_d, dmy2_m, dmy2_y)
+;
+
+LOAD DATA
+ LOCAL INFILE 'txt/event_values.txt'
+ INTO TABLE event_values
+ CHARACTER SET UTF8
+ FIELDS TERMINATED BY '££' ENCLOSED BY '$'
+ (e_id, attr)
 ;
 
 LOAD DATA

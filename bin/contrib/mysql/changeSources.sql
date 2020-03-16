@@ -1,5 +1,4 @@
-DROP TABLE IF EXISTS tmp1_sources;
-CREATE TABLE tmp1_sources (
+CREATE TEMPORARY TABLE tmp1_sources (
 	s_id	INTEGER UNSIGNED PRIMARY KEY,
 	source	TEXT,
 	unique (source(200))
@@ -10,8 +9,7 @@ select min(s_id), source
 from sources
 group by 2;
 
-DROP TABLE IF EXISTS tmp2_sources;
-CREATE TABLE tmp2_sources (
+CREATE TEMPORARY TABLE tmp2_sources (
 	s_id INTEGER UNSIGNED PRIMARY KEY,
 	s_id_to   INTEGER UNSIGNED
 );
