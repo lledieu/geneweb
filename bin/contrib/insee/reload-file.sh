@@ -1,13 +1,13 @@
 #!/bin/bash
 
 MYSQL="./mysql.sh"
-pattern='^INSEE/deces-[[:digit:]]{4}\.txt$'
+pattern='^INSEE/deces-[[:digit:]]{4}(-m[[:digit:]]{2})?\.txt$'
 
 if [[ "$1" =~ $pattern ]]
 then
 	f=$1
 else
-	echo "Usage: $0 INSEE/deces-<annee>.txt [charset]"
+	echo "Usage: $0 INSEE/deces-<annee>[-mMM].txt [charset]"
 	exit -1
 fi
 

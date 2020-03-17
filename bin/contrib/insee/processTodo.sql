@@ -66,7 +66,7 @@ BEGIN
 	  and t1.Id in (
 		/* Exact Match TODO -> INSEE */
 		select i.Id
-		from INSEE
+		from INSEE i
 		where i.Nom = tNom
 		  and i.Prenom = tPrenom
 		  and i.Sexe = tSexe
@@ -365,7 +365,7 @@ BEGIN
 	  and getPlaceLib(DecesCode,DecesY,DecesM,DecesD) = tDecesPlace
 	;
 
-	IF ! theEnd THEN
+	IF iId != 0 THEN
 		set etat = 1;
 		set nbMatch = 1;
 		set bestScore = null;

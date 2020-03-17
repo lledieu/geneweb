@@ -36,7 +36,6 @@ fi
 
 echo "Get new files..."
 grep checkurl ${SUMMARY} | sed -e "s/\s*:checkurl=\"'//" -e "s#/check/'\"##" > ${URL_LIST}
-lastyear=""
 for url in $(cat ${URL_LIST})
 do
 	wget -q "${BASE_URL}${url}" -O ${JSON}
@@ -51,15 +50,16 @@ do
 	file_last_modified=$(jq -r '.last_modified' ${JSON})
 	file_title=$(jq -r '.title' ${JSON})
 	year=$(echo ${file_title} | sed -e "s/^deces-//" -e "s/-.*//" -e "s/\..*//" )
-	file_dest=$(echo ${file_title} | sed -e "s/-[mt][0-9]*//")
 
-	if [[ "${file_title}" =~ -(m|t) && "$year" == "$lastyear" ]]
+	if [[ ("${file_title}" =~ "-t") ||
+	      ("${file_title}" =~ "-m" && "$year" == "2019") ||
+	      (!("${file_title}" =~ -(t|m)) && "$year" -gt "2019") ]]
 	then
 		echo "File ${DIR}/${file_title} is useless."
 	elif [[ "${last_sync}" < "${file_last_modified}" ]]
 	then
 		echo "Downloading ${DIR}/${file_title}..."
-		wget "${file_latest}" -O "${DIR}/${file_dest}"
+		wget "${file_latest}" -O "${DIR}/${file_title}"
 		res=$?
 		if [[ ${res} != 0 ]]
 		then
@@ -69,7 +69,6 @@ do
 	else
 		echo "File ${DIR}/${file_title} is unchanged."
 	fi
-	lastyear=$year
 done
 
 echo "Save synchronization date..."

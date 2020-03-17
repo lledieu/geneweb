@@ -11,21 +11,21 @@ Un score de 6 correspond à des données identiques.
 
 Seules les comparaisons ayant un score supérieur ou égal à 2 sont jugées exploitables.
 
-### Création de la base MySQL
+### Création de la base MariaDB
 ```
-mysql -u root -p
+sudo mysql -u root -p
 ```
 Renseigner le mot de passe puis valider avec `Entrée`
 Puis, dans la console `mysql>` :
 ```
-create database insee;
+create database insee character set UTF8;
 create user 'insee'@'localhost' identified by '<mot_de_passe>';
 grant all privileges on insee.* to 'insee'@'localhost';
 grant file on *.* to 'insee'@'localhost';
 exit
 ```
 
-Si besoin, pour mémoriser le mot de passe de la connexion de manière un peu plus sécurisée :
+Si besoin, pour mémoriser le mot de passe de la connexion de manière un peu plus sécurisée (nécessaire uniquement pour MySQL):
 ```
 mysql_config_editor set --login-path=client --user=insee --password
 ```
