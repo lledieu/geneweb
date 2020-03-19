@@ -78,7 +78,7 @@ if [ -f "$BDDIR/$BD.gwb/history" ]
 then
 
 	echo "Formating old history..."
-	sed "s/\(.*\) \[\(.*\)\] \(..\) \(.*\)\$/\1||\2||\3||\4||/" $BDDIR/$BD.gwb/history > txt/old_history.tmp
+	sed "s/\(.*\) \[\(.*\)\] \(..\) \(.*\)\$/\1||\2||\3||\4||/" $BDDIR/$BD.gwb/history | sed -e "s/J-B.de La Grandière/J-B.de La GrandiÃ¨re/" > txt/old_history.tmp
 	$MYSQL < load_old_history.sql
 
 else
