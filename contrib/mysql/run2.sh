@@ -2,6 +2,7 @@
 
 CFG=.run.cfg
 MYSQL=./mysql.sh
+CHARSET=utf8mb4
 
 if [ ! -f $CFG ]
 then
@@ -48,7 +49,7 @@ $MYSQL << EOF
 LOAD DATA
  LOCAL INFILE 'txt/history.txt'
  INTO TABLE history
- CHARACTER SET UTF8
+ CHARACTER SET $CHARSET
  FIELDS TERMINATED BY '££' ENCLOSED BY '$'
  (h_id, h_date, wizard, pkey)
 ;
@@ -56,7 +57,7 @@ LOAD DATA
 LOAD DATA
  LOCAL INFILE 'txt/history_details.txt'
  INTO TABLE history_details
- CHARACTER SET UTF8
+ CHARACTER SET $CHARSET
  FIELDS TERMINATED BY '££' ENCLOSED BY '$'
  (h_id, data, old, new)
  set hd_id = 0

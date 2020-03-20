@@ -2,6 +2,7 @@
 
 CFG=.run.cfg
 MYSQL=./mysql.sh
+CHARSET=utf8mb4
 
 if [ ! -f $CFG ]
 then
@@ -46,7 +47,7 @@ $MYSQL << EOF
 LOAD DATA
  LOCAL INFILE 'txt/notes.txt'
  INTO TABLE notes
- CHARACTER SET UTF8
+ CHARACTER SET $CHARSET
  FIELDS TERMINATED BY '££' ENCLOSED BY '$'
  (n_id, note)
 ;
@@ -54,7 +55,7 @@ LOAD DATA
 LOAD DATA
  LOCAL INFILE 'txt/sources.txt'
  INTO TABLE sources
- CHARACTER SET UTF8
+ CHARACTER SET $CHARSET
  FIELDS TERMINATED BY '££' ENCLOSED BY '$'
  (s_id, source)
 ;
@@ -62,7 +63,7 @@ LOAD DATA
 LOAD DATA
  LOCAL INFILE 'txt/persons.txt'
  INTO TABLE persons
- CHARACTER SET UTF8
+ CHARACTER SET $CHARSET
  FIELDS TERMINATED BY '££' ENCLOSED BY '$'
  (p_id, pkey, pkey2, occ, death, @n_id, @s_id, consang, sex, access)
  set n_id = nullif(@n_id, '__NULL__'),
@@ -72,7 +73,7 @@ LOAD DATA
 LOAD DATA
  LOCAL INFILE 'txt/events.txt'
  INTO TABLE events
- CHARACTER SET UTF8
+ CHARACTER SET $CHARSET
  FIELDS TERMINATED BY '££' ENCLOSED BY '$'
  (e_id, e_type, t_name, d_prec, d_cal1, dmy1_d, dmy1_m, dmy1_y, d_cal2, dmy2_d, dmy2_m, dmy2_y, d_text, death_reason, place, @n_id, @s_id)
  set n_id = nullif(@n_id, '__NULL__'),
@@ -82,7 +83,7 @@ LOAD DATA
 LOAD DATA
  LOCAL INFILE 'txt/occupation_details.txt'
  INTO TABLE occupation_details
- CHARACTER SET UTF8
+ CHARACTER SET $CHARSET
  FIELDS TERMINATED BY '££' ENCLOSED BY '$'
  (e_id, name)
 ;
@@ -90,7 +91,7 @@ LOAD DATA
 LOAD DATA
  LOCAL INFILE 'txt/title_details.txt'
  INTO TABLE title_details
- CHARACTER SET UTF8
+ CHARACTER SET $CHARSET
  FIELDS TERMINATED BY '££' ENCLOSED BY '$'
  (e_id, ident, place, nth, main, name, d1_prec, d1_cal, d1_dmy1_d, d1_dmy1_m, d1_dmy1_y, d1_dmy2_d, d1_dmy2_m, d1_dmy2_y, d1_text, d2_prec, d2_cal, d2_dmy1_d, d2_dmy1_m, d2_dmy1_y, d2_dmy2_d, d2_dmy2_m, d2_dmy2_y, d2_text)
 ;
@@ -98,7 +99,7 @@ LOAD DATA
 LOAD DATA
  LOCAL INFILE 'txt/person_event.txt'
  INTO TABLE person_event
- CHARACTER SET UTF8
+ CHARACTER SET $CHARSET
  FIELDS TERMINATED BY '££' ENCLOSED BY '$'
  (e_id, p_id, role)
  set pe_id = 0
@@ -107,7 +108,7 @@ LOAD DATA
 LOAD DATA
  LOCAL INFILE 'txt/medias.txt'
  INTO TABLE medias
- CHARACTER SET UTF8
+ CHARACTER SET $CHARSET
  FIELDS TERMINATED BY '££' ENCLOSED BY '$'
  (m_id, fname)
 ;
@@ -115,7 +116,7 @@ LOAD DATA
 LOAD DATA
  LOCAL INFILE 'txt/person_media.txt'
  INTO TABLE person_media
- CHARACTER SET UTF8
+ CHARACTER SET $CHARSET
  FIELDS TERMINATED BY '££' ENCLOSED BY '$'
  (p_id, m_id)
  set pm_id = 0
@@ -124,7 +125,7 @@ LOAD DATA
 LOAD DATA
  LOCAL INFILE 'txt/person_name.txt'
  INTO TABLE person_name
- CHARACTER SET UTF8
+ CHARACTER SET $CHARSET
  FIELDS TERMINATED BY '££' ENCLOSED BY '$'
  (p_id, givn, nick, surn, n_type)
  set pn_id = 0, npfx = '', spfx = '', nsfx = ''
@@ -133,7 +134,7 @@ LOAD DATA
 LOAD DATA
  LOCAL INFILE 'txt/groups.txt'
  INTO TABLE groups
- CHARACTER SET UTF8
+ CHARACTER SET $CHARSET
  FIELDS TERMINATED BY '££' ENCLOSED BY '$'
  (g_id, @n_id, @s_id, origin)
  set n_id = nullif(@n_id, '__NULL__'),
@@ -143,7 +144,7 @@ LOAD DATA
 LOAD DATA
  LOCAL INFILE 'txt/person_group.txt'
  INTO TABLE person_group
- CHARACTER SET UTF8
+ CHARACTER SET $CHARSET
  FIELDS TERMINATED BY '££' ENCLOSED BY '$'
  (g_id, p_id, role, seq)
  set pg_id = 0
@@ -152,7 +153,7 @@ LOAD DATA
 LOAD DATA
  LOCAL INFILE 'txt/linked_notes.txt'
  INTO TABLE linked_notes
- CHARACTER SET UTF8
+ CHARACTER SET $CHARSET
  FIELDS TERMINATED BY '££' ENCLOSED BY '$'
  (ln_id, ln_type, nkey, @p_id, @g_id)
  set p_id = nullif(@p_id, '__NULL__'),
@@ -162,7 +163,7 @@ LOAD DATA
 LOAD DATA
  LOCAL INFILE 'txt/linked_notes_nt.txt'
  INTO TABLE linked_notes_nt
- CHARACTER SET UTF8
+ CHARACTER SET $CHARSET
  FIELDS TERMINATED BY '££' ENCLOSED BY '$'
  (ln_id, nkey)
  set lnn_id = 0
@@ -171,7 +172,7 @@ LOAD DATA
 LOAD DATA
  LOCAL INFILE 'txt/linked_notes_ind.txt'
  INTO TABLE linked_notes_ind
- CHARACTER SET UTF8
+ CHARACTER SET $CHARSET
  FIELDS TERMINATED BY '££' ENCLOSED BY '$'
  (ln_id, pkey, text, pos)
  set lni_id = 0
