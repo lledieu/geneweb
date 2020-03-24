@@ -27,7 +27,7 @@ Lancer le script `./run.sh` qui va enchaîner les étapes suivantes :
 * Compilation de l'extracteur Ocaml (j'utilise la version 4.07)
 * Création des tables dans la base MariaDB (écrase les donnnées issues des précédentes migrations)
 * Exécution de l'extracteur
-* Exécution des scripts de transformations (actuellement changePlaces.sql, changeSources.sql, occupationsChange.sql)
+* Exécution des scripts de transformations (actuellement occupationsChange.sql)
 
 Lancer le script `./run2.sh` qui va enchaîner les étapes suivantes :
 * Compilation de l'extracteur Ocaml (j'utilise la version 4.07)

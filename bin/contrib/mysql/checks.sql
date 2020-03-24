@@ -26,3 +26,7 @@ where ln_type = 'PgPhp'
 group by 1, 2
 having count(*) <> 1;
 
+select * from notes inner join groups using(n_id) where note like '*%';
+
+select * from notes inner join persons using(n_id) where note not like '*%';
+

@@ -20,6 +20,8 @@ type base
 val open_base : string -> base
 val close_base : base -> unit
 
+val my_istr_key : istr -> string
+
 val eq_istr : istr -> istr -> bool
 val is_empty_string : istr -> bool
 val is_quest_string : istr -> bool

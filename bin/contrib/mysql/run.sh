@@ -68,6 +68,14 @@ LOAD DATA
 ;
 
 LOAD DATA
+ LOCAL INFILE 'txt/places.txt'
+ INTO TABLE places
+ CHARACTER SET UTF8
+ FIELDS TERMINATED BY '££' ENCLOSED BY '$'
+ (pl_id, place)
+;
+
+LOAD DATA
  LOCAL INFILE 'txt/persons.txt'
  INTO TABLE persons
  CHARACTER SET UTF8
@@ -82,8 +90,9 @@ LOAD DATA
  INTO TABLE events
  CHARACTER SET UTF8
  FIELDS TERMINATED BY '££' ENCLOSED BY '$'
- (e_id, e_type, t_name, d_prec, d_cal1, dmy1_d, dmy1_m, dmy1_y, d_text, place, @n_id, @s_id)
- set n_id = nullif(@n_id, '__NULL__'),
+ (e_id, e_type, t_name, d_prec, d_cal1, dmy1_d, dmy1_m, dmy1_y, d_text, @pl_id, @n_id, @s_id)
+ set pl_id = nullif(@pl_id, '__NULL__'),
+     n_id = nullif(@n_id, '__NULL__'),
      s_id = nullif(@s_id, '__NULL__')
 ;
 
@@ -211,26 +220,6 @@ LOAD DATA
 
 EOF
 res=$?
-echo END $(date '+%FT%T')
-
-if [ $res != 0 ]
-then
-  exit -1
-fi
-
-echo "Adjusting places..."
-echo BEGIN $(date '+%FT%T')
-$MYSQL < changePlaces.sql
-echo END $(date '+%FT%T')
-
-if [ $res != 0 ]
-then
-  exit -1
-fi
-
-echo "Adjusting sources..."
-echo BEGIN $(date '+%FT%T')
-$MYSQL < changeSources.sql
 echo END $(date '+%FT%T')
 
 if [ $res != 0 ]

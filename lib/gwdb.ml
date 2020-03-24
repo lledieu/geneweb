@@ -99,6 +99,12 @@ let is_quest_string i = let f pf = pf.is_quest_string in wrap_istr f f f i
 let un_istr i = let f pf = pf.un_istr in wrap_istr f f f i
 let un_istr2 i = let f pf = pf.un_istr2 in wrap_istr f f f i
 
+let my_istr_key =
+  function
+  | Istr istr -> string_of_int @@ Adef.int_of_istr istr
+  | Istr2 (_, (f1, f2), pos) -> Printf.sprintf "%s-%s-%d" f1 f2 pos
+  | Istr2New _ -> failwith "my_int_of_istr"
+
 (* String person index - common definitions *)
 
 type string_person_index =

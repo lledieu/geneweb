@@ -171,7 +171,6 @@ CREATE TABLE events (
 	dmy1_y	SMALLINT NOT NULL DEFAULT 0,
 	d_text	VARCHAR(35) NOT NULL DEFAULT '', -- FIXME deprecated
 	-- Autres champs
-	place	VARCHAR(120) NOT NULL DEFAULT '', -- Removed after migration
 	pl_id	INTEGER UNSIGNED,
 	n_id	INTEGER UNSIGNED,
 	s_id	INTEGER UNSIGNED,

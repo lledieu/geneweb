@@ -7,7 +7,6 @@ open Gwdb
 let null = "__NULL__"
 
 let n_id = ref 0
-let s_id = ref 0
 let e_id = ref 0
 let m_id = ref 0
 let ln_id = ref 0
@@ -169,11 +168,21 @@ let gw_to_mysql base dir_out fname =
   let oc_s = open_oc dir_out "sources" in
   let insert_source istr =
     let s = sou base istr in
+    let key = my_istr_key istr in
     if s = "" then null
     else begin
-      incr s_id ;
-      Printf.fprintf oc_s "$%d$££$%s$££\n" !s_id s ;
-      string_of_int !s_id
+      Printf.fprintf oc_s "$%s$££$%s$££\n" key s ;
+      key
+    end
+  in
+  let oc_pl = open_oc dir_out "places" in
+  let insert_place istr =
+    let s = sou base istr in
+    let key = my_istr_key istr in
+    if s = "" then null
+    else begin
+      Printf.fprintf oc_pl "$%s$££$%s$££\n" key s ;
+      key
     end
   in
   let oc_p = open_oc dir_out "persons" in
@@ -191,19 +200,18 @@ let gw_to_mysql base dir_out fname =
   let oc_pg = open_oc dir_out "person_group" in
   (* events *)
   let event base i_p1 i_p2 t n date place note source reason witnesses =
-    let place = sou base place in
-    (* if date <> Adef.cdate_None || place <> "" || (sou base note) <> "" || (sou base source) <> "" then FIXME contrôle utile uniquement en v6 ? *)
-      let date = Adef.od_of_cdate date in
-        let go_insert d =
-	  let n_id_opt = insert_note note in
-	  let s_id_opt, src_as_value =
-            match t, n with
-            | "FACT", "FS" -> null, true
-            | "FACT", "FSc" -> null, true
-            | _ -> insert_source source, false
-          in
-          incr e_id ;
-          Printf.fprintf oc_e "$%d$££$%s$££$%s$££$%s$££$%s$££$%d$££$%d$££$%d$££$%s$££$%s$££$%s$££$%s$££\n" !e_id
+    let date = Adef.od_of_cdate date in
+    let go_insert d =
+      let n_id_opt = insert_note note in
+      let s_id_opt, src_as_value =
+        match t, n with
+        | "FACT", "FS" -> null, true
+        | "FACT", "FSc" -> null, true
+        | _ -> insert_source source, false
+      in
+      let pl_id_opt = insert_place place in
+      incr e_id ;
+      Printf.fprintf oc_e "$%d$££$%s$££$%s$££$%s$££$%s$££$%d$££$%d$££$%d$££$%s$££$%s$££$%s$££$%s$££\n" !e_id
 	    (if t = "Name" then "EVEN" else t)
 	    (if t = "EVEN" || t = "FACT" then n else "")
 	    (match d with
@@ -222,41 +230,41 @@ let gw_to_mysql base dir_out fname =
 	    (match d with
 	      | Some Dtext s -> s
 	      | _ -> "")
-	    place n_id_opt s_id_opt ;
-          if t = "DEAT" && reason <> "" then begin
-            Printf.fprintf oc_e_d "$%d$££$%s$££\n" !e_id reason
-          end ;
-          if src_as_value then begin
-            Printf.fprintf oc_e_v "$%d$££${\"ref\":\"%s\"}$££\n" !e_id (sou base source)
-          end;
-          Printf.fprintf oc_pe "$%d$££$%d$££$Main$££\n" !e_id i_p1 ;
-	  begin match i_p2 with
-	  | Some i -> Printf.fprintf oc_pe "$%d$££$%d$££$Main$££\n" !e_id i ;
-	  | _ -> ()
-	  end ;
-	  Array.iter (fun (iper, role) ->
-            Printf.fprintf oc_pe "$%d$££$%d$££$%s$££\n" !e_id (Adef.int_of_iper iper)
-	      (match role with
-		| Witness -> "Witness"
-		| Witness_GodParent -> "Godparent"
-		| Witness_Officer -> "Official"
-	      )
-          ) witnesses
-        in
-        match date with
-        | Some (Dgreg (dmy, calendar)) -> begin
-	    match dmy.prec with
-	    | OrYear dmy2 -> begin
-		go_insert (Some (Dgreg ({dmy with prec = Sure ; day = dmy2.day2 ; month = dmy2.month2 ; year = dmy2.year2}, calendar)));
-		go_insert (Some (Dgreg ({dmy with prec = Sure}, calendar)))
-	      end
-	    | YearInt dmy2 -> begin
-		go_insert (Some (Dgreg ({dmy with prec = Before ; day = dmy2.day2 ; month = dmy2.month2 ; year = dmy2.year2}, calendar)));
-		go_insert (Some (Dgreg ({dmy with prec = After}, calendar)))
-	      end
-	    | _ -> go_insert date
+	    pl_id_opt n_id_opt s_id_opt ;
+      if t = "DEAT" && reason <> "" then begin
+        Printf.fprintf oc_e_d "$%d$££$%s$££\n" !e_id reason
+      end ;
+      if src_as_value then begin
+        Printf.fprintf oc_e_v "$%d$££${\"ref\":\"%s\"}$££\n" !e_id (sou base source)
+      end;
+      Printf.fprintf oc_pe "$%d$££$%d$££$Main$££\n" !e_id i_p1 ;
+      begin match i_p2 with
+      | Some i -> Printf.fprintf oc_pe "$%d$££$%d$££$Main$££\n" !e_id i ;
+      | _ -> ()
+      end ;
+      Array.iter (fun (iper, role) ->
+        Printf.fprintf oc_pe "$%d$££$%d$££$%s$££\n" !e_id (Adef.int_of_iper iper)
+          (match role with
+           | Witness -> "Witness"
+	   | Witness_GodParent -> "Godparent"
+	   | Witness_Officer -> "Official"
+	  )
+      ) witnesses
+    in
+    match date with
+    | Some (Dgreg (dmy, calendar)) -> begin
+        match dmy.prec with
+        | OrYear dmy2 -> begin
+            go_insert (Some (Dgreg ({dmy with prec = Sure ; day = dmy2.day2 ; month = dmy2.month2 ; year = dmy2.year2}, calendar)));
+            go_insert (Some (Dgreg ({dmy with prec = Sure}, calendar)))
+          end
+        | YearInt dmy2 -> begin
+	    go_insert (Some (Dgreg ({dmy with prec = Before ; day = dmy2.day2 ; month = dmy2.month2 ; year = dmy2.year2}, calendar)));
+	    go_insert (Some (Dgreg ({dmy with prec = After}, calendar)))
 	  end
-        | _ -> go_insert date
+	| _ -> go_insert date
+      end
+    | _ -> go_insert date
   in
   Printf.eprintf "Parsing persons :\n%!" ;
   (* For each person *)
@@ -298,8 +306,8 @@ let gw_to_mysql base dir_out fname =
         end else BatText.to_string (BatText.sub r o_start (o_end-o_start+1))
       in
       incr e_id ;
-      Printf.fprintf oc_e "$%d$££$OCCU$££$$££$%s$££$Gregorian$££$0$££$0$££$%d$££$$££$$££$%s$££$%s$££\n" !e_id
-        (if y_end <> 0 then "FROM-TO" else "") y_start null null ;
+      Printf.fprintf oc_e "$%d$££$OCCU$££$$££$%s$££$Gregorian$££$0$££$0$££$%d$££$$££$%s$££$%s$££$%s$££\n" !e_id
+        (if y_end <> 0 then "FROM-TO" else "") y_start null null null ;
       if y_end <> 0 then begin
         Printf.fprintf oc_e_d2 "$%d$££$Gregorian$££$0$££$0$££$%d$££\n" !e_id y_end
       end ;
@@ -443,9 +451,9 @@ let gw_to_mysql base dir_out fname =
           | Some _, Some _ -> "FROM-TO"
         in
         incr e_id ;
-        Printf.fprintf oc_e "$%d$££$TITL$££$$££$%s$££$%s$££$%d$££$%d$££$%d$££$$££$$££$%s$££$%s$££\n" !e_id prec
+        Printf.fprintf oc_e "$%d$££$TITL$££$$££$%s$££$%s$££$%d$££$%d$££$%d$££$$££$%s$££$%s$££$%s$££\n" !e_id prec
 	  (get_calendar d_start) (get_day d_start) (get_month d_start) (get_year d_start)
-	  null null ;
+	  null null null ;
         if prec = "FROM-TO" then begin
           Printf.fprintf oc_e_d2 "$%d$££$%s$££$%d$££$%d$££$%d$££\n" !e_id
 	    (get_calendar d_end) (get_day d_end) (get_month d_end) (get_year d_end)
@@ -529,8 +537,8 @@ let gw_to_mysql base dir_out fname =
     in
     let as_an_event e_t e_n r s_id_opt role =
       incr e_id ;
-      Printf.fprintf oc_e "$%d$££$%s$££$%s$££$$££$Gregorian$££$0$££$0$££$0$££££$$££$$££$%s$££$%s$££\n"
-        !e_id e_t e_n null s_id_opt ;
+      Printf.fprintf oc_e "$%d$££$%s$££$%s$££$$££$Gregorian$££$0$££$0$££$0$££££$$££$%s$££$%s$££$%s$££\n"
+        !e_id e_t e_n null null s_id_opt ;
       insert_person_event (Some (Adef.iper_of_int i)) "Main" ;
       insert_person_event r.r_fath role ;
       insert_person_event r.r_moth role
