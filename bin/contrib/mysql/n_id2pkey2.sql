@@ -6,6 +6,14 @@ inner join person_event using(e_id)
 inner join persons using(p_id)
 where notes.n_id = @id and role='Main'
 union
+select e_type, persons.pkey2
+from notes
+inner join events using(n_id)
+inner join group_event using(e_id)
+inner join person_group using(g_id)
+inner join persons using(p_id)
+where notes.n_id = @id and role in ('Parent1','Parent2')
+union
 select "INDI", persons.pkey2
 from notes
 inner join persons using(n_id)
@@ -16,5 +24,5 @@ from notes
 inner join groups using(n_id)
 inner join person_group using(g_id)
 inner join persons using(p_id)
-where notes.n_id = @id and role='Parent'
+where notes.n_id = @id and role in ('Parent1','Parent2')
 ;

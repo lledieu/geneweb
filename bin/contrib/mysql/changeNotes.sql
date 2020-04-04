@@ -448,10 +448,7 @@ b:	LOOP
 			set id3 = last_insert_id();
 			INSERT INTO events (e_type, n_id, dmy1_d, dmy1_m, dmy1_y) values ('MARC',id3, d, m, y);
 			set id4 = last_insert_id();
-			INSERT INTO person_event (e_id, p_id, role)
-				SELECT id4, p_id, 'Main'
-				FROM person_group
-				WHERE g_id = id2 and role = 'Parent';
+			INSERT INTO group_event (e_id, g_id) values (id4, id2 );
 			IF new = '' THEN
 				UPDATE groups SET n_id = NULL WHERE g_id = id2;
 				DELETE FROM notes WHERE n_id = id1;
@@ -468,10 +465,7 @@ b:	LOOP
 			set id3 = last_insert_id();
 			INSERT INTO events (e_type, n_id, d_cal1, dmy1_d, dmy1_m, dmy1_y) values ('MARC', id3, 'French', d, m, y);
 			set id4 = last_insert_id();
-			INSERT INTO person_event (e_id, p_id, role)
-				SELECT id4, p_id, 'Main'
-				FROM person_group
-				WHERE g_id = id2 and role = 'Parent';
+			INSERT INTO group_event (e_id, g_id) values (id4, id2 );
 			IF new = '' THEN
 				UPDATE groups SET n_id = NULL WHERE g_id = id2;
 				DELETE FROM notes WHERE n_id = id1;
@@ -487,10 +481,7 @@ b:	LOOP
 			set id3 = last_insert_id();
 			INSERT INTO events (e_type, n_id, dmy1_d, dmy1_m, dmy1_y) values ('MARC',id3, 0, m, y);
 			set id4 = last_insert_id();
-			INSERT INTO person_event (e_id, p_id, role)
-				SELECT id4, p_id, 'Main'
-				FROM person_group
-				WHERE g_id = id2 and role = 'Parent';
+			INSERT INTO group_event (e_id, g_id) values (id4, id2 );
 			IF new = '' THEN
 				UPDATE groups SET n_id = NULL WHERE g_id = id2;
 				DELETE FROM notes WHERE n_id = id1;
@@ -505,10 +496,7 @@ b:	LOOP
 			set id3 = last_insert_id();
 			INSERT INTO events (e_type, n_id, dmy1_d, dmy1_m, dmy1_y) values ('MARC',id3, 0, 0, y);
 			set id4 = last_insert_id();
-			INSERT INTO person_event (e_id, p_id, role)
-				SELECT id4, p_id, 'Main'
-				FROM person_group
-				WHERE g_id = id2 and role = 'Parent';
+			INSERT INTO group_event (e_id, g_id) values (id4, id2 );
 			IF new = '' THEN
 				UPDATE groups SET n_id = NULL WHERE g_id = id2;
 				DELETE FROM notes WHERE n_id = id1;
@@ -525,10 +513,7 @@ b:	LOOP
 			set id3 = last_insert_id();
 			INSERT INTO events (e_type, n_id, dmy1_d, dmy1_m, dmy1_y) values ('MARC',id3, d, m, y);
 			set id4 = last_insert_id();
-			INSERT INTO person_event (e_id, p_id, role)
-				SELECT id4, p_id, 'Main'
-				FROM person_group
-				WHERE g_id = id2 and role = 'Parent';
+			INSERT INTO group_event (e_id, g_id) values (id4, id2 );
 			IF new = '' THEN
 				UPDATE groups SET n_id = NULL WHERE g_id = id2;
 				DELETE FROM notes WHERE n_id = id1;
@@ -545,10 +530,7 @@ b:	LOOP
 			set id3 = last_insert_id();
 			INSERT INTO events (e_type, n_id, d_cal1, dmy1_d, dmy1_m, dmy1_y) values ('MARC', id3, 'French', d, m, y);
 			set id4 = last_insert_id();
-			INSERT INTO person_event (e_id, p_id, role)
-				SELECT id4, p_id, 'Main'
-				FROM person_group
-				WHERE g_id = id2 and role = 'Parent';
+			INSERT INTO group_event (e_id, g_id) values (id4, id2 );
 			IF new = '' THEN
 				UPDATE groups SET n_id = NULL WHERE g_id = id2;
 				DELETE FROM notes WHERE n_id = id1;
@@ -564,10 +546,7 @@ b:	LOOP
 			set id3 = last_insert_id();
 			INSERT INTO events (e_type, n_id, dmy1_d, dmy1_m, dmy1_y) values ('MARC',id3, 0, m, y);
 			set id4 = last_insert_id();
-			INSERT INTO person_event (e_id, p_id, role)
-				SELECT id4, p_id, 'Main'
-				FROM person_group
-				WHERE g_id = id2 and role = 'Parent';
+			INSERT INTO group_event (e_id, g_id) values (id4, id2 );
 			IF new = '' THEN
 				UPDATE groups SET n_id = NULL WHERE g_id = id2;
 				DELETE FROM notes WHERE n_id = id1;
@@ -582,10 +561,7 @@ b:	LOOP
 			set id3 = last_insert_id();
 			INSERT INTO events (e_type, n_id, dmy1_d, dmy1_m, dmy1_y) values ('MARC',id3, 0, 0, y);
 			set id4 = last_insert_id();
-			INSERT INTO person_event (e_id, p_id, role)
-				SELECT id4, p_id, 'Main'
-				FROM person_group
-				WHERE g_id = id2 and role = 'Parent';
+			INSERT INTO group_event (e_id, g_id) values (id4, id2 );
 			IF new = '' THEN
 				UPDATE groups SET n_id = NULL WHERE g_id = id2;
 				DELETE FROM notes WHERE n_id = id1;

@@ -76,6 +76,14 @@ LOAD DATA
 ;
 
 LOAD DATA
+ LOCAL INFILE 'txt/origins.txt'
+ INTO TABLE origins
+ CHARACTER SET UTF8
+ FIELDS TERMINATED BY '££' ENCLOSED BY '$'
+ (o_id, origin)
+;
+
+LOAD DATA
  LOCAL INFILE 'txt/persons.txt'
  INTO TABLE persons
  CHARACTER SET UTF8
@@ -167,8 +175,8 @@ LOAD DATA
  INTO TABLE person_name
  CHARACTER SET UTF8
  FIELDS TERMINATED BY '££' ENCLOSED BY '$'
- (p_id, givn, nick, surn, n_type)
- set pn_id = 0, npfx = '', spfx = '', nsfx = ''
+ (p_id, givn, nick, surn, n_type, givn_c, surn_c, crush, part, surn_wp, givn_l, surn_l)
+ set pn_id = 0
 ;
 
 LOAD DATA
@@ -176,9 +184,19 @@ LOAD DATA
  INTO TABLE groups
  CHARACTER SET UTF8
  FIELDS TERMINATED BY '££' ENCLOSED BY '$'
- (g_id, @n_id, @s_id, origin)
+ (g_id, @n_id, @s_id, @o_id)
  set n_id = nullif(@n_id, '__NULL__'),
-     s_id = nullif(@s_id, '__NULL__')
+     s_id = nullif(@s_id, '__NULL__'),
+     o_id = nullif(@o_id, '__NULL__')
+;
+
+LOAD DATA
+ LOCAL INFILE 'txt/group_event.txt'
+ INTO TABLE group_event
+ CHARACTER SET UTF8
+ FIELDS TERMINATED BY '££' ENCLOSED BY '$'
+ (e_id, g_id)
+ set ge_id = 0
 ;
 
 LOAD DATA
@@ -227,9 +245,21 @@ then
   exit -1
 fi
 
+echo "Loading particles..."
+cp $BDDIR/$BD.gwb/particles.txt txt/
+$MYSQL << EOF
+LOAD DATA
+ LOCAL INFILE 'txt/particles.txt'
+ INTO TABLE particles
+ CHARACTER SET UTF8
+ (particle)
+;
+EOF
+
 echo "Adjusting occupations..."
 echo BEGIN $(date '+%FT%T')
 $MYSQL < changeOccupations.sql
+res=$?
 echo END $(date '+%FT%T')
 
 if [ $res != 0 ]

@@ -4,9 +4,12 @@
 
 select @id := ifnull(@id, 17424);
 
-select n_type, givn, nick, surn
+select n_type, ifnull(givn,''), ifnull(nick,''), ifnull(surn,'')
 from names
-inner join person_name using(n_id)
+inner join person_name using(na_id)
+left join names_givn using (nag_id)
+left join names_nick using (nan_id)
+left join names_surn using (nas_id)
 where p_id = @id;
 
 select
@@ -20,12 +23,27 @@ from person_event
 inner join events using(e_id)
 left join places using(pl_id)
 where person_event.p_id = @id
-order by dmy1_y;
+union
+select
+ e_type, t_name,
+ concat(' ', dmy1_d , '/', dmy1_m, '/', dmy1_y, ' ') as "date",
+ ifnull(place,'') as "place",
+ 'Main',
+ ifnull(n_id,'') as "note",
+ ifnull(s_id,'') as "source"
+from person_group
+inner join group_event using(g_id)
+inner join events using(e_id)
+left join places using(pl_id)
+where role in ('Parent1', 'Parent2') and p_id = @id
+;
 
 select
  name,
  group_concat(case d_prec
   when 'FROM-TO' then concat(dmy1_y, '-',  dmy2_y)
+  when 'FROM' then concat(dmy1_y, '-')
+  when 'TO' then concat('-', dmy1_y)
   else dmy1_y
  end order by dmy1_y separator ', ') as period
 from events
@@ -39,12 +57,14 @@ group by 1 order by period;
 select
  pg1.role, pg1.seq,
  pg2.role, pg2.seq,
- n.givn, n.surn
+ givn, surn
 from person_group pg1
 inner join groups g1 on pg1.g_id = g1.g_id
 inner join person_group pg2 on pg1.g_id = pg2.g_id
 inner join person_name pn on pn.p_id = pg2.p_id
-inner join names n on n.n_id = pn.n_id
+inner join names n on n.na_id = pn.na_id
+inner join names_givn using(nag_id)
+inner join names_surn using(nas_id)
 where pg1.p_id = @id
   and pg2.p_id <> @id
   and pn.n_type = 'Main'

@@ -6,6 +6,14 @@ inner join person_event using(e_id)
 inner join persons using(p_id)
 where sources.s_id = @id and role='Main'
 union
+select e_type, persons.pkey2
+from sources
+inner join events using(s_id)
+inner join group_event using(e_id)
+inner join person_group using(g_id)
+inner join persons using(p_id)
+where sources.s_id = @id and role in ('Parent1','Parent2')
+union
 select "INDI", persons.pkey2
 from sources
 inner join persons using(s_id)
@@ -16,5 +24,5 @@ from sources
 inner join groups using(s_id)
 inner join person_group using(g_id)
 inner join persons using(p_id)
-where sources.s_id = @id and role='Parent'
+where sources.s_id = @id and role in ('Parent1','Parent2')
 ;

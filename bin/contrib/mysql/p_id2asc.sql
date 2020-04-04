@@ -7,11 +7,10 @@ with recursive ancestors as (
  from person_group
  where p_id = @id and role = 'Child'
 union
- select a.gen+1, a.sosa*2+if(persons.sex = 'F', 1, 0), c.g_id, p.p_id
+ select a.gen+1, a.sosa*2+if(p.role = 'Parent2', 1, 0), c.g_id, p.p_id
  from person_group p
- inner join persons using(p_id)
- inner join ancestors a on p.g_id = a.g_id and p.role = 'Parent'
- left join person_group c on p.p_id = c.p_id and p.role = 'Parent' and c.role = 'Child'
+ inner join ancestors a on p.g_id = a.g_id and p.role in ('Parent1', 'Parent2')
+ left join person_group c on p.p_id = c.p_id and p.role in ('Parent1', 'Parent2') and c.role = 'Child'
  where a.gen < @max_gen
 )
 

@@ -185,6 +185,16 @@ let gw_to_mysql base dir_out fname =
       key
     end
   in
+  let oc_o = open_oc dir_out "origins" in
+  let insert_origin istr =
+    let s = sou base istr in
+    let key = my_istr_key istr in
+    if s = "" then null
+    else begin
+      Printf.fprintf oc_o "$%s$££$%s$££\n" key s ;
+      key
+    end
+  in
   let oc_p = open_oc dir_out "persons" in
   let oc_e = open_oc dir_out "events" in
   let oc_e_od = open_oc dir_out "occupation_details" in
@@ -193,13 +203,14 @@ let gw_to_mysql base dir_out fname =
   let oc_e_v = open_oc dir_out "event_values" in
   let oc_e_d2 = open_oc dir_out "event_dmy2" in
   let oc_pe = open_oc dir_out "person_event" in
+  let oc_ge = open_oc dir_out "group_event" in
   let oc_m = open_oc dir_out "medias" in
   let oc_pm = open_oc dir_out "person_media" in
   let oc_pn = open_oc dir_out "person_name" in
   let oc_g = open_oc dir_out "groups" in
   let oc_pg = open_oc dir_out "person_group" in
   (* events *)
-  let event base i_p1 i_p2 t n date place note source reason witnesses =
+  let event base id t_id t n date place note source reason witnesses =
     let date = Adef.od_of_cdate date in
     let go_insert d =
       let n_id_opt = insert_note note in
@@ -237,11 +248,8 @@ let gw_to_mysql base dir_out fname =
       if src_as_value then begin
         Printf.fprintf oc_e_v "$%d$££${\"ref\":\"%s\"}$££\n" !e_id (sou base source)
       end;
-      Printf.fprintf oc_pe "$%d$££$%d$££$Main$££\n" !e_id i_p1 ;
-      begin match i_p2 with
-      | Some i -> Printf.fprintf oc_pe "$%d$££$%d$££$Main$££\n" !e_id i ;
-      | _ -> ()
-      end ;
+      if t_id = 'P' then Printf.fprintf oc_pe "$%d$££$%d$££$Main$££\n" !e_id id
+      else begin Printf.fprintf oc_ge "$%d$££$%d$££\n" !e_id id end ;
       Array.iter (fun (iper, role) ->
         Printf.fprintf oc_pe "$%d$££$%d$££$%s$££\n" !e_id (Adef.int_of_iper iper)
           (match role with
@@ -306,8 +314,16 @@ let gw_to_mysql base dir_out fname =
         end else BatText.to_string (BatText.sub r o_start (o_end-o_start+1))
       in
       incr e_id ;
+      let t_period, y_start, y_end =
+        match y_start, y_end with
+        | -1, -1 -> "", 0, 0
+        | y, -1 -> "", y, 0
+        | 0, y -> "TO", y, 0
+        | y, 0 -> "FROM", y, 0
+        | y1, y2 -> "FROM-TO", y1, y2
+      in
       Printf.fprintf oc_e "$%d$££$OCCU$££$$££$%s$££$Gregorian$££$0$££$0$££$%d$££$$££$%s$££$%s$££$%s$££\n" !e_id
-        (if y_end <> 0 then "FROM-TO" else "") y_start null null null ;
+        t_period y_start null null null ;
       if y_end <> 0 then begin
         Printf.fprintf oc_e_d2 "$%d$££$Gregorian$££$0$££$0$££$%d$££\n" !e_id y_end
       end ;
@@ -345,7 +361,7 @@ let gw_to_mysql base dir_out fname =
       | _ -> insert_occupation i
           r o_start o_end
           (to_int r p_start p_end)
-          0
+          (-1)
     in
     let rec parse_dates r o_start o_end d_start d_end =
       (* Printf.eprintf "DEBUG dates (%d) : %d-%d %d-%d\n%!" i o_start o_end d_start d_end ; *)
@@ -374,7 +390,7 @@ let gw_to_mysql base dir_out fname =
           | Some pos2 -> begin
               begin
                 try parse_dates r pos0 (pos1-1) (pos1+1) (pos2-1)
-                with Failure _ -> insert_occupation i r pos0 pos2 0 0
+                with Failure _ -> insert_occupation i r pos0 pos2 (-1) (-1)
               end ;
               parse_occupation r (pos2+1)
             end
@@ -385,10 +401,10 @@ let gw_to_mysql base dir_out fname =
         | Some pos1, None -> subparse pos1
         | Some pos1, Some pos1b when pos1 < pos1b -> subparse pos1
         | _, Some pos1 -> begin
-            insert_occupation i r pos0 (pos1-1) 0 0 ;
+            insert_occupation i r pos0 (pos1-1) (-1) (-1) ;
             parse_occupation r (pos1+1)
           end
-        | None, None -> insert_occupation i r pos0 last 0 0
+        | None, None -> insert_occupation i r pos0 last (-1) (-1)
     in parse_occupation (BatText.of_string (sou base (get_occupation p))) 0 ;
     (* FIXME trop simplifié ? *)
     let has_image_file =
@@ -406,7 +422,14 @@ let gw_to_mysql base dir_out fname =
     | None -> ()
     end ;
     let insert_person_name givn nick surn t =
-      Printf.fprintf oc_pn "$%d$££$%s$££$%s$££$%s$££$%s$££\n" i givn nick surn t
+      Printf.fprintf oc_pn "$%d$££$%s$££$%s$££$%s$££$%s$££$%s$££$%s$££$%s$££$%s$££$%s$££$%s$££$%s$££\n" i givn nick surn t
+        (Name.crush_lower givn)
+        (Name.crush_lower surn)
+        (Name.crush_lower (givn ^ nick ^ surn))
+        (Util.surname_particle base surn)
+        (Util.surname_without_particle base surn)
+        (Name.lower givn)
+        (Name.lower surn)
     in
     if sn <> "?" || fn <> "?" then begin
       insert_person_name fn "" sn "Main"
@@ -491,7 +514,8 @@ let gw_to_mysql base dir_out fname =
 	     | _ -> "")
 	  (get_calendar d_end) (get_day d_end) (get_month d_end) (get_year d_end)
 	  (get_day2 d_end_dmy2) (get_month2 d_end_dmy2) (get_year2 d_end_dmy2)
-	  (match d_end with | Some Dtext s -> s | _ -> "")
+	  (match d_end with | Some Dtext s -> s | _ -> "") ;
+        Printf.fprintf oc_pe "$%d$££$%d$££$Main$££\n" !e_id i ;
     ) (get_titles p) ;
     (* Initialize family group / parent link *)
     Array.iteri (fun seq ifam ->
@@ -499,17 +523,22 @@ let gw_to_mysql base dir_out fname =
       let cpl = foi base ifam in
       let i_father = Adef.int_of_iper (get_father cpl) in
       let i_mother = Adef.int_of_iper (get_mother cpl) in
+      let role =
+        if i = i_father then "Parent1"
+        else "Parent2"
+      in
       if (i = i_father && i_father < i_mother) ||
          (i = i_mother && i_mother < i_father) then begin
         let n_id_opt = insert_note (get_comment cpl) in
         let s_id_opt = insert_source (get_fsources cpl) in
-        Printf.fprintf oc_g "$%d$££$%s$££$%s$££$%s$££\n" g_id n_id_opt s_id_opt (sou base (get_origin_file cpl))
+        let o_id_opt = insert_origin (get_origin_file cpl) in
+        Printf.fprintf oc_g "$%d$££$%s$££$%s$££$%s$££\n" g_id n_id_opt s_id_opt o_id_opt
       end ;
-      Printf.fprintf oc_pg "$%d$££$%d$££$Parent$££$%d$££\n" g_id i seq
+      Printf.fprintf oc_pg "$%d$££$%d$££$%s$££$%d$££\n" g_id i role seq
     ) (get_family p) ;
     (* Ces événements sont en doublon dans pevents en v7 / à conserver pour la v6
-    event base i "BIRT" "" (get_birth p) (get_birth_place p) (get_birth_note p) (get_birth_src p) "" [];
-    event base i "BAPM" "" (get_baptism p) (get_baptism_place p) (get_baptism_note p) (get_baptism_src p) "" [];
+    event base i 'P' "BIRT" "" (get_birth p) (get_birth_place p) (get_birth_note p) (get_birth_src p) "" [];
+    event base i 'P' "BAPM" "" (get_baptism p) (get_baptism_place p) (get_baptism_note p) (get_baptism_src p) "" [];
     begin match death with
     | Death (r, d) ->
 	let reason = match r with
@@ -519,14 +548,14 @@ let gw_to_mysql base dir_out fname =
           | Disappeared -> "Disappeared"
           | Unspecified -> ""
 	in
-        event base i "DEAT" "" d (get_death_place p) (get_death_note p) (get_death_src p) reason [];
+        event base i 'P' "DEAT" "" d (get_death_place p) (get_death_note p) (get_death_src p) reason [];
     | _ -> ()
     end ;
     begin match get_burial p with
     | Buried d ->
-        event base i "BURI" "" d (get_burial_place p) (get_burial_note p) (get_burial_src p) "" [];
+        event base i 'P' "BURI" "" d (get_burial_place p) (get_burial_note p) (get_burial_src p) "" [];
     | Cremated d ->
-        event base i "CREM" "" d (get_burial_place p) (get_burial_note p) (get_burial_src p) "" [];
+        event base i 'P' "CREM" "" d (get_burial_place p) (get_burial_note p) (get_burial_src p) "" [];
     | UnknownBurial -> ()
     end ;
     *)
@@ -537,14 +566,14 @@ let gw_to_mysql base dir_out fname =
     in
     let as_an_event e_t e_n r s_id_opt role =
       incr e_id ;
-      Printf.fprintf oc_e "$%d$££$%s$££$%s$££$$££$Gregorian$££$0$££$0$££$0$££££$$££$%s$££$%s$££$%s$££\n"
+      Printf.fprintf oc_e "$%d$££$%s$££$%s$££$$££$Gregorian$££$0$££$0$££$0$££$$££$%s$££$%s$££$%s$££\n"
         !e_id e_t e_n null null s_id_opt ;
       insert_person_event (Some (Adef.iper_of_int i)) "Main" ;
       insert_person_event r.r_fath role ;
       insert_person_event r.r_moth role
     in
     List.iter (fun r ->
-      (* Only populated from API ! *)
+      (* Source only populated from API ! *)
       let s_id_opt = insert_source r.r_sources in
       match r.r_type with
       | Adoption -> as_an_event "ADOP" "" r s_id_opt "AdoptionParent"
@@ -559,7 +588,7 @@ let gw_to_mysql base dir_out fname =
 	  if e_t = "DEAT" then string_of_death_reason (get_death p)
 	  else ""
 	in
-	event base i None e_t e_n evt.epers_date evt.epers_place evt.epers_note evt.epers_src reason evt.epers_witnesses
+	event base i 'P' e_t e_n evt.epers_date evt.epers_place evt.epers_note evt.epers_src reason evt.epers_witnesses
     ) (get_pevents p)
   done ;
   ProgrBar.finish () ;
@@ -570,6 +599,7 @@ let gw_to_mysql base dir_out fname =
   close_out oc_pm ;
   close_out oc_pn ;
   close_out oc_m ;
+  close_out oc_o ;
   (* For each family *)
   Printf.eprintf "Parsing families :\n%!" ;
   let nb_fam = nb_of_families base in
@@ -580,15 +610,13 @@ let gw_to_mysql base dir_out fname =
     let fam = foi base (Adef.ifam_of_int i) in
     if is_deleted_family fam then ()
     else begin
-      let ip_father = Adef.int_of_iper (get_father fam) in
-      let ip_mother = Adef.int_of_iper (get_mother fam) in
       Array.iteri
         (fun seq c ->
            Printf.fprintf oc_pg "$%d$££$%d$££$Child$££$%d$££\n" i (Adef.int_of_iper c) seq)
         (get_children fam) ;
       List.iter (fun evt ->
 	let e_t, e_n = string_of_fevent (sou base) evt.efam_name in
-	event base ip_father (Some ip_mother) e_t e_n evt.efam_date evt.efam_place evt.efam_note evt.efam_src "" evt.efam_witnesses
+	event base i 'F' e_t e_n evt.efam_date evt.efam_place evt.efam_note evt.efam_src "" evt.efam_witnesses
       ) (get_fevents fam)
     end
   done ;
@@ -598,6 +626,7 @@ let gw_to_mysql base dir_out fname =
   close_out oc_e ;
   close_out oc_e_v ;
   close_out oc_e_d2 ;
+  close_out oc_ge ;
   close_out oc_pe ;
   close_out oc_g ;
   close_out oc_pg ;
