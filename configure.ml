@@ -27,12 +27,17 @@ let set_sosa_num () = assert (!sosa = `None) ; sosa := `Num
 
 let set_gwdb_legacy () = assert (!gwdb = `None) ; gwdb := `Legacy
 
+let set_gwdb_mariadb () = assert (!gwdb = `None) ; gwdb := `MariaDB
+
 let release = ref false
 
 let speclist =
   [ ( "--api"
     , Arg.Unit set_api
     , "Enable API support" )
+  ; ( "--gwdb-mariadb"
+    , Arg.Unit set_gwdb_mariadb
+    , "Use MariaDB backend" )
   ; ( "--gwdb-legacy"
     , Arg.Unit set_gwdb_legacy
     , "Use legacy backend" )
@@ -86,6 +91,8 @@ let () =
     | `None
     | `Legacy ->
       "geneweb-gwdb-legacy" ;
+    | `MariaDB ->
+      "geneweb-gwdb-mariadb" ;
   in
   let dune_profile = if !release then "release" else "dev" in
   let os_type, camlp5f, ext, rm, strip =

@@ -1,0 +1,12 @@
+(library
+  (name gwdb_mariadb)
+  (public_name geneweb-gwdb-mariadb)
+  (implements geneweb-lib.gwdb_driver.mli)
+  (libraries
+    mariadb
+    geneweb-lib.def
+    geneweb-lib.wserver.mli
+    geneweb-lib.util
+    geneweb-lib.io
+  )
+)

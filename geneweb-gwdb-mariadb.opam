@@ -1,0 +1,15 @@
+opam-version: "2.0"
+
+synopsis: "Gwdb module implementation (mariadb backend)"
+
+authors: [ "Ludovic Ledieu <lledieu@free.fr>" ]
+
+homepage: "http://geneweb.org"
+
+dev-repo: "git://github.com/lledieu/geneweb"
+
+bug-reports: "https://github.com/lledieu/geneweb/issues"
+
+build: [
+  ["dune" "build" "-p" name "-j" jobs]
+]
