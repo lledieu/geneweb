@@ -2,7 +2,7 @@ open Def
 
 (* Traces *)
 let failwithstack msg n =
-  failwith @@ msg ^ "\n" ^ (Printexc.raw_backtrace_to_string (Printexc.get_callstack n))
+  failwith @@ msg ^ "\n" ^ Printexc.(raw_backtrace_to_string @@ get_callstack n)
 
 let failexit () = failwithstack "" 5
 
@@ -167,11 +167,16 @@ let query_with_fetch db query params parse_res =
 let insert_cache db name v =
   let query =
     "insert into caches (name, object) \
-     values ('" ^ name ^ "',?) \
+     values (?, ?) \
      on duplicate key update object = value(object)"
   in
+  let params =
+    [| `String name
+     ; `Bytes (Marshal.to_bytes v [Marshal.No_sharing])
+    |]
+  in
   let s = M.prepare db.cnx query |> or_die "prepare" in
-  ignore (M.Stmt.execute s [| `Bytes (Marshal.to_bytes v [Marshal.No_sharing]) |] |> or_die "execute") ;
+  ignore (M.Stmt.execute s params |> or_die "execute") ;
   M.Stmt.close s |> or_die "close"
 
 let get_cache_opt db name =
@@ -184,9 +189,9 @@ let get_cache_opt db name =
   let query =
     "select SQL_NO_CACHE object \
      from caches \
-     where name = '" ^ name ^ "'"
+     where name = ?"
   in
-  query_one_row db query [| |] parse_row
+  query_one_row db query [| `String name |] parse_row
 
 let get_int = M.Field.int
 
@@ -197,57 +202,57 @@ let get_string = M.Field.string
 let get_string_opt = M.Field.string_opt
 
 let get_prec field =
-  match M.Field.value field with
-  | `String "" -> Sure
-  | `String "ABT" -> About
-  | `String "Maybe" -> Maybe
-  | `String "BEF" -> Before
-  | `String "AFT" -> After
-  | `String "FROM" -> Sure
-  | `String "TO" -> Sure
-  | `String "FROM-TO" -> Sure
+  match get_string field with
+  | "" -> Sure
+  | "ABT" -> About
+  | "Maybe" -> Maybe
+  | "BEF" -> Before
+  | "AFT" -> After
+  | "FROM" -> Sure
+  | "TO" -> Sure
+  | "FROM-TO" -> Sure
   | _ -> failexit ()
 
 let get_cal field =
-  match M.Field.value field with
-  | `String "Gregorian" -> Dgregorian
-  | `String "Julian" -> Djulian
-  | `String "French" -> Dfrench
-  | `String "Hebrew" -> Dhebrew
+  match get_string field with
+  | "Gregorian" -> Dgregorian
+  | "Julian" -> Djulian
+  | "French" -> Dfrench
+  | "Hebrew" -> Dhebrew
   | _ -> failexit ()
 
 let get_place_opt field =
-  match M.Field.int_opt field with
+  match get_int_opt field with
   | None -> empty_string
   | Some i -> DbPlace i
 
 let get_note_opt field =
-  match M.Field.int_opt field with
+  match get_int_opt field with
   | None -> empty_string
   | Some i -> DbNote i
 
 let get_source_opt field =
-  match M.Field.int_opt field with
+  match get_int_opt field with
   | None -> empty_string
   | Some i -> DbSource i
 
 let get_origin_opt field =
-  match M.Field.int_opt field with
+  match get_int_opt field with
   | None -> empty_string
   | Some i -> DbOrigin i
 
 let get_sex field =
-  match M.Field.value field with
-  | `String "M" -> Male
-  | `String "F" -> Female
-  | `String "" -> Neuter
+  match get_string field with
+  | "M" -> Male
+  | "F" -> Female
+  | "" -> Neuter
   | _ -> failexit ()
 
 let get_access field =
-  match M.Field.value field with
-  | `String "IfTitles" -> IfTitles
-  | `String "Public" -> Public
-  | `String "Private" -> Private
+  match get_string field with
+  | "IfTitles" -> IfTitles
+  | "Public" -> Public
+  | "Private" -> Private
   | _ -> failexit ()
 
 (* Implementation *)
@@ -692,14 +697,21 @@ let load_ascends_array db =
   let build_array () =
     trace_in f ;
     let size = nb_of_persons db in
-    let a = Array.make size { parents = None ; consang = Adef.no_consang } in
+    let a = Array.make size
+      { parents = None
+      ; consang = Adef.no_consang
+      }
+    in
     let query =
       "select SQL_NO_CACHE p.p_id, g_id \
        from persons p \
        left join person_group pg on p.p_id = pg.p_id and role = 'Child'"
     in
     let parse_res = function
-      | [| f1 ; f2 |] -> a.(get_int f1) <- { parents = get_int_opt f2 ; consang = Adef.no_consang }
+      | [| f1 ; f2 |] -> a.(get_int f1) <-
+          { parents = get_int_opt f2
+          ; consang = Adef.no_consang
+          }
       | _ -> failexit ()
     in
     query_with_fetch db query [| |] parse_res ;
@@ -738,7 +750,7 @@ let load_couples_array db =
        inner join person_group pg2 on g.g_id = pg2.g_id and pg2.role = 'Parent2'"
     in
     let parse_res = function
-      | [| f1 ; f2 ; f3 |] -> a.(get_int f1) <- (Adef.couple (get_int f2) (get_int f3))
+      | [| f1 ; f2 ; f3 |] -> a.(get_int f1) <- Adef.couple (get_int f2) (get_int f3)
       | _ -> failexit ()
     in
     query_with_fetch db query [| |] parse_res ;
@@ -814,7 +826,9 @@ let get_death_reason db e_id =
     | _ -> failexit ()
   in
   query_one_row db
-    "select reason from death_details where e_id = ?"
+    "select reason \
+     from death_details \
+     where e_id = ?"
     [| `Int e_id |]
     parse_row
 
@@ -1193,10 +1207,6 @@ let get_person db iper =
       let db_titles = ref [] in
       let parse_res = function
         | [| f1 ; f2 ; f3 ; f4 ; f5 ; f6 ; f7 ; f8 ; f9 ; f10 ; f11 ; f12 |] -> begin
-            let d_prec = get_prec f3 in
-            let d_cal1 = get_cal f4 in
-            let dmy1_d = get_int f5 in
-            let dmy1_m = get_int f6 in
             let dmy1_y = get_int f7 in
             let d_text = get_string f8 in
             let pl_id = get_place_opt f9 in
@@ -1207,13 +1217,13 @@ let get_person db iper =
               Adef.cdate_of_date (
                 if d_text <> "" then Dtext d_text
                 else Dgreg (
-                  { day = dmy1_d
-                  ; month = dmy1_m
+                  { day = get_int f5
+                  ; month = get_int f6
                   ; year = dmy1_y
-                  ; prec = d_prec
+                  ; prec = get_prec f3
                   ; delta = 0
                   },
-                  d_cal1
+                  get_cal f4
                 )
               )
             in
@@ -1234,20 +1244,20 @@ let get_person db iper =
                 :: !db_pevents
             in
             let db_witnesses = get_witnesses db e_id in
-            match get_string f1, get_string_opt f2 with
-            | "BIRT", _ ->
+            match get_string f1, get_string f2 with
+            | "BIRT", "" ->
                 db_birth := e_cdate2 ;
                 db_birth_place := pl_id ;
                 db_birth_note := n_id ;
                 db_birth_src := s_id ;
                 add_event Epers_Birth e_cdate2 pl_id n_id s_id db_witnesses
-            | "BAPM", _ ->
+            | "BAPM", "" ->
                 db_baptism := e_cdate2 ;
                 db_baptism_place := pl_id ;
                 db_baptism_note := n_id ;
                 db_baptism_src := s_id ;
                 add_event Epers_Baptism e_cdate2 pl_id n_id s_id db_witnesses
-            | "DEAT", _ ->
+            | "DEAT", "" ->
                 if db_death_status = "Dead" then begin
                   db_death := Death (get_death_reason db e_id, e_cdate)
                 end ;
@@ -1255,7 +1265,7 @@ let get_person db iper =
                 db_death_note := n_id ;
                 db_death_src := s_id ;
                 add_event Epers_Death e_cdate pl_id n_id s_id db_witnesses
-            | "BURI", _ ->
+            | "BURI", "" ->
                 db_burial :=
                   if dmy1_y = 0 then Buried Adef.cdate_None
                   else Buried e_cdate
@@ -1264,7 +1274,7 @@ let get_person db iper =
                 db_burial_note := n_id ;
                 db_burial_src := s_id ;
                 add_event Epers_Burial e_cdate pl_id n_id s_id db_witnesses
-            | "CREM", _ ->
+            | "CREM", "" ->
                 db_burial :=
                   if dmy1_y = 0 then Cremated Adef.cdate_None
                   else Cremated e_cdate
@@ -1273,21 +1283,20 @@ let get_person db iper =
                 db_burial_note := n_id ;
                 db_burial_src := s_id ;
                 add_event Epers_Cremation e_cdate pl_id n_id s_id db_witnesses
-            | "TITL", _ ->
+            | "TITL", "" ->
                 db_titles := get_title db e_id :: !db_titles
-            | "FACT", Some "FS" ->
+            | "FACT", "FS" ->
                 add_event (Epers_Name (DbString "FS")) Adef.cdate_None empty_string
                   (DbString ("%vFSp:" ^ get_event_values db e_id "$.ref" ^ ";"))
                   empty_string [| |]
-            | "FACT", Some "FB" ->
+            | "FACT", "FB" ->
                 add_event (Epers_Name (DbString "Facebook")) Adef.cdate_None empty_string
                   (DbString (get_event_values_FB db e_id))
                   empty_string [| |]
-            | "ADOP", _ -> ()
+            | "ADOP", "" -> ()
             | "FACT", _ -> ()
             | "EVEN", _ -> ()
-            | s1, Some s2 -> Printf.eprintf "-> unexpected pevent %s %s\n%!" s1 s2 ; failexit ()
-            | s, None -> Printf.eprintf "-> unexpected pevent %s\n%!" s ; failexit ()
+            | s1, s2 -> failwith @@ Printf.sprintf "unexpected pevent %s(%s)" s1 s2
           end
         | _ -> failexit ()
       in
@@ -1432,7 +1441,7 @@ let no_family =
   }
 
 let get_family db ifam =
-  if ifam = dummy_iper then no_family else
+  if ifam = dummy_ifam then no_family else
   let f = "get_family" in
   let cache =
     match db.cache_families with
@@ -1470,7 +1479,8 @@ let get_family db ifam =
           fam
       | Some (db_n_id, db_s_id, db_o_id) -> begin
           let query =
-            "select e_type, t_name, d_prec, d_cal1, dmy1_d, dmy1_m, dmy1_y, d_text, pl_id, n_id, s_id, e_id \
+            "select e_type, t_name, d_prec, d_cal1, \
+              dmy1_d, dmy1_m, dmy1_y, d_text, pl_id, n_id, s_id, e_id \
              from events \
              inner join group_event using(e_id) \
              where g_id = ?"
@@ -1485,10 +1495,6 @@ let get_family db ifam =
           let db_witnesses = ref [| |] in
           let parse_res = function
             | [| f1 ; f2 ; f3 ; f4 ; f5 ; f6 ; f7 ; f8 ; f9 ; f10 ; f11 ; f12 |] -> begin
-                let d_prec = get_prec f3 in
-                let d_cal1 = get_cal f4 in
-                let dmy1_d = get_int f5 in
-                let dmy1_m = get_int f6 in
                 let dmy1_y = get_int f7 in
                 let d_text = get_string f8 in
                 let pl_id = get_place_opt f9 in
@@ -1499,7 +1505,14 @@ let get_family db ifam =
                   if dmy1_y = 0 && d_text = "" then Adef.cdate_None
                   else Adef.cdate_of_date (
                     if d_text <> "" then Dtext d_text
-                    else Dgreg ( { day = dmy1_d ; month = dmy1_m ; year = dmy1_y ; prec = d_prec ; delta = 0 }, d_cal1 )
+                    else Dgreg (
+                      { day = get_int f5
+                      ; month = get_int f6
+                      ; year = dmy1_y
+                      ; prec = get_prec f3
+                      ; delta = 0
+                      }, get_cal f4
+                    )
                   )
                 in
                 let add_event name date place note src witnesses =
@@ -1515,31 +1528,31 @@ let get_family db ifam =
                     :: !db_fevents
                 in
                 let witnesses = get_witnesses db e_id in
-                match get_string f1, get_string_opt f2 with
-                | "MARR", _ ->
+                match get_string f1, get_string f2 with
+                | "MARR", "" ->
                     db_marriage := e_cdate ;
                     db_marriage_place := pl_id ;
                     db_marriage_note := n_id ;
                     db_marriage_src := s_id ;
                     add_event Efam_Marriage e_cdate pl_id n_id s_id witnesses ;
-                    db_witnesses := witnesses ;
+                    db_witnesses := Array.map (fun (iper, _) -> iper) witnesses ;
                     db_relation := Married
-                | "MARC", _ ->
+                | "MARC", "" ->
                     add_event Efam_MarriageContract e_cdate pl_id n_id s_id witnesses
-                | "DIV", _ ->
+                | "DIV", "" ->
                     add_event Efam_Divorce e_cdate pl_id n_id s_id witnesses ;
                     db_divorce := Divorced e_cdate
-                | "ENGA", _ ->
+                | "ENGA", "" ->
                     add_event Efam_Engage e_cdate pl_id n_id s_id witnesses ;
                     db_relation := Engaged
-                | "EVEN", Some "unmarried" ->
+                | "EVEN", "unmarried" ->
                     db_relation := NotMarried
-                | "EVEN", Some "nomen" ->
+                | "EVEN", "nomen" ->
                     db_relation := NoMention
-                | "EVEN", Some "SEP" ->
+                | "EVEN", "SEP" ->
                     db_divorce := Separated
-                | "FACT", Some "FSc" -> ()
-                | _ -> failexit ()
+                | "FACT", "FSc" -> ()
+                | s1, s2 -> failwith @@ Printf.sprintf "unexpected fevent %s(%s)" s1 s2
               end
             | _ -> failexit ()
           in
@@ -1549,7 +1562,7 @@ let get_family db ifam =
             ; marriage_place = !db_marriage_place
             ; marriage_note = !db_marriage_note
             ; marriage_src = !db_marriage_src
-            ; witnesses = Array.map (fun (iper, _) -> iper) !db_witnesses
+            ; witnesses = !db_witnesses
             ; relation = !db_relation
             ; divorce = !db_divorce
             ; fevents = !db_fevents
