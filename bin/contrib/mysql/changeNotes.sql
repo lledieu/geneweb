@@ -248,6 +248,59 @@ delimiter $$
 CREATE PROCEDURE geneweb.test()
 BEGIN
 	DECLARE done INT DEFAULT FALSE;
+	DECLARE id1, id2, id3 INTEGER UNSIGNED;
+	DECLARE cur CURSOR FOR
+		SELECT p1.e_id, p2.e_id, p1.pe_id
+		from (
+			select e_id, p_id, pe_id
+			from person_event
+			inner join events using (e_id)
+			where e_type = 'BAPM' and role = 'Main' and dmy1_y = 0
+		) p1
+		inner join (
+			select e_id, p_id
+			from person_event
+			inner join events using (e_id)
+			where e_type = 'BAPM' and role = 'Main' and dmy1_y <> 0
+		) p2 using(p_id)
+	;
+	DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+	SELECT 'Merging BAPM...';
+
+	OPEN cur;
+b:	LOOP
+		FETCH cur INTO id1, id2, id3;
+
+		IF done THEN
+			LEAVE b;
+		END IF;
+
+		update person_event
+		set e_id = id2
+		where e_id = id1 and role <> 'Main';
+
+		delete from person_event where pe_id = id3;
+
+		delete from events where e_id = id1;
+
+
+	END LOOP;
+
+	CLOSE cur;
+
+END$$
+
+delimiter ;
+
+call test();
+
+DROP PROCEDURE geneweb.test;
+
+delimiter $$
+CREATE PROCEDURE geneweb.test()
+BEGIN
+	DECLARE done INT DEFAULT FALSE;
 	DECLARE id1, id2, id3, id4 INTEGER UNSIGNED;
 	DECLARE nbr INTEGER;
 	DECLARE n, new, v TEXT;
@@ -275,16 +328,10 @@ b:	LOOP
 			INSERT INTO notes (note) values (v);
 			set id3 = last_insert_id();
 
-			SELECT count(*) into @nbr
-			FROM events
-			INNER JOIN person_event USING(e_id)
-			WHERE p_id = id2 and e_type = 'BAPT'
-			;
-
 			UPDATE events
 			INNER JOIN person_event using(e_id)
 			SET n_id = id3
-			where p_id = id2 and e_type = 'BAPM' and n_id is null;
+			where p_id = id2 and e_type = 'BAPM' and role = 'Main' and n_id is null;
 			set nbr = ROW_COUNT();
 			IF nbr = 0 THEN
 				INSERT events (e_type, n_id) values ('BAPM', id3);
@@ -306,16 +353,10 @@ b:	LOOP
 			INSERT INTO notes (note) values (v);
 			set id3 = last_insert_id();
 
-			SELECT count(*) into @nbr
-			FROM events
-			INNER JOIN person_event USING(e_id)
-			WHERE p_id = id2 and e_type = 'BAPT'
-			;
-
 			UPDATE events
 			INNER JOIN person_event using(e_id)
 			SET n_id = id3
-			where p_id = id2 and e_type = 'BAPM' and n_id is null;
+			where p_id = id2 and e_type = 'BAPM' and role = 'Main' and n_id is null;
 			set nbr = ROW_COUNT();
 			IF nbr = 0 THEN
 				INSERT events (e_type, n_id) values ('BAPM', id3);
@@ -337,16 +378,10 @@ b:	LOOP
 			INSERT INTO notes (note) values (v);
 			set id3 = last_insert_id();
 
-			SELECT count(*) into @nbr
-			FROM events
-			INNER JOIN person_event USING(e_id)
-			WHERE p_id = id2 and e_type = 'BAPT'
-			;
-
 			UPDATE events
 			INNER JOIN person_event using(e_id)
 			SET n_id = id3
-			where p_id = id2 and e_type = 'BAPM' and n_id is null;
+			where p_id = id2 and e_type = 'BAPM' and role ='Main' and n_id is null;
 			set nbr = ROW_COUNT();
 			IF nbr = 0 THEN
 				INSERT events (e_type, n_id) values ('BAPM', id3);
@@ -368,16 +403,10 @@ b:	LOOP
 			INSERT INTO notes (note) values (v);
 			set id3 = last_insert_id();
 
-			SELECT count(*) into @nbr
-			FROM events
-			INNER JOIN person_event USING(e_id)
-			WHERE p_id = id2 and e_type = 'BAPT'
-			;
-
 			UPDATE events
 			INNER JOIN person_event using(e_id)
 			SET n_id = id3
-			where p_id = id2 and e_type = 'BAPM' and n_id is null;
+			where p_id = id2 and e_type = 'BAPM' and role = 'Main' and n_id is null;
 			set nbr = ROW_COUNT();
 			IF nbr = 0 THEN
 				INSERT events (e_type, n_id) values ('BAPM', id3);

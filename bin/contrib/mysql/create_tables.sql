@@ -206,7 +206,7 @@ CREATE TABLE events (
 		'MARL',
 		'MARS'
 	) NOT NULL,
-	t_name	VARCHAR(90),
+	t_name	VARCHAR(90) NOT NULL DEFAULT '',
 	-- Date
 	d_prec	enum(
 		'',
