@@ -165,7 +165,11 @@ let query_with_fetch db query params parse_res =
   ignore @@ query_with_init_and_fetch db query params no_init parse_res
 
 let insert_cache db name v =
-  let query = "insert into caches values ('" ^ name ^ "',?)" in
+  let query =
+    "insert into caches (name, object) \
+     values ('" ^ name ^ "',?) \
+     on duplicate key update object = value(object)"
+  in
   let s = M.prepare db.cnx query |> or_die "prepare" in
   ignore (M.Stmt.execute s [| `Bytes (Marshal.to_bytes v [Marshal.No_sharing]) |] |> or_die "execute") ;
   M.Stmt.close s |> or_die "close"
@@ -305,7 +309,7 @@ let eq_istr istr1 istr2 = trace_in "eq_istr" ;
   | DbNick nan_id1, DbNick nan_id2 -> nan_id1 = nan_id2
   | DbSurn nas_id1, DbSurn nas_id2 -> nas_id1 = nas_id2
   | DbSurnP nas_id1, DbSurnP nas_id2 -> nas_id1 = nas_id2
-  | DbSurn nas_id1, DbSurnP nas_id2 -> nas_id1 = nas_id2 (* strange but nedded ! *)
+  | DbSurn nas_id1, DbSurnP nas_id2 -> nas_id1 = nas_id2 (* strange but needed ! *)
 (*  | DbSurnP nas_id1, DbSurn nas_id2 -> nas_id1 = nas_id2 => not needed so far *)
   | DbPlace pl_id1, DbPlace pl_id2 -> pl_id1 = pl_id2
   | DbNote n_id1, DbNote n_id2 -> n_id1 = n_id2
@@ -457,6 +461,8 @@ let commit_notes _ = todo "commit_notes"
 let person_of_key db fn sn oc =
   let f = "person_of_key" in
   let start = trace_in_start f in
+  let fn = String.trim fn in
+  let sn = String.trim sn in
   let key = Mutil.tr ' ' '_' (fn ^ "." ^ string_of_int oc ^ "." ^ sn) in
   let parse_row row =
     match row with
@@ -682,10 +688,28 @@ let base_strings_of_surname db s =
 
 let load_ascends_array db =
   let f = "load_ascend_array" in
+  let start = Unix.gettimeofday () in
+  let build_array () =
+    trace_in f ;
+    let size = nb_of_persons db in
+    let a = Array.make size { parents = None ; consang = Adef.no_consang } in
+    let query =
+      "select SQL_NO_CACHE p.p_id, g_id \
+       from persons p \
+       left join person_group pg on p.p_id = pg.p_id and role = 'Child'"
+    in
+    let parse_res = function
+      | [| f1 ; f2 |] -> a.(get_int f1) <- { parents = get_int_opt f2 ; consang = Adef.no_consang }
+      | _ -> failexit ()
+    in
+    query_with_fetch db query [| |] parse_res ;
+    insert_cache db "ascends" a ;
+    db.array_ascends <- Some a ;
+    trace_out f start
+  in
   match db.array_ascends with
   | Some _ -> trace_in_cache f
   | None -> begin
-      let start = Unix.gettimeofday () in
       match get_cache_opt db "ascends" with
       | Some a -> begin
           try
@@ -693,26 +717,9 @@ let load_ascends_array db =
             trace_in f ;
             db.array_ascends <- Some (Marshal.from_bytes a 0) ;
             trace_out f start
-          with _ -> failexit ()
+          with _ -> build_array ()
         end
-      | None -> begin
-          trace_in f ;
-          let size = nb_of_persons db in
-          let a = Array.make size { parents = None ; consang = Adef.no_consang } in
-          let query =
-            "select SQL_NO_CACHE p.p_id, g_id \
-             from persons p \
-             left join person_group pg on p.p_id = pg.p_id and role = 'Child'"
-          in
-          let parse_res = function
-            | [| f1 ; f2 |] -> a.(get_int f1) <- { parents = get_int_opt f2 ; consang = Adef.no_consang }
-            | _ -> failexit ()
-          in
-          query_with_fetch db query [| |] parse_res ;
-          insert_cache db "ascends" a ;
-          db.array_ascends <- Some a ;
-          trace_out f start
-        end
+      | None -> build_array ()
     end
 
 let load_unions_array _ = trace_in_dummy "load_unions_array" ;
@@ -720,10 +727,28 @@ let load_unions_array _ = trace_in_dummy "load_unions_array" ;
 
 let load_couples_array db =
   let f = "load_couples_array" in
+  let start = Unix.gettimeofday () in
+  let build_array () =
+    trace_in f ;
+    let a = Array.make (nb_of_families db) (Adef.couple dummy_iper dummy_iper) in
+    let query =
+      "select SQL_NO_CACHE g.g_id, pg1.p_id, pg2.p_id \
+       from groups g \
+       inner join person_group pg1 on g.g_id = pg1.g_id and pg1.role = 'Parent1' \
+       inner join person_group pg2 on g.g_id = pg2.g_id and pg2.role = 'Parent2'"
+    in
+    let parse_res = function
+      | [| f1 ; f2 ; f3 |] -> a.(get_int f1) <- (Adef.couple (get_int f2) (get_int f3))
+      | _ -> failexit ()
+    in
+    query_with_fetch db query [| |] parse_res ;
+    insert_cache db "couples" a ;
+    db.array_couples <- Some a ;
+    trace_out f start
+  in
   match db.array_couples with
   | Some _ -> trace_in_cache f
   | None -> begin
-      let start = Unix.gettimeofday () in
       match get_cache_opt db "couples" with
       | Some a -> begin
           try
@@ -731,26 +756,9 @@ let load_couples_array db =
             trace_in f ;
             db.array_couples <- Some (Marshal.from_bytes a 0) ;
             trace_out f start
-          with _ -> failexit ()
+          with _ -> build_array ()
         end
-      | None -> begin
-          trace_in f ;
-          let a = Array.make (nb_of_families db) (Adef.couple dummy_iper dummy_iper) in
-          let query =
-            "select SQL_NO_CACHE g.g_id, pg1.p_id, pg2.p_id \
-             from groups g \
-             inner join person_group pg1 on g.g_id = pg1.g_id and pg1.role = 'Parent1' \
-             inner join person_group pg2 on g.g_id = pg2.g_id and pg2.role = 'Parent2'"
-          in
-          let parse_res = function
-            | [| f1 ; f2 ; f3 |] -> a.(get_int f1) <- (Adef.couple (get_int f2) (get_int f3))
-            | _ -> failexit ()
-          in
-          query_with_fetch db query [| |] parse_res ;
-          insert_cache db "couples" a ;
-          db.array_couples <- Some a ;
-          trace_out f start
-        end
+      | None -> build_array ()
     end
 
 let load_descends_array _ = trace_in_dummy "load_descends_array" ;
@@ -1011,15 +1019,25 @@ let get_rparents db iper =
     | _ -> failexit ()
   in
   let query =
-    "select p1.p_id, pe1.role, p2.p_id, pe2.role, e.s_id \
+    "select p1.p_id, p1.role, p2.p_id, p2.role, e.s_id \
      from person_event pe \
      inner join events e using(e_id) \
-     left join person_event pe1 on pe.e_id=pe1.e_id and pe1.role like '%Parent' \
-     left join persons p1 on pe1.p_id = p1.p_id and p1.sex = 'M' \
-     left join person_event pe2 on pe.e_id=pe2.e_id and pe2.role like '%Parent' \
-     left join persons p2 on pe2.p_id = p2.p_id and p2.sex = 'F' \
+     left join ( \
+       select e_id, person_event.p_id, role \
+       from person_event \
+       inner join persons using (p_id) \
+       where sex = 'M' \
+         and role like '%Parent' \
+     ) p1 using(e_id) \
+     left join ( \
+       select e_id, person_event.p_id, role \
+       from person_event \
+       inner join persons using (p_id) \
+       where sex = 'F' \
+         and role like '%Parent' \
+     ) p2 using(e_id) \
      where pe.role = 'Main' \
-       and (p1.sex is not null or p2.sex is not null) \
+       and (p1.p_id is not null or p2.p_id is not null) \
        and pe.p_id = ?"
   in
   query_with_fetch db query [| `Int iper |] parse_res ;
