@@ -64,6 +64,10 @@ let todo f =
 (* Database tools *)
 module M = Mariadb.Blocking
 
+let escape_string s = (* FIXME not safe for utf8 *)
+  let s = String.concat "\\_" @@ String.split_on_char '_' s in
+  String.concat "\\%" @@ String.split_on_char '%' s
+
 type iper = int
 type ifam = int
 
@@ -561,7 +565,8 @@ let spi_first ind s =
   let query, params =
     if s = "" then ind.query_all, [| |]
     else
-      let s = s ^ "%" in
+      (* FIXME sometime input string is " " insteed of "_" *)
+      let s = (escape_string s) ^ "%" in
       ind.query_start, [| `String s |]
   in
   let s = get_statement ind.db query in
@@ -703,14 +708,17 @@ let load_ascends_array db =
       }
     in
     let query =
-      "select SQL_NO_CACHE p.p_id, g_id \
+      "select SQL_NO_CACHE p.p_id, g_id, consang \
        from persons p \
        left join person_group pg on p.p_id = pg.p_id and role = 'Child'"
     in
     let parse_res = function
-      | [| f1 ; f2 |] -> a.(get_int f1) <-
+      | [| f1 ; f2 ; f3|] -> a.(get_int f1) <-
           { parents = get_int_opt f2
-          ; consang = Adef.no_consang
+          ; consang =
+              let f3 = Float.of_string @@ M.Field.string f3 in
+              if f3 = (-1.0) then Adef.no_consang
+              else Adef.fix_of_float (f3 /. 100.0)
           }
       | _ -> failexit ()
     in
