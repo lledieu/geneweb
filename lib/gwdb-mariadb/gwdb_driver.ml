@@ -598,7 +598,8 @@ let spi_find ind istr =
   let query =
     "select distinct p_id from person_name \
      inner join names using(na_id) \
-     where " ^ ind.field_id ^ " = ?"
+     where n_type = 'Main' \
+       and " ^ ind.field_id ^ " = ?"
   in
   let l = ref [] in
   let parse_res = function
