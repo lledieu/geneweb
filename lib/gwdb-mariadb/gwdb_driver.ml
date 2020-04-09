@@ -46,15 +46,17 @@ let trace_in_array f =
       Hashtbl.add counters f (v, c, a+1, t)
   | None -> Hashtbl.add counters f (0, 0, 1, None)
 
-let trace_in_dummy f = trace_in ("(dummy) " ^ f)
+let trace_in_dummy f = trace_in ("(dummy)" ^ f)
 
 let trace_in_close start =
-  Printf.eprintf "= gwdb_driver ====================nbr=====time===cache===array=\n" ;
-  Hashtbl.iter (fun key (v, c, a, t) ->
+  let l = Hashtbl.fold (fun k v acc -> (k, v) :: acc) counters [] in
+  let l = List.sort (fun (key1, _) (key2, _) -> String.compare key1 key2) l in
+  Printf.eprintf "= gwdb_driver ==============================nbr=====time===cache===array=\n" ;
+  List.iter (fun (key, (v, c, a, t)) ->
     match t with
-    | Some t when v <> 0 -> Printf.eprintf "%30s%8d %f%8d%8d\n" key v (t /. (Float.of_int v)) c a
-    | _ -> Printf.eprintf "%30s%8d         %8d%8d\n" key v c a
-  ) counters ;
+    | Some t when v <> 0 -> Printf.eprintf "%40s%8d %f%8d%8d\n" key v (t /. (Float.of_int v)) c a
+    | _ -> Printf.eprintf "%40s%8d         %8d%8d\n" key v c a
+  ) l ;
   Printf.eprintf "=> close_base(%d) %f\n%!" (Unix.getpid ()) (Unix.gettimeofday () -. start)
 
 let todo f =
@@ -63,10 +65,6 @@ let todo f =
 
 (* Database tools *)
 module M = Mariadb.Blocking
-
-let escape_string s = (* FIXME not safe for utf8 *)
-  let s = String.concat "\\_" @@ String.split_on_char '_' s in
-  String.concat "\\%" @@ String.split_on_char '%' s
 
 type iper = int
 type ifam = int
@@ -138,7 +136,7 @@ let or_die prefix = function
   | Error (num, msg) -> failwithstack (Printf.sprintf "%s\n(%d) %s" prefix num msg) 4
 
 let get_statement db query =
-  let f = "get_statement" in
+  let f = "(internal)get_statement" in
   match Hashtbl.find_opt db.queries query with
   | Some s -> trace_in_cache f ; s
   | None ->
@@ -205,7 +203,7 @@ let get_string = M.Field.string
 
 let get_string_opt = M.Field.string_opt
 
-let get_prec field =
+let get_prec field get_dmy2 =
   match get_string field with
   | "" -> Sure
   | "ABT" -> About
@@ -215,6 +213,8 @@ let get_prec field =
   | "FROM" -> Sure
   | "TO" -> Sure
   | "FROM-TO" -> Sure
+  | "OrYear" -> OrYear (get_dmy2 ())
+  | "YearInt" -> YearInt (get_dmy2 ())
   | _ -> failexit ()
 
 let get_cal field =
@@ -525,7 +525,7 @@ let persons_of_first_name db = trace_in "persons_of_first_name" ;
        from person_name \
        inner join names using (na_id) \
        inner join names_givn using (nag_id) \
-       where n_type = 'Main' and givn like ?"
+       where n_type = 'Main' and givn rlike ?"
   ; cursor = None
   }
 
@@ -547,7 +547,7 @@ let persons_of_surname db = trace_in "persons_of_surname" ;
        inner join names using (na_id) \
        inner join names_surn using (nas_id) \
        where n_type = 'Main' \
-         and surn_wp like ?"
+         and surn_wp rlike ?"
   ; cursor = None
   }
 
@@ -565,8 +565,12 @@ let spi_first ind s =
   let query, params =
     if s = "" then ind.query_all, [| |]
     else
-      (* FIXME sometime input string is " " insteed of "_" *)
-      let s = (escape_string s) ^ "%" in
+      (* FIXME not safe for utf8 *)
+      let s = String.concat "[ _]" @@ String.split_on_char ' ' s in
+      let s = String.concat "\\(" @@ String.split_on_char '(' s in
+      let s = String.concat "\\)" @@ String.split_on_char ')' s in
+      let s = String.concat "\\." @@ String.split_on_char '.' s in
+      let s = "^" ^ s ^ ".*" in
       ind.query_start, [| `String s |]
   in
   let s = get_statement ind.db query in
@@ -716,7 +720,7 @@ let load_ascends_array db =
       | [| f1 ; f2 ; f3|] -> a.(get_int f1) <-
           { parents = get_int_opt f2
           ; consang =
-              let f3 = Float.of_string @@ M.Field.string f3 in
+              let f3 = Float.of_string @@ get_string f3 in
               if f3 = (-1.0) then Adef.no_consang
               else Adef.fix_of_float (f3 /. 100.0)
           }
@@ -733,7 +737,7 @@ let load_ascends_array db =
       match get_cache_opt db "ascends" with
       | Some a -> begin
           try
-            let f = "(re)" ^ f in
+            let f = f ^ "(pre)" in
             trace_in f ;
             db.array_ascends <- Some (Marshal.from_bytes a 0) ;
             trace_out f start
@@ -772,7 +776,7 @@ let load_couples_array db =
       match get_cache_opt db "couples" with
       | Some a -> begin
           try
-            let f = "(re)" ^ f in
+            let f = f ^ "(pre)" in
             trace_in f ;
             db.array_couples <- Some (Marshal.from_bytes a 0) ;
             trace_out f start
@@ -821,6 +825,8 @@ let clear_families_array _ = trace_in_dummy "clear_families_array" ;
 let date_of_last_change _ = todo "date_of_last_change"
 
 let get_death_reason db e_id =
+  let step = "get_person->events->death_reason" in
+  let start_step = trace_in_start step in
   let parse_row row =
     match row with
     | Some [| f1 |] -> begin match get_string f1 with
@@ -833,14 +839,20 @@ let get_death_reason db e_id =
     | None -> Unspecified
     | _ -> failexit ()
   in
-  query_one_row db
-    "select reason \
-     from death_details \
-     where e_id = ?"
-    [| `Int e_id |]
-    parse_row
+  let res =
+    query_one_row db
+      "select reason \
+       from death_details \
+       where e_id = ?"
+      [| `Int e_id |]
+      parse_row
+  in
+  trace_out step start_step ;
+  res
 
 let get_event_values db e_id path =
+  let step = "get_person->events->value" in
+  let start_step = trace_in_start step in
   let parse_row row =
     match row with
     | Some [| f1 |] -> get_string f1
@@ -851,9 +863,15 @@ let get_event_values db e_id path =
      from event_values \
      where e_id = ?"
   in
-  query_one_row db query [| `Int e_id |] parse_row
+  let res =
+    query_one_row db query [| `Int e_id |] parse_row
+  in
+  trace_out step start_step ;
+  res
 
 let get_event_values_FB db e_id =
+  let step = "get_person->events->valueFB" in
+  let start_step = trace_in_start step in
   let parse_row row =
     match row with
     | Some [| f1 ; f2 |] -> begin
@@ -871,9 +889,15 @@ let get_event_values_FB db e_id =
      from event_values \
      where e_id = ?"
   in
-  query_one_row db query [| `Int e_id |] parse_row
+  let res =
+    query_one_row db query [| `Int e_id |] parse_row
+  in
+  trace_out step start_step ;
+  res
 
 let get_title db e_id =
+  let step = "get_person->events->title" in
+  let start_step = trace_in_start step in
   let parse_row row =
     match row with
     | Some [|f1;f2;f3;f4;f5;f6;f7;f8;f9;f10;f11;f12;f13;f14;f15;f16;f17;f18;f19;f20;f21;f22;f23|] ->
@@ -911,16 +935,7 @@ let get_title db e_id =
                 { day = get_int f_dmy1_d
                 ; month = get_int f_dmy1_m
                 ; year = dmy1_y
-                ; prec = begin match get_string f_prec with
-                   | "" -> Sure
-                   | "ABT" -> About
-                   | "Maybe" -> Maybe
-                   | "BEF" -> Before
-                   | "AFT" -> After
-                   | "OrYear" -> OrYear (get_dmy2 ())
-                   | "YearInt" -> YearInt (get_dmy2 ())
-                   | _ -> failexit ()
-                  end
+                ; prec = get_prec f_prec get_dmy2
                 ; delta = 0
                 }, get_cal f_cal)
             in
@@ -942,9 +957,15 @@ let get_title db e_id =
      from title_details \
      where e_id = ?"
   in
-  query_one_row db query [| `Int e_id |] parse_row
+  let res =
+    query_one_row db query [| `Int e_id |] parse_row
+  in
+  trace_out step start_step ;
+  res
 
 let get_occupation db iper =
+  let step = "get_person->occupation" in
+  let start_step = trace_in_start step in
   let query =
     "select name, \
       group_concat(case d_prec \
@@ -987,9 +1008,12 @@ let get_occupation db iper =
     | _ -> failexit ()
   in
   query_with_fetch db query [| `Int iper |] parse_res ;
+  trace_out step start_step ;
   !occu
 
 let get_witnesses db e_id =
+  let step = "get_person->events->witnesses" in
+  let start_step = trace_in_start step in
   let a = ref [| |] in
   let parse_res = function
     | [| f1 ; f2 |] -> a := Array.append !a [| (
@@ -1009,9 +1033,12 @@ let get_witnesses db e_id =
        and role in ('Witness','GodParent','Official')"
   in
   query_with_fetch db query [| `Int e_id |] parse_res ;
+  trace_out step start_step ;
   !a
 
 let get_rparents db iper =
+  let step = "get_person->rparents" in
+  let start_step = trace_in_start step in
   let l = ref [] in
   let parse_res = function
     | [| f1 ; f2 ; f3 ; f4 ; f5 |] ->
@@ -1063,9 +1090,12 @@ let get_rparents db iper =
        and pe.p_id = ?"
   in
   query_with_fetch db query [| `Int iper |] parse_res ;
+  trace_out step start_step ;
   !l
 
 let get_related db iper =
+  let step = "get_person->related" in
+  let start_step = trace_in_start step in
   let l = ref [] in
   let parse_res = function
     | [| f1 |] -> l := get_int f1 :: !l
@@ -1089,10 +1119,12 @@ let get_related db iper =
   in
   let params = Array.make 2 (`Int iper) in
   query_with_fetch db query params parse_res ;
+  trace_out step start_step ;
   !l
 
-(*
 let get_event_dmy2 db e_id =
+  let step = "get_person->events->dmy2" in
+  let start_step = trace_in_start step in
   let parse_row row =
     match row with
     | Some [| f1 ; f2 ; f3 |] -> begin
@@ -1104,11 +1136,14 @@ let get_event_dmy2 db e_id =
       end
     | _ -> failexit ()
   in
-  query_one_row db
-    "select dmy2_d, dmy2_m, dmy2_y from event_dmy2 where e_id = ?"
-    [| `Int e_id |]
-    parse_row
-*)
+  let res =
+    query_one_row db
+      "select dmy2_d, dmy2_m, dmy2_y from event_dmy2 where e_id = ?"
+      [| `Int e_id |]
+      parse_row
+  in
+  trace_out step start_step ;
+  res
 
 let get_person db iper =
   let f = "get_person" in
@@ -1124,6 +1159,8 @@ let get_person db iper =
   | Some p -> trace_in_cache f ; p
   | None -> begin
       let start = trace_in_start f in
+      let step = f ^ "->main" in
+      let start_step = trace_in_start step in
       let parse_row row =
         match row with
         | Some [| f1 ; f2 ; f3 ; f4 ; f5; f6 |] ->
@@ -1143,6 +1180,9 @@ let get_person db iper =
           [| `Int iper |]
           parse_row
       in
+      trace_out step start_step ;
+      let step = f ^ "->names" in
+      let start_step = trace_in_start step in
       let query =
         "select n_type, nag_id, nan_id, nas_id  \
          from person_name \
@@ -1178,6 +1218,9 @@ let get_person db iper =
         | _ -> failexit ()
       in
       query_with_fetch db query [| `Int iper |] parse_res ;
+      trace_out step start_step ;
+      let step = f ^ "->events" in
+      let start_step = trace_in_start step in
       let query =
         "select e_type, t_name, d_prec, d_cal1, dmy1_d, dmy1_m, dmy1_y, d_text, pl_id, n_id, s_id, e_id \
          from events \
@@ -1221,6 +1264,7 @@ let get_person db iper =
             let n_id = get_note_opt f10 in
             let s_id = get_source_opt f11 in
             let e_id = get_int f12 in
+            let get_dmy2 () = get_event_dmy2 db e_id in
             let e_cdate =
               Adef.cdate_of_date (
                 if d_text <> "" then Dtext d_text
@@ -1228,7 +1272,7 @@ let get_person db iper =
                   { day = get_int f5
                   ; month = get_int f6
                   ; year = dmy1_y
-                  ; prec = get_prec f3
+                  ; prec = get_prec f3 get_dmy2
                   ; delta = 0
                   },
                   get_cal f4
@@ -1309,6 +1353,7 @@ let get_person db iper =
         | _ -> failexit ()
       in
       query_with_fetch db query [| `Int iper |] parse_res ;
+      trace_out step start_step ;
       let db_occupation =
         let s = get_occupation db iper in
         if s = "" then empty_string
@@ -1509,6 +1554,7 @@ let get_family db ifam =
                 let n_id = get_note_opt f10 in
                 let s_id = get_source_opt f11 in
                 let e_id = get_int f12 in
+                let get_dmy2 () = get_event_dmy2 db e_id in
                 let e_cdate =
                   if dmy1_y = 0 && d_text = "" then Adef.cdate_None
                   else Adef.cdate_of_date (
@@ -1517,7 +1563,7 @@ let get_family db ifam =
                       { day = get_int f5
                       ; month = get_int f6
                       ; year = dmy1_y
-                      ; prec = get_prec f3
+                      ; prec = get_prec f3 get_dmy2
                       ; delta = 0
                       }, get_cal f4
                     )
