@@ -222,26 +222,35 @@ let gw_to_mysql base dir_out fname =
       in
       let pl_id_opt = insert_place place in
       incr e_id ;
+      let prec, dmy2_opt =
+	match d with
+	| Some (Dgreg (dmy, _)) ->
+		begin match dmy.prec with
+		| Sure -> "", None
+		| About -> "ABT", None
+		| Maybe -> "Maybe", None (* FIXME: mauvais usage dans GeneWeb => comment ajuster ? *)
+		| Before -> "BEF", None
+		| After -> "AFT", None
+		| OrYear dmy2 -> "OrYear", Some dmy2
+		| YearInt dmy2 -> "YearInt", Some dmy2
+		end
+	| _ -> "", None
+      in
+      let cal = get_calendar d in
       Printf.fprintf oc_e "$%d$££$%s$££$%s$££$%s$££$%s$££$%d$££$%d$££$%d$££$%s$££$%s$££$%s$££$%s$££\n" !e_id
 	    (if t = "Name" then "EVEN" else t)
 	    (if t = "EVEN" || t = "FACT" then n else "")
-	    (match d with
-	      | Some (Dgreg (dmy, _)) ->
-		begin match dmy.prec with
-		| Sure -> ""
-		| About -> "ABT"
-		| Maybe -> "Maybe" (* FIXME: mauvais usage dans GeneWeb => comment ajuster ? *)
-		| Before -> "BEF"
-		| After -> "AFT"
-		| OrYear _ -> raise (Failure "OrYear")
-		| YearInt _ -> raise (Failure "YearInt")
-		end
-	      | _ -> "")
-	    (get_calendar d) (get_day d) (get_month d) (get_year d)
+	    prec cal (get_day d) (get_month d) (get_year d)
 	    (match d with
 	      | Some Dtext s -> s
 	      | _ -> "")
 	    pl_id_opt n_id_opt s_id_opt ;
+      begin match dmy2_opt with
+      | Some dmy2 ->
+          Printf.fprintf oc_e_d2 "$%d$££$%s$££$%d$££$%d$££$%d$££\n" !e_id
+	    cal (get_day2 (Some dmy2)) (get_month2 (Some dmy2)) (get_year2 (Some dmy2))
+      | None -> ()
+      end ; 
       if t = "DEAT" && reason <> "" then begin
         Printf.fprintf oc_e_d "$%d$££$%s$££\n" !e_id reason
       end ;
@@ -259,6 +268,7 @@ let gw_to_mysql base dir_out fname =
 	  )
       ) witnesses
     in
+(*
     match date with
     | Some (Dgreg (dmy, calendar)) -> begin
         match dmy.prec with
@@ -273,6 +283,8 @@ let gw_to_mysql base dir_out fname =
 	| _ -> go_insert date
       end
     | _ -> go_insert date
+*)
+    go_insert date
   in
   Printf.eprintf "Parsing persons :\n%!" ;
   (* For each person *)

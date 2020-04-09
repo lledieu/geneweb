@@ -255,13 +255,13 @@ BEGIN
 			select e_id, p_id, pe_id
 			from person_event
 			inner join events using (e_id)
-			where e_type = 'BAPM' and role = 'Main' and dmy1_y = 0
+			where e_type = 'BAPM' and role = 'Main' and dmy1_y = 0 and pl_id is null
 		) p1
 		inner join (
 			select e_id, p_id
 			from person_event
 			inner join events using (e_id)
-			where e_type = 'BAPM' and role = 'Main' and dmy1_y <> 0
+			where e_type = 'BAPM' and role = 'Main' and (dmy1_y <> 0 or pl_id is not null)
 		) p2 using(p_id)
 	;
 	DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
@@ -338,7 +338,7 @@ b:	LOOP
 				set id4 = last_insert_id();
 				INSERT person_event (p_id, e_id, role) values (id2, id4, 'Main');
 			ELSEIF nbr > 1 THEN
-				select 'WARN', id1, 'affected', nbr;
+				select 'WARN', id1, id2, 'affected', nbr;
 			END IF;
 
 			IF new = '' THEN
@@ -363,7 +363,7 @@ b:	LOOP
 				set id4 = last_insert_id();
 				INSERT person_event (p_id, e_id, role) values (id2, id4, 'Main');
 			ELSEIF nbr > 1 THEN
-				select 'WARN', id1, 'affected', nbr;
+				select 'WARN', id1, id2, 'affected', nbr;
 			END IF;
 
 			IF new = '' THEN
@@ -388,7 +388,7 @@ b:	LOOP
 				set id4 = last_insert_id();
 				INSERT person_event (p_id, e_id, role) values (id2, id4, 'Main');
 			ELSEIF nbr > 1 THEN
-				select 'WARN', id1, 'affected', nbr;
+				select 'WARN', id1, id2, 'affected', nbr;
 			END IF;
 
 			IF new = '' THEN
@@ -413,7 +413,7 @@ b:	LOOP
 				set id4 = last_insert_id();
 				INSERT person_event (p_id, e_id, role) values (id2, id4, 'Main');
 			ELSEIF nbr > 1 THEN
-				select 'WARN', id1, 'affected', nbr;
+				select 'WARN', id1, id2, 'affected', nbr;
 			END IF;
 
 			IF new = '' THEN

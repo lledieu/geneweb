@@ -220,7 +220,9 @@ CREATE TABLE events (
 		'FROM',
 		'TO',
 		'FROM-TO',
-		'INT'
+		'INT',
+                'OrYear', -- FIXME privilégier 2 événements ?
+		'YearInt' -- FIXME privilégier 2 événements ?
 	) NOT NULL DEFAULT '',
 	d_cal1	enum(
 		'Gregorian',

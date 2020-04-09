@@ -232,8 +232,9 @@ LOAD DATA
  INTO TABLE linked_notes_ind
  CHARACTER SET UTF8
  FIELDS TERMINATED BY '££' ENCLOSED BY '$'
- (ln_id, pkey, text, pos)
- set lni_id = 0
+ (ln_id, pkey, @text, pos)
+ set lni_id = 0,
+     text = nullif(@text, '__NULL__')
 ;
 
 EOF
