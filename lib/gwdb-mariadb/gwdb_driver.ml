@@ -512,9 +512,10 @@ let persons_of_first_name db = trace_in "persons_of_first_name" ;
   { db = db
   ; field_id = "nag_id"
   ; query_one =
-      "select p_id from person_name \
+      "select distinct p_id from person_name \
        inner join names using(na_id) \
-       where nag_id = ?"
+       where n_type = 'Main' \
+       and nag_id = ?"
   ; query_all =
       "select distinct nag_id \
        from person_name \
@@ -533,9 +534,10 @@ let persons_of_surname db = trace_in "persons_of_surname" ;
   { db = db
   ; field_id = "nas_id"
   ; query_one =
-      "select p_id from person_name \
+      "select distinct p_id from person_name \
        inner join names using(na_id) \
-       where nas_id = ?"
+       where n_type = 'Main' \
+       and nas_id = ?"
   ; query_all =
       "select distinct nas_id \
        from person_name \
@@ -595,12 +597,6 @@ let spi_next ind _ =
 let spi_find ind istr =
   let f = "spi_find" in
   let start = trace_in_start f in
-  let query =
-    "select distinct p_id from person_name \
-     inner join names using(na_id) \
-     where n_type = 'Main' \
-       and " ^ ind.field_id ^ " = ?"
-  in
   let l = ref [] in
   let parse_res = function
     | [| f1 |] -> l := get_int f1 :: !l
@@ -613,7 +609,7 @@ let spi_find ind istr =
     | DbSurnP nas_id, "nas_id" -> nas_id
     | _ -> failexit ()
   in
-  query_with_fetch ind.db query [| `Int id |] parse_res ;
+  query_with_fetch ind.db ind.query_one [| `Int id |] parse_res ;
   trace_out f start ;
   !l
 
