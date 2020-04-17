@@ -32,7 +32,7 @@ mysql_config_editor set --login-path=client --user=insee --password
 
 ### Explications sur les divers scripts et outils SQL
 
-- `dune build /bin/contrib/insee/insee.ml` => insee.exe (nécessite Ocaml v4.07.0 maximum en l’état) : outil à compiler pour extraire les données d’une base GeneWeb à confronter au fichier INSEE ;
+- `dune build insee.exe` (nécessite Ocaml v4.07.0 maximum en l’état) : outil à compiler pour extraire les données d’une base GeneWeb à confronter au fichier INSEE ;
 - `./mysql.sh` : permet de se connecter à la base de données MySQL (identifiants à ajuster) ;
 - `./get-files.sh` : permet de récupérer et mettre à jour le fichier INSEE ;
 - `./load-files.sh` : permet de charger tous les fichiers INSEE en base ;
