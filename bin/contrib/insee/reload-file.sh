@@ -33,6 +33,14 @@ then
 	sed -e "s/\t/ /g" $f-tab > $f
 	echo " character tabulation replaced by a space."
 fi
+grep -Pa '\x00' $f > /dev/null 2>&1
+if [[ "$?" == "0" ]]
+then
+	echo "WARNING: invalid NUL char found in file $f"
+	mv $f $f-NUL
+	sed -e "s/\x00/ /g" $f-NUL > $f
+	echo " character NUL replaced by a space."
+fi
 
 echo "Remove old data (in case of reload)..."
 $MYSQL << EOF
